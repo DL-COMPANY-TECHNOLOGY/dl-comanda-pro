@@ -1,0 +1,48 @@
+# DL COMANDA PRO
+
+**Del mesero a la cocina en un toque. Pedido tomado, plato a tiempo.**
+
+Desarrollado y administrado por **DL COMPANY -TECHNOLOGY-**.
+
+## Qué es
+
+App web (instalable en el celular) para restaurantes y bares. El mesero toma el pedido por mesa, la cocina o la caja lo recibe **en vivo**, lo marca **listo** y al mesero le llega el aviso (sonido, vibración y notificación) para recogerlo. Todo sincronizado en tiempo real entre todos los dispositivos.
+
+## Roles
+
+| Rol | Cómo entra | Qué hace |
+|---|---|---|
+| 👑 Dueño | Correo + contraseña | Todo: mesas, cocina, cuentas, ventas del día, menú, mesas y personal |
+| 🧑‍🍳 Mesero | Restaurante + NIT → usuario + PIN | Toma pedidos por mesa, recibe el aviso de "listo", marca recogido |
+| 🔥 Cocina / Caja | Restaurante + NIT → usuario + PIN | Tablero en vivo (Nuevos · En preparación · Listos), cobra las cuentas |
+
+## Flujo de un pedido
+
+`nuevo` 🔔 → `preparando` 🔥 → `listo` ✅ (aviso al mesero) → `entregado` 🍽️ → cobrado 💵
+
+## Estructura
+
+```
+index.html            App completa (HTML + CSS + JS)
+legal.html            Términos, privacidad y reembolsos
+config.js             URL y clave pública de Supabase
+manifest.json, sw.js  Instalación como app (PWA) y avisos
+logo.svg + íconos     Marca DL COMANDA PRO
+dl-company.png        Logo de DL COMPANY -TECHNOLOGY-
+supabase/schema.sql   Tablas, seguridad (RLS), funciones y tiempo real
+```
+
+## Nube (Supabase)
+
+- El esquema ya está aplicado. Para un proyecto nuevo: SQL Editor → pegar `supabase/schema.sql` → Run.
+- **Authentication → Sign In / Providers → Allow anonymous sign-ins: ON** (necesario para el ingreso con PIN).
+- **Authentication → URL Configuration → Site URL**: la dirección de GitHub Pages.
+
+## Hoja de ruta
+
+- [x] Pedidos por mesa, cocina en vivo, aviso de listo, cuentas y cobro
+- [x] Roles dueño / mesero / cocina-caja con PIN
+- [x] Ventas del día, top de productos, tiempos de cocina
+- [ ] Notificaciones push con la app cerrada
+- [ ] Planes de pago
+- [ ] Impresión de comandas
