@@ -34,6 +34,7 @@ supabase/v2-*.sql     Stock y código de barras
 supabase/v3-*.sql     Avisos push, cobros (propina/descuento) y cambio de mesa
 supabase/v4-*.sql     Estaciones cocina / bar
 supabase/v5-*.sql     Pago dividido y mixto
+supabase/v6-*.sql     Pedir la cuenta con propina voluntaria preguntada
 supabase/functions/   Función que envía los avisos push
 supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo común (v1.2)
 ```
@@ -57,5 +58,6 @@ supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo c
 - [x] Stock opcional y código de barras
 - [x] Estaciones cocina / bar (cada una con su tablero y sus avisos)
 - [x] Pago dividido (partes iguales o por lo que pidió cada uno) y pago con varios medios
+- [x] Pedir la cuenta: el mesero pregunta al cliente por la propina voluntaria del 10% y caja recibe el aviso
 - [ ] Cierre de caja
 - [ ] Planes de pago

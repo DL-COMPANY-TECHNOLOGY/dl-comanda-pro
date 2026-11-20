@@ -26,7 +26,8 @@ Deno.serve(async (req) => {
   try { c = await config(); } catch (e) { return json({ error: "config", detail: String(e) }, 500); }
   if (req.headers.get("x-hook-secret") !== c.hook_secret) return json({ error: "unauthorized" }, 401);
 
-  const { tipo, pedido_id } = await req.json().catch(() => ({}));
+  const { tipo, pedido_id, mesa_id } = await req.json().catch(() => ({}));
+  if (tipo === "cuenta" && mesa_id) return await avisarCuenta(mesa_id);
   if (!tipo || !pedido_id) return json({ error: "datos" }, 400);
 
   const { data: p } = await sb.from("pedidos").select("*,pedido_items(nombre,cant)").eq("id", pedido_id).maybeSingle();
@@ -52,17 +53,37 @@ Deno.serve(async (req) => {
   const { data: subs } = await q;
   if (!subs?.length) return json({ ok: true, enviados: 0 });
 
-  // Solo celulares con una sesión vigente en esa empresa (PIN no cambiado, usuario activo)
-  const { data: perf } = await sb.from("perfiles").select("user_id,personal_id,empresa_id").in("user_id", subs.map((s) => s.user_id));
-  const vivos = new Set((perf || []).filter((x) => x.empresa_id === p.empresa_id).map((x) => x.user_id));
+  return await enviar(subs, p.empresa_id, msg, tipo === "listo" ? 900 : 1800);
+});
 
+// Mesa pide la cuenta → avisa a caja (rol cocina/caja)
+async function avisarCuenta(mesa_id: string) {
+  const { data: m } = await sb.from("mesas").select("id,empresa_id,nombre,cuenta_en,cuenta_propina,cuenta_por").eq("id", mesa_id).maybeSingle();
+  if (!m || !m.cuenta_en) return json({ ok: true, enviados: 0 });
+  const { data: ps } = await sb.from("pedidos").select("total").eq("mesa_id", m.id).eq("pagado", false).neq("estado", "cancelado");
+  const sub = (ps || []).reduce((a: number, p: { total: number }) => a + p.total, 0);
+  const prop = m.cuenta_propina ? Math.round(sub * 0.1) : 0;
+  const fmt = (n: number) => "$" + n.toLocaleString("es-CO");
+  const { data: subs } = await sb.from("push_subs").select("id,user_id,personal_id,rol,endpoint,p256dh,auth").eq("empresa_id", m.empresa_id).eq("rol", "cocina");
+  if (!subs?.length) return json({ ok: true, enviados: 0 });
+  return await enviar(subs, m.empresa_id, {
+    title: `🧾 ${m.nombre} pide la cuenta · ${fmt(sub + prop)}`,
+    body: `${m.cuenta_por || "Mesero"}: ${m.cuenta_propina ? `el cliente ACEPTA la propina voluntaria (${fmt(prop)})` : "el cliente NO desea propina"}`,
+    tag: `cuenta-${m.id}`, urgente: true,
+  }, 1800);
+}
+
+type Sub = { id: number; user_id: string; personal_id: string | null; rol: string; endpoint: string; p256dh: string; auth: string };
+async function enviar(subs: Sub[], empresa_id: string, msg: Record<string, unknown>, ttl: number) {
+  const { data: perf } = await sb.from("perfiles").select("user_id,empresa_id").in("user_id", subs.map((s) => s.user_id));
+  const vivos = new Set((perf || []).filter((x) => x.empresa_id === empresa_id).map((x) => x.user_id));
   const payload = JSON.stringify({ ...msg, url: "./" });
   let enviados = 0;
   const muertos: number[] = [];
   await Promise.all(subs.filter((s) => vivos.has(s.user_id)).map(async (s) => {
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload,
-        { TTL: tipo === "listo" ? 900 : 1800, urgency: "high" });
+        { TTL: ttl, urgency: "high" });
       enviados++;
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode;
@@ -72,4 +93,4 @@ Deno.serve(async (req) => {
   const huerfanos = subs.filter((s) => !vivos.has(s.user_id)).map((s) => s.id);
   if (muertos.length || huerfanos.length) await sb.from("push_subs").delete().in("id", [...muertos, ...huerfanos]);
   return json({ ok: true, enviados });
-});
+}

@@ -127,6 +127,10 @@ html[data-theme="light"] .mesa{background:linear-gradient(160deg,#fff,#fbf8ee)}
 .mesa.cocina{border-color:rgba(255,181,71,.55)}.mesa.cocina .ms{color:var(--warn)}
 .mesa.listo{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 26px rgba(212,175,55,.35);animation:glowp 1.6s ease-in-out infinite}.mesa.listo .ms{color:var(--gold)}
 .mesa.ocupada{border-color:rgba(34,228,255,.45)}.mesa.ocupada .ms{color:var(--acc)}
+.mesa.cuenta{border-color:var(--acc2);box-shadow:0 0 0 1px var(--acc2),0 0 22px rgba(168,85,247,.3)}.mesa.cuenta .ms{color:var(--acc2)}.mesa.cuenta::before{background:linear-gradient(90deg,#a855f7,#22e4ff)}
+.pq{font-size:22px;font-weight:800;line-height:1.3;text-align:center;margin:6px 0 4px}
+.pq b{background:var(--goldGrad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.propbtns{display:grid;gap:10px;margin:14px 0 8px}.propbtns .btn{padding:16px;font-size:16px}
 .mesa::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:transparent}
 .mesa.cocina::before{background:var(--warn)}.mesa.listo::before{background:var(--goldGrad)}.mesa.ocupada::before{background:var(--grad)}
 @keyframes glowp{50%{box-shadow:0 0 0 2px var(--gold),0 0 36px rgba(212,175,55,.55)}}
@@ -345,7 +349,7 @@ body.standalone .dl-only{display:none!important}
   <section class="view" id="v-mesas">
     <div id="mBanner"></div>
     <div class="mgrid" id="mGrid"></div>
-    <div class="legend"><span><i style="background:var(--muted);opacity:.5"></i>Libre</span><span><i style="background:var(--warn)"></i>En cocina</span><span><i style="background:var(--gold)"></i>Listo para recoger</span><span><i style="background:var(--acc)"></i>Cuenta abierta</span></div>
+    <div class="legend"><span><i style="background:var(--muted);opacity:.5"></i>Libre</span><span><i style="background:var(--warn)"></i>En cocina</span><span><i style="background:var(--gold)"></i>Listo para recoger</span><span><i style="background:var(--acc)"></i>Cuenta abierta</span><span><i style="background:var(--acc2)"></i>Pidió la cuenta</span></div>
   </section>
 
   <section class="view" id="v-orden">
@@ -413,7 +417,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.5 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v1.6 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -748,7 +752,11 @@ async function boot(){
 }
 function teardown(){st.ready=false;st.perfil=null;st.rol=null;st.empresa=null;st.ped=new Map();if(chan){try{sb.removeChannel(chan);}catch(e){}chan=null;}clearInterval(pollT);setLive(false);wake(false);}
 
-async function loadMesas(){const r=await sb.from("mesas").select("*").order("orden").order("creado");if(r.error)throw r.error;st.mesas=r.data||[];}
+async function loadMesas(){const r=await sb.from("mesas").select("*").order("orden").order("creado");if(r.error)throw r.error;
+  const prev=new Map(st.mesas.map(m=>[m.id,m.cuenta_en]));st.mesas=r.data||[];
+  if(st.ready&&st.rol!=="mesero")st.mesas.forEach(m=>{if(m.cuenta_en&&prev.has(m.id)&&prev.get(m.id)!==m.cuenta_en&&m.cuenta_por!==(st.rol==="dueno"?"Dueño":st.usuario)){
+    sndNuevo();vib([200,80,200]);toast(`🧾 ${m.nombre} pide la cuenta · ${m.cuenta_propina?"con propina":"sin propina"}`,5000);
+    sysNotify(`🧾 ${m.nombre} pide la cuenta`,m.cuenta_propina?"El cliente acepta la propina voluntaria":"El cliente no desea propina","cuenta-"+m.id);}});}
 async function loadProductos(){const r=await sb.from("productos").select("*").order("categoria").order("orden").order("nombre");if(r.error)throw r.error;st.productos=r.data||[];}
 const SEL_PED="*,pedido_items(id,producto_id,nombre,precio,cant,nota)";
 async function loadCobros(){
@@ -841,6 +849,7 @@ function estadoMesa(m){
   if(!ps.length)return {k:"libre",txt:"Libre",ps,tot:0};
   const tot=ps.reduce((s,p)=>s+p.total,0);
   if(ps.some(p=>p.estado==="listo"))return {k:"listo",txt:"Listo para recoger",ps,tot};
+  if(m.cuenta_en)return {k:"cuenta",txt:"🧾 Pidió la cuenta",ps,tot,prop:m.cuenta_propina};
   if(ps.some(p=>p.estado==="nuevo"||p.estado==="preparando")){const n=ps.filter(p=>p.estado==="nuevo"||p.estado==="preparando");return {k:"cocina",txt:n.length+" en cocina",ps,tot,desde:Math.min(...n.map(p=>new Date(p.creado).getTime()))};}
   return {k:"ocupada",txt:"Cuenta abierta",ps,tot};
 }
@@ -897,7 +906,7 @@ function renderBadges(){
   badge("cocina",ab.filter(p=>p.estado==="nuevo"&&enMiEst(p)).length);
   badge("listos",ab.filter(p=>p.estado==="listo"&&esMio(p)).length,true);
   badge("mesas",st.rol==="mesero"?ab.filter(p=>p.estado==="listo"&&esMio(p)).length:0,true);
-  badge("cuentas",0);
+  badge("cuentas",mesasAct().filter(m=>m.cuenta_en&&estadoMesa(m).tot).length);
 }
 function notifBanner(el){
   const hay="Notification" in window,perm=hay?Notification.permission:"no";
@@ -925,7 +934,10 @@ function imprimirComanda(p){
     (p.pedido_items||[]).map(i=>`<div class="big">${i.cant} x ${esc(i.nombre)}</div>${i.nota?`<div class="n">&gt; ${esc(i.nota)}</div>`:""}`).join("")+
     (p.nota?`<hr><div class="b">NOTA: ${esc(p.nota)}</div>`:"")+`<hr><div class="c s">${esc(st.empresa.nombre)} · DL COMANDA PRO</div>`);
 }
-function cuentaHTML(titulo,mesa,ps,c){
+const propDe=sub=>Math.round(sub*.1);
+const LEY_PROP="La propina es voluntaria: el cliente puede aceptarla, rechazarla o pedir modificar su valor.";
+function cuentaHTML(titulo,mesa,ps,c,opt){
+  opt=opt||{};
   const it=agrupar(ps),sub=ps.reduce((a,p)=>a+p.total,0),e=st.empresa;
   let h=`<h1>${esc(e.nombre)}</h1><div class="c">NIT ${esc(e.nit)}</div><hr><div class="c b">${titulo}</div><div class="r"><span>${esc(mesa)}</span><span>${fechaHora(c?c.creado:null)}</span></div><hr>`+
     it.map(i=>`<div class="r"><span>${i.cant} x ${esc(i.nombre)}</span><span>${money(i.precio*i.cant)}</span></div>`).join("")+
@@ -939,10 +951,15 @@ function cuentaHTML(titulo,mesa,ps,c){
       if(pgs[0].recibido!=null)h+=`<div class="r"><span>Recibido</span><span>${money(pgs[0].recibido)}</span></div><div class="r"><span>Vueltas</span><span>${money(pgs[0].recibido-pgs[0].monto)}</span></div>`;}
     else{h+=`<div class="b">Pagos (${pgs.length})</div>`+pgs.map(pg=>`<div class="r"><span>${pg.persona?esc(pg.persona)+" · ":""}${nom(pg.metodo)}</span><span>${money(pg.monto)}</span></div>${pg.recibido!=null?`<div class="r s"><span>&nbsp; recibido ${money(pg.recibido)}</span><span>vueltas ${money(pg.recibido-pg.monto)}</span></div>`:""}`).join("");}
     h+=`<div class="r"><span>Atendió</span><span>${esc(c.cajero)}</span></div>`;
+  }else if(opt.totales){h+=opt.totales;
+  }else if(opt.propina===true){
+    h+=`<div class="r"><span>Propina voluntaria 10%</span><span>${money(propDe(sub))}</span></div><div class="s">(el cliente aceptó incluirla)</div><div class="r big"><span>TOTAL</span><span>${money(sub+propDe(sub))}</span></div>`;
+  }else if(opt.propina===false){
+    h+=`<div class="r big"><span>TOTAL</span><span>${money(sub)}</span></div><div class="s">Propina voluntaria: no incluida</div>`;
   }else{
-    h+=`<div class="r"><span>Propina sugerida 10%</span><span>${money(sub*.1)}</span></div><div class="r big"><span>TOTAL</span><span>${money(sub)}</span></div><div class="r"><span>Total con propina</span><span>${money(sub*1.1)}</span></div>`;
+    h+=`<div class="r big"><span>TOTAL</span><span>${money(sub)}</span></div><div class="s" style="margin-top:4px">¿Desea incluir la propina voluntaria del 10% (${money(propDe(sub))})? Indíqueselo a su mesero.</div>`;
   }
-  return h+`<hr><div class="c s">La propina es voluntaria.<br>Este documento no es factura electrónica.</div><div class="c" style="margin-top:6px">¡Gracias por su visita!</div><div class="c s">DL COMANDA PRO</div>`;
+  return h+`<hr><div class="c s">${LEY_PROP}<br>Este documento no es factura electrónica.</div><div class="c" style="margin-top:6px">¡Gracias por su visita!</div><div class="c s">DL COMANDA PRO</div>`;
 }
 async function imprimirRecibo(c){
   let ps=[...st.ped.values()].filter(p=>p.cobro_id===c.id);
@@ -956,8 +973,8 @@ function renderMesas(){
   const ms=mesasAct();
   if(!ms.length){$("#mGrid").innerHTML=`<div class="empty" style="grid-column:1/-1">No hay mesas.${st.rol==="dueno"?" Créalas en Admin.":" Pide al dueño que las cree."}</div>`;return;}
   $("#mGrid").innerHTML=ms.map(m=>{const e=estadoMesa(m);
-    let x="";if(e.k==="cocina")x="hace "+durTxt(mins(e.desde));else if(e.k!=="libre")x=e.ps.length+(e.ps.length>1?" pedidos":" pedido");
-    return `<button class="mesa ${e.k}" data-m="${m.id}"><span class="mn">${esc(m.nombre)}</span><span class="ms">${e.txt}</span>${x?`<span class="mx">${x}</span>`:""}<span class="mt num">${e.k==="libre"?'<span style="color:var(--muted);font-size:13px">+ Tomar pedido</span>':money(e.tot)}</span></button>`;}).join("");
+    let x="";if(e.k==="cocina")x="hace "+durTxt(mins(e.desde));else if(e.k==="cuenta")x=(m.cuenta_propina?"✅ Con propina":"Sin propina")+" · hace "+durTxt(mins(m.cuenta_en));else if(e.k!=="libre")x=e.ps.length+(e.ps.length>1?" pedidos":" pedido");
+    return `<button class="mesa ${e.k}" data-m="${m.id}"><span class="mn">${esc(m.nombre)}</span><span class="ms">${e.txt}</span>${x?`<span class="mx">${x}</span>`:""}<span class="mt num">${e.k==="libre"?'<span style="color:var(--muted);font-size:13px">+ Tomar pedido</span>':money(e.k==="cuenta"&&m.cuenta_propina?e.tot+propDe(e.tot):e.tot)}</span></button>`;}).join("");
 }
 $("#mGrid").onclick=e=>{const b=e.target.closest("[data-m]");if(!b)return;const m=st.mesas.find(x=>x.id===b.dataset.m);if(!m)return;
   const e2=estadoMesa(m);if(e2.k==="libre")abrirOrden(m.id);else mesaSheet(m.id);};
@@ -978,19 +995,54 @@ function mesaSheet(mid){
         if(p.estado==="listo")a+=`<button class="btn ok sm" data-ent="${p.id}">Recogido ✓</button>`;
         if(p.estado==="nuevo"||(st.rol!=="mesero"&&p.estado==="preparando"))a+=`<button class="btn bad sm" data-can="${p.id}">Cancelar</button>`;
         return pedCard(p,a);}).join("")||'<div class="empty">Sin pedidos abiertos</div>'}
-      ${e.tot?`<div class="bigtot"><span style="font-weight:800;color:var(--muted)">Total cuenta</span><b class="num">${money(e.tot)}</b></div>`:""}
-      <div class="acts"><button class="btn gold" data-new>+ Nuevo pedido</button>${puedeCobrar&&e.tot?`<button class="btn pri" data-cob>Cobrar</button>`:""}</div>
+      ${e.tot?`<div class="bigtot"><span style="font-weight:800;color:var(--muted)">Subtotal</span><b class="num">${money(e.tot)}</b></div>`:""}
+      ${m.cuenta_en&&e.tot?`<div class="banner" style="background:rgba(168,85,247,.12);color:var(--acc2);border-color:rgba(168,85,247,.4)">🧾 ${esc(m.cuenta_por||"")} pidió la cuenta · ${m.cuenta_propina?`el cliente <b>&nbsp;acepta&nbsp;</b> la propina (${money(propDe(e.tot))}) → ${money(e.tot+propDe(e.tot))}`:"el cliente <b>&nbsp;no desea&nbsp;</b> propina"}<button class="btn sm" data-pc>Cambiar</button></div>`:""}
+      <div class="acts"><button class="btn gold" data-new>+ Nuevo pedido</button>${e.tot&&!m.cuenta_en?`<button class="btn pri" data-pc>🧾 Pedir la cuenta</button>`:""}${puedeCobrar&&e.tot&&m.cuenta_en?`<button class="btn pri" data-cob>Cobrar</button>`:""}</div>
+      ${puedeCobrar&&e.tot&&!m.cuenta_en?`<div class="acts"><button class="btn sm" data-cob>Cobrar directo</button></div>`:""}
       ${e.tot?`<div class="acts"><button class="btn sm" data-pr>🖨️ Imprimir cuenta</button><button class="btn sm" data-sh>📲 Compartir</button><button class="btn sm" data-mv>↔️ Cambiar mesa</button></div>`:""}`;
     s.querySelector("[data-new]").onclick=()=>{closeSheet();abrirOrden(mid);};
-    const cb=s.querySelector("[data-cob]");if(cb)cb.onclick=()=>cobrarSheet(mid);
     const sh=s.querySelector("[data-sh]");if(sh)sh.onclick=()=>share(cuentaTxt(m));
-    const pr=s.querySelector("[data-pr]");if(pr)pr.onclick=()=>printHTML(cuentaHTML("CUENTA",m.nombre,e.ps,null));
+    const pr=s.querySelector("[data-pr]");if(pr)pr.onclick=()=>printHTML(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_en?m.cuenta_propina:null}));
+    s.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>pedirCuentaSheet(mid));
+    s.querySelectorAll("[data-cob]").forEach(b=>b.onclick=()=>cobrarSheet(mid));
     const mv=s.querySelector("[data-mv]");if(mv)mv.onclick=()=>moverSheet(mid);
     s.onclick=async ev=>{const en=ev.target.closest("[data-ent]"),ca=ev.target.closest("[data-can]");
       if(en){en.disabled=true;try{await setEstado(en.dataset.ent,"entregado");toast("Entregado ✓");}catch(err){toast(errMsg(err));en.disabled=false;}}
       if(ca){const p=st.ped.get(ca.dataset.can);confirmSheet("Cancelar pedido #"+p.numero,"Se avisa a cocina y no se cobra.","Sí, cancelar",async()=>{await setEstado(p.id,"cancelado");toast("Pedido cancelado");mesaSheet(mid);},true);}};
   };
   openSheet("",()=>{});st.sheetFn=draw;draw();
+}
+/* pedir la cuenta: el mesero le pregunta al cliente por la propina voluntaria */
+function pedirCuentaSheet(mid){
+  const m=st.mesas.find(x=>x.id===mid);const e=estadoMesa(m);const pr=propDe(e.tot);
+  openSheet(`<h3>🧾 Cuenta de ${esc(m.nombre)}</h3><p class="hint" style="margin-bottom:6px">Antes de llevar la cuenta, pregúntale al cliente:</p>
+    <div class="card" style="padding:16px"><div class="pq">"¿Desea que le incluyamos la propina voluntaria del <b>10%</b>?"</div>
+      <div class="hint" style="text-align:center">Subtotal ${money(e.tot)} · Propina ${money(pr)}</div></div>
+    <div class="propbtns"><button class="btn gold" data-si>✅ Sí, incluir propina · Total ${money(e.tot+pr)}</button><button class="btn" data-no>No, sin propina · Total ${money(e.tot)}</button></div>
+    <p class="hint">${LEY_PROP} Caja recibe el aviso con la respuesta del cliente.</p>
+    ${m.cuenta_en?`<button class="btn ghost wide" data-anular>Anular la cuenta pedida</button>`:""}
+    <button class="btn ghost wide" data-x>Volver</button>`,s=>{
+    const enviarResp=async(si,b)=>{b.disabled=true;try{await rpc("pedir_cuenta",{p_mesa:mid,p_propina:si});
+        const mm=st.mesas.find(x=>x.id===mid);if(mm){mm.cuenta_en=new Date().toISOString();mm.cuenta_propina=si;mm.cuenta_por=st.rol==="dueno"?"Dueño":st.usuario;}
+        cuentaListaSheet(mid);render();}catch(err){toast(errMsg(err));b.disabled=false;}};
+    s.querySelector("[data-si]").onclick=ev=>enviarResp(true,ev.currentTarget);
+    s.querySelector("[data-no]").onclick=ev=>enviarResp(false,ev.currentTarget);
+    s.querySelector("[data-x]").onclick=()=>mesaSheet(mid);
+    const an=s.querySelector("[data-anular]");if(an)an.onclick=async()=>{try{await rpc("anular_cuenta",{p_mesa:mid});const mm=st.mesas.find(x=>x.id===mid);if(mm)mm.cuenta_en=null;toast("Cuenta anulada");mesaSheet(mid);}catch(err){toast(errMsg(err));}};
+  });
+}
+function cuentaListaSheet(mid){
+  const m=st.mesas.find(x=>x.id===mid);const e=estadoMesa(m);const tot=e.tot+(m.cuenta_propina?propDe(e.tot):0);
+  openSheet(`<div style="text-align:center"><div style="font-size:48px">🧾</div><h3>Cuenta pedida · ${money(tot)}</h3>
+    <p class="hint">${m.cuenta_propina?"Con propina voluntaria del 10% ("+money(propDe(e.tot))+")":"Sin propina"} · Caja ya fue avisada.</p></div>
+    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir cuenta</button><button class="btn" data-sh>📲 Compartir</button></div>
+    ${st.rol!=="mesero"?`<button class="btn pri wide" data-cob style="margin-top:8px">Cobrar ahora</button>`:""}
+    <button class="btn gold wide" data-x style="margin-top:8px">Listo</button>`,s=>{
+    s.querySelector("[data-x]").onclick=closeSheet;
+    s.querySelector("[data-pr]").onclick=()=>printHTML(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_propina}));
+    s.querySelector("[data-sh]").onclick=()=>share(cuentaTxt(m));
+    const cb=s.querySelector("[data-cob]");if(cb)cb.onclick=()=>cobrarSheet(mid);
+  });
 }
 function moverSheet(mid){
   const m=st.mesas.find(x=>x.id===mid);
@@ -1004,19 +1056,21 @@ function moverSheet(mid){
         const n=await rpc("mover_mesa",{p_origen:mid,p_destino:d.id});closeSheet();toast(`↔️ ${n} pedido(s) pasados a ${d.nombre}`);await sync();});};});
 }
 function agrupar(ps){const g=new Map();ps.forEach(p=>(p.pedido_items||[]).forEach(i=>{const k=i.nombre+"|"+i.precio;const x=g.get(k)||{nombre:i.nombre,precio:i.precio,cant:0};x.cant+=i.cant;g.set(k,x);}));return [...g.values()];}
-function cuentaTxt(m){const e=estadoMesa(m);const it=agrupar(e.ps);
-  return `🧾 ${st.empresa.nombre}\n${m.nombre} · ${new Date().toLocaleDateString("es-CO",{timeZone:"America/Bogota"})}\n\n`+it.map(i=>`${i.cant}× ${i.nombre}  ${money(i.precio*i.cant)}`).join("\n")+`\n\nTOTAL: ${money(e.tot)}\nPropina sugerida (10%): ${money(e.tot*.1)}\n\nDL COMANDA PRO`;}
+function cuentaTxt(m){const e=estadoMesa(m);const it=agrupar(e.ps);const pr=m.cuenta_propina;
+  return `🧾 ${st.empresa.nombre}\n${m.nombre} · ${new Date().toLocaleDateString("es-CO",{timeZone:"America/Bogota"})}\n\n`+it.map(i=>`${i.cant}× ${i.nombre}  ${money(i.precio*i.cant)}`).join("\n")+
+    `\n\nSubtotal: ${money(e.tot)}\n`+(pr===true?`Propina voluntaria 10%: ${money(propDe(e.tot))}\nTOTAL: ${money(e.tot+propDe(e.tot))}`:pr===false?`TOTAL: ${money(e.tot)}\n(Propina voluntaria no incluida)`:`TOTAL: ${money(e.tot)}\n¿Desea incluir la propina voluntaria del 10% (${money(propDe(e.tot))})?`)+`\n\n${LEY_PROP}\n\nDL COMANDA PRO`;}
 function cobrarSheet(mid){
   const m=st.mesas.find(x=>x.id===mid);const e=estadoMesa(m);
-  const it=agrupar(e.ps),sub=e.tot;let met="efectivo",prop=0,propMode="0",desc=0;
+  const it=agrupar(e.ps),sub=e.tot;let met="efectivo",prop=0,propMode=m.cuenta_en&&m.cuenta_propina?"10":"0",desc=0;
   const pend=e.ps.filter(p=>p.estado==="nuevo"||p.estado==="preparando").length;
   const num=v=>+String(v||"").replace(/\D/g,"")||0;
   openSheet(`<h3>Cobrar ${esc(m.nombre)}</h3><p class="hint">${e.ps.length} pedido(s)</p>
     <div class="card">${it.map(i=>`<div class="row"><div class="grow"><div class="t">${i.cant}× ${esc(i.nombre)}</div></div><b class="num">${money(i.precio*i.cant)}</b></div>`).join("")}
       <div class="row"><div class="grow"><div class="t">Subtotal</div></div><b class="num">${money(sub)}</b></div></div>
     ${pend?`<div class="banner">⚠️ Hay ${pend} pedido(s) aún en cocina. Al cobrar se marcan como entregados.</div>`:""}
-    <div class="fld" style="margin:14px 0 0"><span>Propina voluntaria (pregúntale al cliente)</span></div>
-    <div class="seg s3" id="cProp" style="margin-top:0"><button class="on" data-p="0">Sin propina</button><button data-p="10">10% · ${money(Math.round(sub*.1))}</button><button data-p="otra">Otro valor</button></div>
+    <div class="fld" style="margin:14px 0 0"><span>Propina voluntaria</span></div>
+    ${m.cuenta_en?`<div class="hint" style="margin:-2px 0 8px">🧾 ${esc(m.cuenta_por||"El mesero")} preguntó: el cliente ${m.cuenta_propina?"<b style='color:var(--ok)'>✅ acepta la propina del 10%</b>":"<b style='color:var(--bad)'>no desea propina</b>"}</div>`:`<div class="hint" style="margin:-2px 0 8px">⚠️ Nadie ha preguntado. Pregúntale al cliente si desea incluir la propina voluntaria del 10%.</div>`}
+    <div class="seg s3" id="cProp" style="margin-top:0"><button class="${propMode==="0"?"on":""}" data-p="0">Sin propina</button><button class="${propMode==="10"?"on":""}" data-p="10">10% · ${money(propDe(sub))}</button><button data-p="otra">Otro valor</button></div>
     <label class="fld" id="cPropW" hidden><span>Valor de la propina</span><input id="cPropV" inputmode="numeric" placeholder="$0"></label>
     <details id="cDescD" style="margin:0 0 10px"><summary class="hint" style="cursor:pointer;font-weight:800">＋ Aplicar descuento</summary>
       <label class="fld" style="margin-top:10px"><span>Descuento en pesos</span><input id="cDesc" inputmode="numeric" placeholder="$0"></label></details>
@@ -1103,8 +1157,8 @@ function dividirSheet(mid,base){
     const dl=t.closest("[data-del]");if(dl){mix.splice(+dl.dataset.del,1);draw();return;}
     const fl=t.closest("[data-fill]");if(fl){const i=+fl.dataset.fill;const otros=mix.reduce((a,x,k)=>a+(k===i?0:x.monto),0);mix[i].monto=Math.max(0,T-otros);draw();return;}
     const pr=t.closest("[data-prp]");if(pr){const p=partes[+pr.dataset.prp];
-      if(modo==="productos")printHTML(cuentaHTML(`CUENTA · ${esc(p.persona).toUpperCase()}`,m.nombre,[{total:p.sub,pedido_items:p.items.map(x=>({...x,cant:1}))}],null).replace(/<div class="r"><span>Propina sugerida[\s\S]*?<\/div><div class="r big"><span>TOTAL<\/span><span>[^<]*<\/span><\/div><div class="r"><span>Total con propina<\/span><span>[^<]*<\/span><\/div>/,`${p.monto>p.sub?`<div class="r"><span>Propina (su parte)</span><span>${money(p.monto-p.sub)}</span></div>`:p.monto<p.sub?`<div class="r"><span>Descuento (su parte)</span><span>-${money(p.sub-p.monto)}</span></div>`:""}<div class="r big"><span>A PAGAR</span><span>${money(p.monto)}</span></div>`));
-      else printHTML(cuentaHTML(`CUENTA DIVIDIDA · PARTE ${+pr.dataset.prp+1} DE ${n}`,m.nombre,e.ps,null).replace(/<div class="r"><span>Propina sugerida[\s\S]*?<\/div><div class="r big"><span>TOTAL<\/span><span>[^<]*<\/span><\/div><div class="r"><span>Total con propina<\/span><span>[^<]*<\/span><\/div>/,`<div class="r"><span>Total mesa</span><span>${money(T)}</span></div><div class="r big"><span>PARTE ${+pr.dataset.prp+1}</span><span>${money(p.monto)}</span></div>`));
+      if(modo==="productos")printHTML(cuentaHTML(`CUENTA · ${esc(p.persona).toUpperCase()}`,m.nombre,[{total:p.sub,pedido_items:p.items.map(x=>({...x,cant:1}))}],null,{totales:`${p.monto>p.sub?`<div class="r"><span>Propina (su parte)</span><span>${money(p.monto-p.sub)}</span></div>`:p.monto<p.sub?`<div class="r"><span>Descuento (su parte)</span><span>-${money(p.sub-p.monto)}</span></div>`:""}<div class="r big"><span>A PAGAR</span><span>${money(p.monto)}</span></div>`}));
+      else printHTML(cuentaHTML(`CUENTA DIVIDIDA · PARTE ${+pr.dataset.prp+1} DE ${n}`,m.nombre,e.ps,null,{totales:`${base.prop?`<div class="r"><span>Propina voluntaria</span><span>${money(base.prop)}</span></div>`:""}${base.desc?`<div class="r"><span>Descuento</span><span>-${money(base.desc)}</span></div>`:""}<div class="r"><span>Total mesa</span><span>${money(T)}</span></div><div class="r big"><span>PARTE ${+pr.dataset.prp+1}</span><span>${money(p.monto)}</span></div>`}));
       return;}
     if(t.closest("[data-x]")){cobrarSheet(mid);return;}
     const ok=t.closest("[data-ok]");if(ok){
@@ -1285,13 +1339,13 @@ window.addEventListener("resize",()=>{if(st.view==="cocina")render();});
 /* CUENTAS */
 function renderCuentas(){
   const d=today();const all=[...st.ped.values()];
-  const abiertasM=mesasAct().map(m=>({m,e:estadoMesa(m)})).filter(x=>x.e.k!=="libre");
+  const abiertasM=mesasAct().map(m=>({m,e:estadoMesa(m)})).filter(x=>x.e.k!=="libre").sort((a,b)=>(b.m.cuenta_en?1:0)-(a.m.cuenta_en?1:0)||String(a.m.cuenta_en||"").localeCompare(String(b.m.cuenta_en||"")));
   const huerf=abiertos().filter(p=>!p.mesa_id||!st.mesas.some(m=>m.id===p.mesa_id&&m.activa));
   const cob=st.cobros||[];
   const totPag=cob.reduce((x,c)=>x+c.total,0),propHoy=cob.reduce((x,c)=>x+c.propina,0),totAb=abiertos().reduce((x,p)=>x+p.total,0);
   $("#cKpis").innerHTML=`<div class="kpi hl"><span>Cobrado hoy</span><b class="num">${money(totPag)}</b></div><div class="kpi"><span>Por cobrar</span><b class="num">${money(totAb)}</b></div><div class="kpi"><span>Mesas abiertas</span><b class="num">${abiertasM.length}</b></div><div class="kpi"><span>Propinas hoy</span><b class="num">${money(propHoy)}</b></div>`;
   $("#cN").textContent=abiertasM.length;
-  $("#cList").innerHTML=abiertasM.map(({m,e})=>`<button class="row" data-cm="${m.id}"><div class="grow"><div class="t">${esc(m.nombre)}</div><div class="sub">${e.ps.length} pedido(s) · ${e.txt}</div></div><b class="num">${money(e.tot)}</b><span class="pill gold">Cobrar ›</span></button>`).join("")
+  $("#cList").innerHTML=abiertasM.map(({m,e})=>`<button class="row" data-cm="${m.id}"><div class="grow"><div class="t">${esc(m.nombre)}</div><div class="sub">${m.cuenta_en?`🧾 Pidió la cuenta hace ${durTxt(mins(m.cuenta_en))} · ${m.cuenta_propina?"✅ con propina":"sin propina"}`:`${e.ps.length} pedido(s) · ${e.txt}`}</div></div><b class="num">${money(e.tot+(m.cuenta_en&&m.cuenta_propina?propDe(e.tot):0))}</b><span class="pill ${m.cuenta_en?"acc":"gold"}">Cobrar ›</span></button>`).join("")
     +(huerf.length?`<div class="row"><div class="grow"><div class="t">Pedidos de mesas eliminadas</div><div class="sub">${huerf.length} sin cobrar · ${money(huerf.reduce((s,p)=>s+p.total,0))}</div></div></div>`:"")
     ||'<div class="empty">No hay cuentas abiertas</div>';
   $("#cpN").textContent=cob.length;
