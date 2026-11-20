@@ -37,11 +37,12 @@ Deno.serve(async (req) => {
   let msg: { title: string; body: string; tag: string; urgente?: boolean };
 
   if (tipo === "nuevo") {
-    q = q.eq("rol", "cocina");
-    msg = { title: `🔔 Nuevo pedido #${p.numero} · ${p.mesa}`, body: `${p.mesero}: ${items}`.slice(0, 180), tag: `nuevo-${p.id}` };
+    q = q.eq("rol", "cocina").or(`estacion.is.null,estacion.eq.${p.estacion === "bar" ? "bar" : "cocina"}`);
+    const est = p.estacion === "bar" ? "🍹 BAR · " : "";
+    msg = { title: `🔔 ${est}Nuevo pedido #${p.numero} · ${p.mesa}`, body: `${p.mesero}: ${items}`.slice(0, 180), tag: `nuevo-${p.id}` };
   } else if (tipo === "listo") {
     q = p.mesero_id ? q.eq("personal_id", p.mesero_id) : q.eq("rol", "dueno");
-    msg = { title: `🍽️ Pedido #${p.numero} listo · ${p.mesa}`, body: `Pasa por la cocina a recogerlo. ${items}`.slice(0, 180), tag: `listo-${p.id}`, urgente: true };
+    msg = { title: p.estacion === "bar" ? `🍹 Bebidas #${p.numero} listas · ${p.mesa}` : `🍽️ Pedido #${p.numero} listo · ${p.mesa}`, body: `Pasa por ${p.estacion === "bar" ? "el bar" : "la cocina"} a recogerlo. ${items}`.slice(0, 180), tag: `listo-${p.id}`, urgente: true };
   } else if (tipo === "cancelado") {
     if (!p.mesero_id) return json({ ok: true, enviados: 0 });
     q = q.eq("personal_id", p.mesero_id);

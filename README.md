@@ -32,6 +32,7 @@ dl-company.png        Logo de DL COMPANY -TECHNOLOGY-
 supabase/schema.sql   Tablas, seguridad (RLS), funciones y tiempo real
 supabase/v2-*.sql     Stock y código de barras
 supabase/v3-*.sql     Avisos push, cobros (propina/descuento) y cambio de mesa
+supabase/v4-*.sql     Estaciones cocina / bar
 supabase/functions/   Función que envía los avisos push
 supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo común (v1.2)
 ```
@@ -53,6 +54,6 @@ supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo c
 - [x] Cambiar / juntar mesas
 - [x] Ventas con propinas y descuentos; exportar a Excel
 - [x] Stock opcional y código de barras
-- [ ] Estaciones (cocina / bar)
+- [x] Estaciones cocina / bar (cada una con su tablero y sus avisos)
 - [ ] Pago dividido y cierre de caja
 - [ ] Planes de pago

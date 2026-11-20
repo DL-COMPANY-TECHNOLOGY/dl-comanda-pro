@@ -366,6 +366,7 @@ body.standalone .dl-only{display:none!important}
 
   <section class="view" id="v-cocina">
     <div id="kBanner"></div>
+    <div class="chips" id="kEst" hidden></div>
     <div class="ksegs" id="kSegs">
       <button data-k="nuevo" class="on">🔔 Nuevos<b id="kn1">0</b></button>
       <button data-k="preparando">🔥 En preparación<b id="kn2">0</b></button>
@@ -412,7 +413,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.3.1 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v1.4 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -484,7 +485,7 @@ body.standalone .dl-only{display:none!important}
 <div class="alert" id="alert"><div class="abox">
   <div class="ai">🍽️</div>
   <h3 id="aTit">¡Pedido listo!</h3>
-  <p class="hint" style="margin:0">Pasa por la cocina a recogerlo.</p>
+  <p class="hint" style="margin:0" id="aSub">Pasa por la cocina a recogerlo.</p>
   <div class="al" id="aList"></div>
   <button class="btn ghost wide" id="aOk">Entendido, ya voy</button>
 </div></div>
@@ -584,7 +585,7 @@ async function ensurePush(){
   try{const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID)});
-    const j=sub.toJSON();await rpc("guardar_push",{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});
+    const j=sub.toJSON();await rpc("guardar_push",{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_estacion:st.rol==="cocina"?miEst():null});
     st.pushOn=true;LS.set("dc_push_ep",j.endpoint);render();return true;
   }catch(e){console.warn("push",e);st.pushOn=false;return false;}
 }
@@ -595,7 +596,7 @@ let alertLoop=null,alertRings=0;
 function alertListo(p){
   st.alerts.add(p.id);showAlert();
   sndListo();vib([300,120,300,120,500]);
-  sysNotify("🍽️ Pedido #"+p.numero+" listo · "+p.mesa,"Pasa por la cocina a recogerlo","listo-"+p.id);
+  sysNotify((p.estacion==="bar"?"🍹 Bebidas #":"🍽️ Pedido #")+p.numero+" listo · "+p.mesa,p.estacion==="bar"?"Pasa por el bar a recogerlas":"Pasa por la cocina a recogerlo","listo-"+p.id);
   clearInterval(alertLoop);alertRings=0;
   alertLoop=setInterval(()=>{if(!st.alerts.size||++alertRings>8){clearInterval(alertLoop);return;}sndListo();vib([300,120,300]);},7000);
 }
@@ -603,8 +604,9 @@ function showAlert(){
   const list=[...st.alerts].map(id=>st.ped.get(id)).filter(p=>p&&p.estado==="listo");
   st.alerts=new Set(list.map(p=>p.id));
   if(!list.length){$("#alert").classList.remove("on");clearInterval(alertLoop);return;}
-  $("#aTit").textContent=list.length>1?`¡${list.length} pedidos listos!`:"¡Pedido listo!";
-  $("#aList").innerHTML=list.map(p=>`<div class="row"><div class="grow"><div class="t">#${p.numero} · ${esc(p.mesa)}</div><div class="sub">${esc(itemsTxt(p))}</div></div><button class="btn ok sm" data-rec="${p.id}">Recogido ✓</button></div>`).join("");
+  $("#aTit").textContent=list.length>1?`¡${list.length} pedidos listos!`:list[0].estacion==="bar"?"¡Bebidas listas!":"¡Pedido listo!";
+  $("#aSub").textContent=list.every(p=>p.estacion==="bar")?"Pasa por el bar a recogerlas.":list.some(p=>p.estacion==="bar")?"Pasa por la cocina y el bar a recogerlos.":"Pasa por la cocina a recogerlo.";
+  $("#aList").innerHTML=list.map(p=>`<div class="row"><div class="grow"><div class="t">#${p.numero} · ${esc(p.mesa)}${estOn()?" · "+EST_TXT[p.estacion||"cocina"]:""}</div><div class="sub">${esc(itemsTxt(p))}</div></div><button class="btn ok sm" data-rec="${p.id}">Recogido ✓</button></div>`).join("");
   $("#alert").classList.add("on");
 }
 $("#aList").onclick=async e=>{const b=e.target.closest("[data-rec]");if(!b)return;b.disabled=true;try{await setEstado(b.dataset.rec,"entregado");st.alerts.delete(b.dataset.rec);showAlert();toast("Entregado ✓");}catch(err){toast(errMsg(err));b.disabled=false;}};
@@ -731,7 +733,7 @@ async function boot(){
     }
     const rol=await rpc("mi_rol");
     if(!rol){teardown();await sb.auth.signOut();showLogin(true);loginPanel("empForm");loginMsg("Tu usuario fue desactivado o cambió de PIN. Pide los datos al dueño.");return;}
-    const em=await sb.from("empresas").select("id,nombre,nit,plan").maybeSingle();
+    const em=await sb.from("empresas").select("id,nombre,nit,plan,estaciones").maybeSingle();
     if(em.error)throw em.error;
     st.perfil=pf.data;st.rol=rol;st.empresa=em.data;
     st.usuario=rol==="dueno"?"Dueño":(LS.get("dc_usr_"+st.user.id,null)||ROL_TXT[rol]);
@@ -805,7 +807,7 @@ setInterval(()=>{if(st.ready&&!document.hidden&&(st.view==="cocina"||st.view==="
 function esMio(p){if(st.rol==="mesero")return p.mesero_id&&p.mesero_id===st.perfil.personal_id;return st.mine.has(p.id);}
 function notifyDiff(old,nw){
   if(!st.ready)return;
-  if(!old&&nw.estado==="nuevo"&&(st.rol==="cocina"||st.rol==="dueno")&&!st.mine.has(nw.id)){
+  if(!old&&nw.estado==="nuevo"&&(st.rol==="cocina"||st.rol==="dueno")&&!st.mine.has(nw.id)&&enMiEst(nw)){
     sndNuevo();vib([200,80,200]);toast(`🔔 Nuevo pedido #${nw.numero} · ${nw.mesa}`,4000);
     sysNotify(`🔔 Nuevo pedido #${nw.numero} · ${nw.mesa}`,itemsTxt(nw),"nuevo-"+nw.id);
   }
@@ -824,6 +826,12 @@ async function setEstado(id,estado){
   render();
 }
 
+/* ---------- estaciones (cocina / bar) ---------- */
+const estOn=()=>!!(st.empresa&&st.empresa.estaciones);
+const miEst=()=>estOn()?LS.get("dc_est",null):null;            // null = todas
+const enMiEst=p=>!miEst()||(p.estacion||"cocina")===miEst();
+const EST_TXT={cocina:"🍳 Cocina",bar:"🍹 Bar"};
+const estPill=p=>estOn()?`<span class="pill ${p.estacion==="bar"?"acc":"warn"}">${EST_TXT[p.estacion||"cocina"]}</span>`:"";
 /* ---------- helpers de pedidos ---------- */
 const itemsTxt=p=>(p.pedido_items||[]).map(i=>i.cant+"× "+i.nombre).join(", ");
 const abiertos=()=>[...st.ped.values()].filter(p=>!p.pagado&&p.estado!=="cancelado");
@@ -886,7 +894,7 @@ function renderNow(){
 function badge(k,n,gold){const b=$("#bd-"+k);if(!b)return;b.hidden=!n;b.textContent=n;b.classList.toggle("g",!!gold);}
 function renderBadges(){
   const ab=abiertos();
-  badge("cocina",ab.filter(p=>p.estado==="nuevo").length);
+  badge("cocina",ab.filter(p=>p.estado==="nuevo"&&enMiEst(p)).length);
   badge("listos",ab.filter(p=>p.estado==="listo"&&esMio(p)).length,true);
   badge("mesas",st.rol==="mesero"?ab.filter(p=>p.estado==="listo"&&esMio(p)).length:0,true);
   badge("cuentas",0);
@@ -913,7 +921,7 @@ function printHTML(html){
 }
 const fechaHora=t=>new Date(t||Date.now()).toLocaleString("es-CO",{timeZone:"America/Bogota",day:"2-digit",month:"2-digit",year:"numeric",hour:"numeric",minute:"2-digit"});
 function imprimirComanda(p){
-  printHTML(`<h1>COMANDA #${p.numero}</h1><div class="c xl">${esc(p.mesa)}</div><div class="c">${esc(p.mesero)} · ${hora(p.creado)}</div><hr>`+
+  printHTML(`<h1>${p.estacion==="bar"&&estOn()?"BAR":"COMANDA"} #${p.numero}</h1><div class="c xl">${esc(p.mesa)}</div><div class="c">${esc(p.mesero)} · ${hora(p.creado)}</div><hr>`+
     (p.pedido_items||[]).map(i=>`<div class="big">${i.cant} x ${esc(i.nombre)}</div>${i.nota?`<div class="n">&gt; ${esc(i.nota)}</div>`:""}`).join("")+
     (p.nota?`<hr><div class="b">NOTA: ${esc(p.nota)}</div>`:"")+`<hr><div class="c s">${esc(st.empresa.nombre)} · DL COMANDA PRO</div>`);
 }
@@ -953,7 +961,7 @@ $("#mGrid").onclick=e=>{const b=e.target.closest("[data-m]");if(!b)return;const 
 
 function pedCard(p,acts){
   const [t,c]=EST[p.estado]||["",""];
-  return `<div class="ped"><div class="ph"><b>#${p.numero}</b><span class="pill ${c}">${t}</span><span class="sub" style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:700">${esc(p.mesero)} · ${hora(p.creado)}</span></div>
+  return `<div class="ped"><div class="ph"><b>#${p.numero}</b><span class="pill ${c}">${t}</span>${estPill(p)}<span class="sub" style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:700">${esc(p.mesero)} · ${hora(p.creado)}</span></div>
     <div class="pi">${(p.pedido_items||[]).map(i=>`<div><span>${i.cant}× ${esc(i.nombre)}${i.nota?`<em>✎ ${esc(i.nota)}</em>`:""}</span><span class="num">${money(i.precio*i.cant)}</span></div>`).join("")}${p.nota?`<em>📝 ${esc(p.nota)}</em>`:""}</div>
     ${acts?`<div class="pa">${acts}</div>`:""}</div>`;
 }
@@ -1124,10 +1132,11 @@ async function enviar(btn){
   try{
     const items=o.lines.map(l=>({pid:l.pid,cant:l.cant,nota:(l.nota||"").trim()||null}));
     const r=await rpc("crear_pedido",{p_mesa:o.mid,p_items:items,p_nota:(o.nota||"").trim()||null});
-    st.mine.add(r.id);LS.set("dc_mine",[...st.mine].slice(-300));
+    (r.pedidos||[{id:r.id}]).forEach(x=>st.mine.add(x.id));LS.set("dc_mine",[...st.mine].slice(-300));
     LS.del("dc_draft_"+o.mid);closeSheet();
     const m=st.mesas.find(x=>x.id===o.mid);
-    toast(`🚀 Pedido #${r.numero} enviado a cocina · ${m?m.nombre:""}`,3200);vib([60,40,60]);
+    const ps2=r.pedidos||[];
+    toast(ps2.length>1?`🚀 Enviado · ${ps2.map(x=>`#${x.numero} ${x.estacion==="bar"?"al bar":"a cocina"}`).join(" y ")} · ${m?m.nombre:""}`:`🚀 Pedido #${r.numero} enviado ${ps2[0]&&ps2[0].estacion==="bar"?"al bar":"a cocina"} · ${m?m.nombre:""}`,3500);vib([60,40,60]);
     st.orden=null;go(st.rol==="cocina"?"cocina":"mesas");sync();
   }catch(e){toast(errMsg(e),4000);btn.disabled=false;btn.textContent="🚀 Enviar a cocina";if(/disponible/.test(errMsg(e))){await loadProductos();render();}}
   finally{enviando=false;}
@@ -1143,7 +1152,7 @@ function renderListos(){
   $("#leList").innerHTML=le.slice(0,40).map(p=>`<div class="row"><div class="grow"><div class="t">#${p.numero} · ${esc(p.mesa)}</div><div class="sub">${esc(itemsTxt(p))}</div></div><span class="sub">${hora(p.entregado_en)}</span></div>`).join("")||'<div class="empty">Aún no hay entregas hoy</div>';
 }
 function pedCardMini(p,acts){const t=p.estado==="listo"?"listo hace "+durTxt(mins(p.listo_en||p.actualizado)):p.estado==="preparando"?"preparando · pedido hace "+durTxt(mins(p.creado)):"enviado hace "+durTxt(mins(p.creado));
-  return `<div class="tk ${p.estado}"><div class="th"><span class="tn">#${p.numero}</span><span class="tm">${esc(p.mesa)}</span><span class="pill ${EST[p.estado][1]}">${EST[p.estado][0]}</span></div><div class="tw">${t}</div><ul>${(p.pedido_items||[]).map(i=>`<li style="font-size:15px;cursor:default"><span class="c">${i.cant}×</span><span>${esc(i.nombre)}${i.nota?`<span class="nn">✎ ${esc(i.nota)}</span>`:""}</span></li>`).join("")}</ul>${acts?`<div class="ta">${acts}</div>`:""}</div>`;}
+  return `<div class="tk ${p.estado}"><div class="th"><span class="tn">#${p.numero}</span><span class="tm">${esc(p.mesa)}</span>${estPill(p)}<span class="pill ${EST[p.estado][1]}">${EST[p.estado][0]}</span></div><div class="tw">${t}</div><ul>${(p.pedido_items||[]).map(i=>`<li style="font-size:15px;cursor:default"><span class="c">${i.cant}×</span><span>${esc(i.nombre)}${i.nota?`<span class="nn">✎ ${esc(i.nota)}</span>`:""}</span></li>`).join("")}</ul>${acts?`<div class="ta">${acts}</div>`:""}</div>`;}
 $("#v-listos").onclick=async e=>{const en=e.target.closest("[data-ent]"),ca=e.target.closest("[data-can]");
   if(en){en.disabled=true;try{await setEstado(en.dataset.ent,"entregado");st.alerts.delete(en.dataset.ent);toast("Entregado ✓");}catch(err){toast(errMsg(err));en.disabled=false;}}
   if(ca){const p=st.ped.get(ca.dataset.can);confirmSheet("Cancelar pedido #"+p.numero,"Cocina verá que se canceló.","Sí, cancelar",async()=>{await setEstado(p.id,"cancelado");closeSheet();toast("Pedido cancelado");},true);}};
@@ -1152,7 +1161,10 @@ $("#v-listos").onclick=async e=>{const en=e.target.closest("[data-ent]"),ca=e.ta
 const kChecks=LS.get("dc_checks",{});
 function renderCocina(){
   notifBanner($("#kBanner"));
-  const ab=abiertos();
+  const ke=$("#kEst");ke.hidden=!estOn();
+  if(estOn()){const all=abiertos().filter(p=>p.estado==="nuevo"),cnt=e2=>all.filter(p=>!e2||(p.estacion||"cocina")===e2).length;
+    ke.innerHTML=[[null,"Todo"],["cocina","🍳 Cocina"],["bar","🍹 Bar"]].map(([k,t])=>`<button class="chip ${miEst()===k?"on":""}" data-e="${k||""}">${t}${cnt(k)?` · ${cnt(k)} nuevo${cnt(k)>1?"s":""}`:""}</button>`).join("");}
+  const ab=abiertos().filter(enMiEst);
   const cols={nuevo:[],preparando:[],listo:[]};
   ab.forEach(p=>{if(cols[p.estado])cols[p.estado].push(p);});
   cols.nuevo.sort((a,b)=>new Date(a.creado)-new Date(b.creado));cols.preparando.sort((a,b)=>new Date(a.creado)-new Date(b.creado));cols.listo.sort((a,b)=>new Date(b.listo_en||0)-new Date(a.listo_en||0));
@@ -1171,11 +1183,13 @@ function ticket(p){
   else if(p.estado==="preparando")acts=`<button class="btn gold" data-st="listo" data-id="${p.id}">✅ Marcar listo</button>`;
   else if(p.estado==="listo")acts=`<button class="btn" data-st="preparando" data-id="${p.id}">↩ Volver</button><button class="btn ok" data-st="entregado" data-id="${p.id}">Entregado</button>`;
   acts+=`<button class="btn more" data-more="${p.id}" aria-label="Más opciones">⋯</button>`;
-  return `<div class="tk ${p.estado}"><div class="th"><span class="tn">#${p.numero}</span><span class="tm">${esc(p.mesa)}</span><span class="tt ${tc}">⏱ ${p.estado==="listo"?"listo "+hora(p.listo_en):durTxt(m)}</span></div>
+  return `<div class="tk ${p.estado}"><div class="th"><span class="tn">#${p.numero}</span><span class="tm">${esc(p.mesa)}</span>${estOn()&&!miEst()?estPill(p):""}<span class="tt ${tc}">⏱ ${p.estado==="listo"?"listo "+hora(p.listo_en):durTxt(m)}</span></div>
     <div class="tw">🧑‍🍳 ${esc(p.mesero)} · ${hora(p.creado)}${p.cocina&&p.estado!=="nuevo"?" · 🔥 "+esc(p.cocina):""}</div>
     <ul>${(p.pedido_items||[]).map(i=>`<li class="${chk.has(i.id)?"done":""}" data-chk="${p.id}:${i.id}"><span class="c">${i.cant}×</span><span>${esc(i.nombre)}${i.nota?`<span class="nn">✎ ${esc(i.nota)}</span>`:""}</span></li>`).join("")}</ul>
     ${p.nota?`<div class="tnote">📝 ${esc(p.nota)}</div>`:""}<div class="ta">${acts}</div></div>`;
 }
+$("#kEst").onclick=e=>{const b=e.target.closest("[data-e]");if(!b)return;LS.set("dc_est",b.dataset.e||null);render();
+  if(st.rol==="cocina"&&st.pushOn)ensurePush();toast(b.dataset.e?`Viendo solo ${EST_TXT[b.dataset.e]}. Los avisos llegan solo de esa estación.`:"Viendo cocina y bar",3000);};
 $("#kSegs").onclick=e=>{const b=e.target.closest("[data-k]");if(!b)return;st.kSeg=b.dataset.k;renderCocina();};
 $("#v-cocina").addEventListener("click",async e=>{
   const c=e.target.closest("[data-chk]");
@@ -1266,11 +1280,15 @@ async function loadPersonal(){const r=await sb.from("personal").select("id,usuar
 function renderAdmin(){
   const e=st.empresa;
   $("#aEmp").innerHTML=`<div class="row"><div class="grow"><div class="t">${esc(e.nombre)}</div><div class="sub">NIT ${esc(e.nit)}</div></div><span class="pill gold">${esc(e.plan||"gratis")}</span></div>
+    <label class="row" style="cursor:pointer"><div class="grow"><div class="t">🍳🍹 Estaciones cocina y bar</div><div class="sub">${e.estaciones?"Activas: las bebidas van al bar y los platos a cocina, cada uno con su aviso":"Apagadas: todo llega a una sola cocina"}</div></div><input type="checkbox" id="aEst" ${e.estaciones?"checked":""} style="width:22px;height:22px;accent-color:#d4af37"></label>
     <button class="row" id="aShareAcc"><div class="grow"><div class="t">📲 Enviar datos de acceso al personal</div><div class="sub">Nombre del restaurante, NIT y enlace de la app</div></div><span>›</span></button>`;
+  $("#aEst").onchange=async ev=>{const v=ev.target.checked;ev.target.disabled=true;
+    try{await rpc("config_estaciones",{p_activar:v});st.empresa.estaciones=v;toast(v?"🍹 Estaciones activas. Revisa en el Menú qué va al bar.":"Estaciones apagadas",3500);render();}
+    catch(err){ev.target.checked=!v;toast(errMsg(err));}finally{ev.target.disabled=false;}};
   $("#aShareAcc").onclick=()=>share(`🍽️ Ingreso a DL COMANDA PRO\n\nAbre: ${location.origin+location.pathname}\nToca "🍽️ Personal" y escribe:\n• Restaurante: ${e.nombre}\n• NIT: ${e.nit}\n\nLuego tu usuario y tu PIN (te los da el dueño).`);
   $("#aPer").innerHTML=st.personal.map(p=>`<button class="row" data-per="${p.id}"><div class="grow"><div class="t">${esc(p.usuario)}</div><div class="sub">${p.rol==="mesero"?"🧑‍🍳 Mesero":"🔥 Cocina / Caja"}${p.bloqueado_hasta&&new Date(p.bloqueado_hasta)>new Date()?" · 🔒 bloqueado":""}</div></div><span class="pill ${p.activo?"ok":""}">${p.activo?"Activo":"Inactivo"}</span></button>`).join("")||'<div class="empty">Crea a tus meseros y a cocina / caja para que entren con su PIN.</div>';
   const cats={};st.productos.forEach(p=>(cats[p.categoria]=cats[p.categoria]||[]).push(p));
-  $("#aProd").innerHTML=Object.keys(cats).map(c=>`<div class="row" style="background:var(--goldSoft);padding:8px 14px"><b style="font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)">${esc(c)}</b></div>`+cats[c].map(p=>`<button class="row" data-pr="${p.id}"><div class="grow"><div class="t" style="${p.activo?"":"opacity:.5;text-decoration:line-through"}">${esc(p.nombre)}</div><div class="sub">${!p.activo?"Agotado / oculto":p.stock==null?"Disponible":p.stock<=0?"⚠️ Sin stock":p.stock<=stockMin(p)?`⚠️ Quedan ${p.stock}`:`Stock: ${p.stock}`}</div></div><b class="num">${money(p.precio)}</b></button>`).join("")).join("")||'<div class="empty">Agrega los platos y bebidas de tu menú</div>';
+  $("#aProd").innerHTML=Object.keys(cats).map(c=>`<div class="row" style="background:var(--goldSoft);padding:8px 14px"><b style="font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)">${esc(c)}</b></div>`+cats[c].map(p=>`<button class="row" data-pr="${p.id}"><div class="grow"><div class="t" style="${p.activo?"":"opacity:.5;text-decoration:line-through"}">${esc(p.nombre)}</div><div class="sub">${estOn()?(p.estacion==="bar"?"🍹 Bar · ":"🍳 Cocina · "):""}${!p.activo?"Agotado / oculto":p.stock==null?"Disponible":p.stock<=0?"⚠️ Sin stock":p.stock<=stockMin(p)?`⚠️ Quedan ${p.stock}`:`Stock: ${p.stock}`}</div></div><b class="num">${money(p.precio)}</b></button>`).join("")).join("")||'<div class="empty">Agrega los platos y bebidas de tu menú</div>';
   $("#aMesas").innerHTML=st.mesas.map(m=>`<button class="row" data-ms="${m.id}"><div class="grow"><div class="t" style="${m.activa?"":"opacity:.5"}">${esc(m.nombre)}</div><div class="sub">${m.activa?"Activa":"Oculta"} · orden ${m.orden}</div></div><span>›</span></button>`).join("")||'<div class="empty">Crea tus mesas</div>';
 }
 $("#aEmpEdit").onclick=()=>openSheet(`<h3>Datos del restaurante</h3><p class="hint">Si cambias el nombre, tu personal debe escribir el nombre nuevo al ingresar. El NIT solo lo cambia DL COMPANY.</p>
@@ -1386,11 +1404,18 @@ function prodSheet(p){
     <div class="two" id="psW" ${p&&p.stock!=null?"":"hidden"}><label class="fld"><span>Stock actual</span><input id="psq" inputmode="numeric" value="${p&&p.stock!=null?p.stock:""}" placeholder="0"></label>
     <label class="fld"><span>Avisar cuando queden</span><input id="psm" inputmode="numeric" value="${p&&p.stock_min!=null?p.stock_min:""}" placeholder="3"></label></div>
     <p class="hint" id="psH" ${p&&p.stock!=null?"":"hidden"} style="margin:-4px 0 12px">Al enviar un pedido se descuenta solo; si se cancela, vuelve. Cuando llega a 0 sale <b>Agotado</b> y no se puede pedir.</p>
+    <div class="fld" style="margin:0"><span>Se prepara en ${estOn()?"":'<small style="text-transform:none;letter-spacing:0">(se usa al activar estaciones en Admin)</small>'}</span></div>
+    <div class="seg" id="pEst" style="margin-top:4px"><button type="button" data-es="cocina" class="${(p?p.estacion:"cocina")!=="bar"?"on":""}">🍳 Cocina</button><button type="button" data-es="bar" class="${p&&p.estacion==="bar"?"on":""}">🍹 Bar</button></div>
     <label class="toggle"><span>Disponible (si se agota, apágalo)</span><input type="checkbox" id="pa" ${!p||p.activo?"checked":""}></label>
     <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Guardar</button></div>
     ${p?`<div class="acts"><button class="btn bad" data-del>Eliminar producto</button></div>`:""}`,s=>{
     s.querySelector("#pp").oninput=e=>{const v=+e.target.value.replace(/\D/g,"");e.target.value=v?v.toLocaleString("es-CO"):"";};
     s.querySelector("[data-x]").onclick=closeSheet;
+    let estTocado=!!p;const setEs=v=>s.querySelectorAll("#pEst button").forEach(x=>x.classList.toggle("on",x.dataset.es===v));
+    s.querySelector("#pEst").onclick=ev=>{const b=ev.target.closest("[data-es]");if(!b)return;estTocado=true;setEs(b.dataset.es);};
+    const esBebida=c=>/bebida|licor|trago|coctel|cocktail|cerveza|vino|jugo|gaseosa|caf/i.test(c.normalize("NFD").replace(/[\u0300-\u036f]/g,""));
+    s.querySelector("#pc").addEventListener("input",ev=>{if(!estTocado)setEs(esBebida(ev.target.value)?"bar":"cocina");});
+    if(!p&&esBebida(s.querySelector("#pc").value))setEs("bar");
     const ps=s.querySelector("#ps");ps.onchange=()=>{s.querySelector("#psW").hidden=!ps.checked;s.querySelector("#psH").hidden=!ps.checked;if(ps.checked)setTimeout(()=>s.querySelector("#psq").focus(),30);};
     const pb=s.querySelector("#pb");
     if(!p){pb.onchange=()=>lookupFill(s,pb.value);}
@@ -1402,6 +1427,7 @@ function prodSheet(p){
       if(cod&&(cod.length<8||cod.length>14)){toast("El código de barras debe tener de 8 a 14 números");return;}
       const dup=cod&&st.productos.find(x=>x.codigo===cod&&(!p||x.id!==p.id));if(dup){toast("Ese código ya es de "+dup.nombre);return;}
       d.codigo=cod||null;
+      d.estacion=(s.querySelector("#pEst .on")||{dataset:{es:"cocina"}}).dataset.es;
       if(ps.checked){const q=s.querySelector("#psq").value.replace(/\D/g,""),mn=s.querySelector("#psm").value.replace(/\D/g,"");d.stock=Math.min(1000000,+q||0);d.stock_min=mn===""?null:Math.min(100000,+mn);}
       else{d.stock=null;d.stock_min=null;}
       const r=p?await sb.from("productos").update(d).eq("id",p.id):await sb.from("productos").insert({...d,empresa_id:st.empresa.id,orden:st.productos.length+1});
