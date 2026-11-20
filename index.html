@@ -307,6 +307,7 @@ html[data-theme="light"] .lcard{background:#fff;box-shadow:0 20px 50px rgba(15,2
 .mdl{margin:14px 0 0}
 body.standalone .dl-only{display:none!important}
 .dlsteps{margin:4px 0 16px;padding-left:22px;line-height:1.55;font-weight:600}.dlsteps li{margin-bottom:8px}
+.tkprev .r{display:flex;justify-content:space-between;gap:8px;padding:2px 0}.tkprev .b{font-weight:800}.tkprev .s{font-size:12px;color:var(--muted)}.tkprev .c{text-align:center}.tkprev .big{font-size:18px;font-weight:800;color:var(--gold)}.tkprev hr{border:0;border-top:1px dashed var(--line2);margin:8px 0}
 /* footer */
 .dev-footer{text-align:center;padding:20px 16px 120px;margin-top:22px;border-top:1px solid var(--line)}
 .dev-mini{display:flex;align-items:center;justify-content:center;gap:10px;text-align:left;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:700}
@@ -384,6 +385,7 @@ body.standalone .dl-only{display:none!important}
   </section>
 
   <section class="view" id="v-cuentas">
+    <div id="cajaBox" style="margin-top:12px"></div>
     <div class="kpis" id="cKpis"></div>
     <div class="sec"><h2>Cuentas abiertas</h2><span class="pill acc" id="cN">0</span></div>
     <div class="card" id="cList"></div>
@@ -395,6 +397,7 @@ body.standalone .dl-only{display:none!important}
     <div class="datebar"><button class="btn sm" id="vPrev">‹</button><input type="date" id="vDate"><button class="btn sm" id="vNext">›</button><button class="btn sm" id="vHoy">Hoy</button></div>
     <div class="kpis" id="vKpis"></div>
     <div class="sec"><h2>Por medio de pago</h2></div><div class="card" id="vPago"></div>
+    <div class="sec"><h2>Cierres de caja</h2></div><div class="card" id="vCajas"></div>
     <div class="sec"><h2>Por mesero</h2></div><div class="card" id="vMes"></div>
     <div class="sec"><h2>Lo más pedido</h2></div><div class="card" id="vTop"></div>
     <div class="acts" style="margin-top:14px"><button class="btn" id="vShare">📲 Resumen por WhatsApp</button><button class="btn" id="vCsv">⬇️ Descargar Excel</button></div>
@@ -417,7 +420,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.6 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v1.7 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -516,7 +519,7 @@ document.querySelectorAll(".wa-link").forEach(a=>a.href=WA+"?text="+encodeURICom
 const sb=(window.supabase&&CFG.SUPABASE_URL)?window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"dc_auth"},realtime:{params:{eventsPerSecond:20}}}):null;
 
 const st={user:null,perfil:null,rol:null,empresa:null,usuario:"",mesas:[],productos:[],ped:new Map(),ready:false,view:null,
-  orden:null,kSeg:"nuevo",cobros:[],pushOn:false,mine:new Set(LS.get("dc_mine",[])),alerts:new Set(),live:false,vDate:today(),personal:[],sheetFn:null,booting:false};
+  orden:null,kSeg:"nuevo",cobros:[],pushOn:false,caja:null,cajaRes:null,cajaMovs:[],mine:new Set(LS.get("dc_mine",[])),alerts:new Set(),live:false,vDate:today(),personal:[],sheetFn:null,booting:false};
 
 /* ---------- utilidades de interfaz ---------- */
 let toastT;function toast(m,ms){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),ms||2600);}
@@ -741,7 +744,7 @@ async function boot(){
     if(em.error)throw em.error;
     st.perfil=pf.data;st.rol=rol;st.empresa=em.data;
     st.usuario=rol==="dueno"?"Dueño":(LS.get("dc_usr_"+st.user.id,null)||ROL_TXT[rol]);
-    await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros()]);
+    await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros(),loadCaja()]);
     st.ready=true;
     showLogin(false);buildTabs();
     const v=LS.get("dc_view_"+rol,null);go(TABS[rol].some(t=>t[0]===v)?v:TABS[rol][0][0]);
@@ -763,6 +766,13 @@ async function loadCobros(){
   if(st.rol==="mesero"){st.cobros=[];return;}
   const r=await sb.from("cobros").select("*,cobro_pagos(*)").eq("fecha",today()).order("creado",{ascending:false}).limit(500);
   if(!r.error)st.cobros=r.data||[];
+}
+async function loadCaja(){
+  if(st.rol==="mesero"){st.caja=null;return;}
+  const r=await sb.from("cajas").select("*").eq("estado","abierta").maybeSingle();
+  if(r.error)return;st.caja=r.data||null;
+  if(st.caja){const [rs,mv]=await Promise.all([sb.rpc("resumen_caja",{p_caja:st.caja.id}),sb.from("caja_movs").select("*").eq("caja_id",st.caja.id).order("creado",{ascending:false})]);
+    st.cajaRes=rs.data||null;st.cajaMovs=mv.data||[];}else{st.cajaRes=null;st.cajaMovs=[];}
 }
 async function loadPedidos(first){
   const d=today();
@@ -786,7 +796,9 @@ async function subscribe(){
     .on("postgres_changes",{event:"*",schema:"public",table:"pedidos",filter:f},onPedidoEvt)
     .on("postgres_changes",{event:"*",schema:"public",table:"mesas",filter:f},()=>debounced("mesas",()=>loadMesas().then(render)))
     .on("postgres_changes",{event:"*",schema:"public",table:"productos",filter:f},()=>debounced("prods",()=>loadProductos().then(render)))
-    .on("postgres_changes",{event:"INSERT",schema:"public",table:"cobros",filter:f},()=>debounced("cobros",()=>loadCobros().then(render),400))
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"cobros",filter:f},()=>debounced("cobros",()=>Promise.all([loadCobros(),loadCaja()]).then(render),400))
+    .on("postgres_changes",{event:"*",schema:"public",table:"cajas",filter:f},()=>debounced("caja",()=>loadCaja().then(render),300))
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"caja_movs",filter:f},()=>debounced("caja",()=>loadCaja().then(render),300))
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"empresas",filter:"id=eq."+st.empresa.id},p=>{if(p.new){st.empresa={...st.empresa,...p.new};render();}})
     .subscribe(status=>{
       if(status==="SUBSCRIBED"){setLive(true);if(wasDown){wasDown=false;sync();}}
@@ -805,7 +817,7 @@ function applyOne(nw){const old=st.ped.get(nw.id);st.ped.set(nw.id,nw);notifyDif
 let syncing=false;
 async function sync(){if(!st.ready||syncing)return;syncing=true;try{
   if(st.rol!=="dueno"){const r=await sb.rpc("mi_rol");if(!r.error&&!r.data){teardown();await sb.auth.signOut();showLogin(true);loginPanel("empForm");loginMsg("Tu sesión terminó (PIN cambiado o usuario desactivado). Pide los datos al dueño.");return;}}
-  await Promise.all([loadPedidos(false),loadCobros()]);render();}catch(e){}finally{syncing=false;}}
+  await Promise.all([loadPedidos(false),loadCobros(),loadCaja()]);render();}catch(e){}finally{syncing=false;}}
 function startPoll(){clearInterval(pollT);pollT=setInterval(()=>{if(!document.hidden)sync();},st.live?20000:8000);}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&st.ready){sync();if(!st.live)subscribe();if(st.view==="cocina"&&wakeWanted())wake(true);}});
 window.addEventListener("online",()=>{if(st.ready){sync();subscribe();}});
@@ -1059,7 +1071,8 @@ function agrupar(ps){const g=new Map();ps.forEach(p=>(p.pedido_items||[]).forEac
 function cuentaTxt(m){const e=estadoMesa(m);const it=agrupar(e.ps);const pr=m.cuenta_propina;
   return `🧾 ${st.empresa.nombre}\n${m.nombre} · ${new Date().toLocaleDateString("es-CO",{timeZone:"America/Bogota"})}\n\n`+it.map(i=>`${i.cant}× ${i.nombre}  ${money(i.precio*i.cant)}`).join("\n")+
     `\n\nSubtotal: ${money(e.tot)}\n`+(pr===true?`Propina voluntaria 10%: ${money(propDe(e.tot))}\nTOTAL: ${money(e.tot+propDe(e.tot))}`:pr===false?`TOTAL: ${money(e.tot)}\n(Propina voluntaria no incluida)`:`TOTAL: ${money(e.tot)}\n¿Desea incluir la propina voluntaria del 10% (${money(propDe(e.tot))})?`)+`\n\n${LEY_PROP}\n\nDL COMANDA PRO`;}
-function cobrarSheet(mid){
+function cobrarSheet(mid,sinCaja){
+  if(!st.caja&&!sinCaja){abrirCajaSheet(()=>cobrarSheet(mid),()=>cobrarSheet(mid,true));return;}
   const m=st.mesas.find(x=>x.id===mid);const e=estadoMesa(m);
   const it=agrupar(e.ps),sub=e.tot;let met="efectivo",prop=0,propMode=m.cuenta_en&&m.cuenta_propina?"10":"0",desc=0;
   const pend=e.ps.filter(p=>p.estado==="nuevo"||p.estado==="preparando").length;
@@ -1160,7 +1173,7 @@ function dividirSheet(mid,base){
       if(modo==="productos")printHTML(cuentaHTML(`CUENTA · ${esc(p.persona).toUpperCase()}`,m.nombre,[{total:p.sub,pedido_items:p.items.map(x=>({...x,cant:1}))}],null,{totales:`${p.monto>p.sub?`<div class="r"><span>Propina (su parte)</span><span>${money(p.monto-p.sub)}</span></div>`:p.monto<p.sub?`<div class="r"><span>Descuento (su parte)</span><span>-${money(p.sub-p.monto)}</span></div>`:""}<div class="r big"><span>A PAGAR</span><span>${money(p.monto)}</span></div>`}));
       else printHTML(cuentaHTML(`CUENTA DIVIDIDA · PARTE ${+pr.dataset.prp+1} DE ${n}`,m.nombre,e.ps,null,{totales:`${base.prop?`<div class="r"><span>Propina voluntaria</span><span>${money(base.prop)}</span></div>`:""}${base.desc?`<div class="r"><span>Descuento</span><span>-${money(base.desc)}</span></div>`:""}<div class="r"><span>Total mesa</span><span>${money(T)}</span></div><div class="r big"><span>PARTE ${+pr.dataset.prp+1}</span><span>${money(p.monto)}</span></div>`}));
       return;}
-    if(t.closest("[data-x]")){cobrarSheet(mid);return;}
+    if(t.closest("[data-x]")){cobrarSheet(mid,true);return;}
     const ok=t.closest("[data-ok]");if(ok){
       const pagos=partes.filter(p=>p.monto>0).map(p=>({metodo:p.metodo,monto:p.monto,recibido:p.metodo==="efectivo"&&p.recibido?p.recibido:null,persona:p.persona||null}));
       if(pagos.some(p=>p.recibido!=null&&p.recibido<p.monto)){toast("Hay un pago en efectivo donde no alcanza lo recibido");return;}
@@ -1337,7 +1350,116 @@ $("#v-cocina").addEventListener("click",async e=>{
 window.addEventListener("resize",()=>{if(st.view==="cocina")render();});
 
 /* CUENTAS */
+/* ---------- CAJA: apertura, movimientos y cierre ---------- */
+const DENOM=[100000,50000,20000,10000,5000,2000,1000];
+function renderCaja(){
+  const el=$("#cajaBox");if(!el)return;
+  if(!st.caja){el.innerHTML=`<div class="card" style="padding:16px;border-color:var(--line2)"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:34px">🔒</div><div class="grow"><div class="t" style="font-weight:800;font-size:16px">Caja cerrada</div><div class="hint">Ábrela con la base de efectivo para empezar a cobrar.</div></div><button class="btn gold" data-cj="abrir">Abrir caja</button></div></div>`;return;}
+  const c=st.caja,r=st.cajaRes||{};
+  el.innerHTML=`<div class="card" style="border-color:var(--gold);box-shadow:var(--glow)">
+    <div class="row" style="background:var(--goldSoft)"><div class="grow"><div class="t">💰 Caja abierta</div><div class="sub">desde ${hora(c.abierta_en)} · por ${esc(c.abierta_por)} · ${r.cobros||0} cobro(s)</div></div><span class="pill ok">Abierta</span></div>
+    <div class="row"><div class="grow">Base inicial</div><b class="num">${money(c.base)}</b></div>
+    <div class="row"><div class="grow">💵 Ventas en efectivo</div><b class="num">${money(r.efectivo)}</b></div>
+    ${r.entradas?`<div class="row"><div class="grow">➕ Entradas</div><b class="num">${money(r.entradas)}</b></div>`:""}
+    ${r.salidas?`<div class="row"><div class="grow">➖ Salidas</div><b class="num">−${money(r.salidas)}</b></div>`:""}
+    <div class="row"><div class="grow"><div class="t">Efectivo que debe haber</div></div><b class="num" style="font-size:20px;color:var(--gold)">${money(r.esperado)}</b></div>
+    <div class="row"><div class="grow sub">💳 Tarjeta ${money(r.tarjeta)} · 📱 Transf. ${money(r.transferencia)} · Propinas ${money(r.propinas)}</div></div>
+    ${st.cajaMovs.length?`<details class="row" style="display:block"><summary class="sub" style="cursor:pointer;font-weight:800">Movimientos (${st.cajaMovs.length})</summary>${st.cajaMovs.map(m=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;font-weight:600"><span>${m.tipo==="entrada"?"➕":"➖"} ${esc(m.motivo)} <span class="sub">· ${hora(m.creado)} · ${esc(m.por)}</span></span><b class="num">${m.tipo==="salida"?"−":""}${money(m.monto)}</b></div>`).join("")}</details>`:""}
+    <div class="acts" style="padding:0 12px 12px"><button class="btn sm" data-cj="entrada">➕ Entrada</button><button class="btn sm" data-cj="salida">➖ Salida</button><button class="btn sm gold" data-cj="cerrar">🔒 Cerrar caja</button></div></div>`;
+}
+$("#cajaBox").onclick=e=>{const b=e.target.closest("[data-cj]");if(!b)return;const a=b.dataset.cj;
+  if(a==="abrir")abrirCajaSheet();else if(a==="cerrar")cerrarCajaSheet();else movCajaSheet(a);};
+function montoInput(ev){const v=+String(ev.target.value).replace(/\D/g,"");ev.target.value=v?v.toLocaleString("es-CO"):"";}
+const nmon=v=>+String(v||"").replace(/\D/g,"")||0;
+function abrirCajaSheet(despues,sinCaja){
+  const ult=LS.get("dc_base",100000);
+  openSheet(`<h3>🔓 Abrir caja</h3><p class="hint">${despues?"Para cobrar, primero abre la caja. ":""}Cuenta el efectivo con el que empiezas (la base para dar vueltas).</p>
+    <label class="fld"><span>Base inicial en efectivo</span><input id="cb" inputmode="numeric" value="${ult?ult.toLocaleString("es-CO"):""}" placeholder="$0"></label>
+    <div class="chips" style="padding-top:0">${[0,50000,100000,200000,300000].map(v=>`<button class="chip" data-b="${v}">${v?money(v):"Sin base"}</button>`).join("")}</div>
+    <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Abrir caja</button></div>
+    ${sinCaja?`<button class="btn ghost wide" data-sin style="margin-top:6px">Cobrar sin abrir caja</button>`:""}`,s=>{
+    const i=s.querySelector("#cb");i.oninput=montoInput;
+    s.querySelector(".chips").onclick=ev=>{const b=ev.target.closest("[data-b]");if(b)i.value=(+b.dataset.b)?(+b.dataset.b).toLocaleString("es-CO"):"0";};
+    s.querySelector("[data-x]").onclick=closeSheet;
+    const sn=s.querySelector("[data-sin]");if(sn)sn.onclick=sinCaja;
+    const ok=s.querySelector("[data-ok]");ok.onclick=async()=>{ok.disabled=true;try{const v=nmon(i.value);await rpc("abrir_caja",{p_base:v});LS.set("dc_base",v);await loadCaja();render();toast("🔓 Caja abierta con base "+money(v));if(despues)despues();else closeSheet();}catch(err){toast(errMsg(err));ok.disabled=false;}};
+  });
+}
+function movCajaSheet(tipo){
+  const sug=tipo==="salida"?["Compra de insumos","Pago a proveedor","Hielo","Gas","Domicilio","Adelanto de sueldo"]:["Sencillo","Base adicional","Abono de cliente"];
+  openSheet(`<h3>${tipo==="salida"?"➖ Salida de efectivo":"➕ Entrada de efectivo"}</h3><p class="hint">${tipo==="salida"?"Dinero que sale de la caja (compras, pagos).":"Dinero que entra a la caja y no es una venta."}</p>
+    <label class="fld"><span>Valor</span><input id="mvm" inputmode="numeric" placeholder="$0"></label>
+    <label class="fld"><span>Motivo</span><input id="mvt" maxlength="120" placeholder="¿Para qué?"></label>
+    <div class="chips" style="padding-top:0">${sug.map(x=>`<button class="chip" data-t="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+    <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Guardar</button></div>`,s=>{
+    s.querySelector("#mvm").oninput=montoInput;
+    s.querySelector(".chips").onclick=ev=>{const b=ev.target.closest("[data-t]");if(b)s.querySelector("#mvt").value=b.dataset.t;};
+    s.querySelector("[data-x]").onclick=closeSheet;
+    const ok=s.querySelector("[data-ok]");ok.onclick=async()=>{ok.disabled=true;try{await rpc("mov_caja",{p_tipo:tipo,p_monto:nmon(s.querySelector("#mvm").value),p_motivo:s.querySelector("#mvt").value});await loadCaja();closeSheet();render();toast(tipo==="salida"?"➖ Salida registrada":"➕ Entrada registrada");}catch(err){toast(errMsg(err));ok.disabled=false;}};
+  });
+}
+function cerrarCajaSheet(){
+  const r=st.cajaRes||{};const esp=r.esperado||0;
+  const abiertas=mesasAct().filter(m=>estadoMesa(m).tot>0);
+  const cnt={};let modo="billetes";
+  openSheet(`<h3>🔒 Cerrar caja</h3><p class="hint">Cuenta el efectivo que hay en la caja. La app lo compara con lo que debería haber.</p>
+    ${abiertas.length?`<div class="banner">⚠️ Hay ${abiertas.length} mesa(s) sin cobrar: ${abiertas.slice(0,5).map(m=>esc(m.nombre)).join(", ")}. Sus ventas no entran en este cierre.</div>`:""}
+    <div class="card" style="margin:12px 0">
+      <div class="row"><div class="grow">Base</div><b class="num">${money(r.base)}</b></div>
+      <div class="row"><div class="grow">+ Ventas en efectivo</div><b class="num">${money(r.efectivo)}</b></div>
+      ${r.entradas?`<div class="row"><div class="grow">+ Entradas</div><b class="num">${money(r.entradas)}</b></div>`:""}
+      ${r.salidas?`<div class="row"><div class="grow">− Salidas</div><b class="num">${money(r.salidas)}</b></div>`:""}
+      <div class="row"><div class="grow"><div class="t">= Debe haber</div></div><b class="num" style="font-size:20px;color:var(--gold)">${money(esp)}</b></div></div>
+    <div class="seg" id="ccModo"><button class="on" data-cm="billetes">Contar billetes</button><button data-cm="total">Escribir total</button></div>
+    <div id="ccBill"><div class="card">${DENOM.map(d=>`<div class="row"><div class="grow"><div class="t num">${money(d)}</div></div><div class="stepper"><button data-d="${d}" data-s="-1">−</button><input data-q="${d}" inputmode="numeric" value="" placeholder="0" style="width:52px;text-align:center;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-weight:800"><button data-d="${d}" data-s="1">+</button></div><span class="sub num" data-st="${d}" style="min-width:84px;text-align:right"></span></div>`).join("")}
+      <div class="row"><div class="grow"><div class="t">Monedas</div></div><input id="ccMon" inputmode="numeric" placeholder="$0" style="width:120px;text-align:right;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-weight:800"></div></div></div>
+    <label class="fld" id="ccTotW" hidden style="margin-top:4px"><span>Efectivo contado</span><input id="ccTot" inputmode="numeric" placeholder="$0"></label>
+    <div class="bigtot"><span style="font-weight:800;color:var(--muted)">Contado</span><b class="num" id="ccCont">$0</b></div>
+    <div id="ccDif" class="banner" style="margin-top:0"></div>
+    <label class="fld" style="margin-top:12px"><span>Nota (opcional)</span><input id="ccNota" maxlength="300" placeholder="Ej: faltante por billete falso"></label>
+    <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Cerrar caja</button></div>`,s=>{
+    const $s=q=>s.querySelector(q);
+    const contado=()=>modo==="total"?nmon($s("#ccTot").value):DENOM.reduce((a,d)=>a+(cnt[d]||0)*d,0)+nmon($s("#ccMon").value);
+    const upd=()=>{const c=contado(),dif=c-esp;$s("#ccCont").textContent=money(c);
+      DENOM.forEach(d=>{const el=s.querySelector(`[data-st="${d}"]`);if(el)el.textContent=cnt[d]?money(cnt[d]*d):"";});
+      const b=$s("#ccDif");b.className="banner"+(dif===0?" acc":"");b.style.cssText="margin-top:0;"+(dif<0?"background:var(--badSoft);color:var(--bad);border-color:rgba(255,92,122,.4)":dif>0?"":"background:var(--okSoft);color:var(--ok);border-color:rgba(46,242,160,.35)");
+      b.innerHTML=dif===0?"✅ La caja cuadra exacto":dif<0?`🔴 Faltan <b>&nbsp;${money(-dif)}&nbsp;</b>`:`🟡 Sobran <b>&nbsp;${money(dif)}&nbsp;</b>`;};
+    s.querySelector("#ccModo").onclick=ev=>{const b=ev.target.closest("[data-cm]");if(!b)return;modo=b.dataset.cm;s.querySelectorAll("#ccModo button").forEach(x=>x.classList.toggle("on",x===b));$s("#ccBill").hidden=modo!=="billetes";$s("#ccTotW").hidden=modo!=="total";upd();};
+    s.querySelector("#ccBill").onclick=ev=>{const b=ev.target.closest("[data-d]");if(!b)return;const d=+b.dataset.d;cnt[d]=Math.max(0,(cnt[d]||0)+ +b.dataset.s);s.querySelector(`[data-q="${d}"]`).value=cnt[d]||"";upd();};
+    s.querySelector("#ccBill").oninput=ev=>{const q=ev.target.dataset.q;if(q){ev.target.value=ev.target.value.replace(/\D/g,"").slice(0,4);cnt[q]=+ev.target.value||0;upd();}};
+    $s("#ccMon").oninput=ev=>{montoInput(ev);upd();};$s("#ccTot").oninput=ev=>{montoInput(ev);upd();};
+    $s("[data-x]").onclick=closeSheet;upd();
+    const ok=$s("[data-ok]");ok.onclick=()=>{const c=contado(),dif=c-esp;
+      const conteo=modo==="billetes"?{...Object.fromEntries(DENOM.filter(d=>cnt[d]).map(d=>[d,cnt[d]])),monedas:nmon($s("#ccMon").value)}:null,nota=$s("#ccNota").value;
+      confirmSheet("¿Cerrar la caja?",`Contado ${money(c)} · ${dif===0?"cuadra exacto":dif<0?"faltan "+money(-dif):"sobran "+money(dif)}. Después de cerrar no se puede modificar.`,"Cerrar caja",async()=>{
+        const res=await rpc("cerrar_caja",{p_contado:c,p_conteo:conteo,p_nota:nota});
+        const cr=await sb.from("cajas").select("*").eq("id",res.id).maybeSingle();
+        const caja=cr.data||{...st.caja,...res,estado:"cerrada",cerrada_en:new Date().toISOString(),cerrada_por:st.rol==="dueno"?"Dueño":st.usuario,conteo,nota};
+        const movs=st.cajaMovs;await loadCaja();render();cierreOkSheet(caja,movs);});};
+  });
+}
+function cierreHTML(c,movs){
+  const e=st.empresa,vt=(c.efectivo||0)+(c.tarjeta||0)+(c.transferencia||0),dif=c.diferencia||0;
+  return `<h1>${esc(e.nombre)}</h1><div class="c">NIT ${esc(e.nit)}</div><hr><div class="c b">CIERRE DE CAJA</div>
+    <div class="r"><span>Abrió: ${esc(c.abierta_por)}</span></div><div class="s">${fechaHora(c.abierta_en)}</div><div class="r"><span>Cerró: ${esc(c.cerrada_por||"")}</span></div><div class="s">${fechaHora(c.cerrada_en)}</div><hr>
+    <div class="r"><span>Base inicial</span><span>${money(c.base)}</span></div><div class="r"><span>+ Ventas efectivo</span><span>${money(c.efectivo)}</span></div>
+    <div class="r"><span>+ Entradas</span><span>${money(c.entradas)}</span></div><div class="r"><span>- Salidas</span><span>${money(c.salidas)}</span></div>
+    <div class="r b"><span>= Debe haber</span><span>${money(c.esperado)}</span></div><div class="r b"><span>Contado</span><span>${money(c.contado)}</span></div>
+    <div class="r big"><span>${dif===0?"CUADRA":dif<0?"FALTANTE":"SOBRANTE"}</span><span>${money(Math.abs(dif))}</span></div><hr>
+    <div class="b">Ventas del turno (${c.cobros||0} cobros)</div><div class="r"><span>Efectivo</span><span>${money(c.efectivo)}</span></div><div class="r"><span>Tarjeta</span><span>${money(c.tarjeta)}</span></div><div class="r"><span>Transferencia</span><span>${money(c.transferencia)}</span></div>
+    <div class="r b"><span>Total</span><span>${money(vt)}</span></div><div class="r s"><span>Incluye propinas</span><span>${money(c.propinas)}</span></div>${c.descuentos?`<div class="r s"><span>Descuentos dados</span><span>${money(c.descuentos)}</span></div>`:""}
+    ${(movs||[]).length?`<hr><div class="b">Movimientos</div>`+movs.map(m=>`<div class="r s"><span>${m.tipo==="entrada"?"+":"-"} ${esc(m.motivo)}</span><span>${money(m.monto)}</span></div>`).join(""):""}
+    ${c.conteo?`<hr><div class="b">Conteo</div>`+DENOM.filter(d=>c.conteo[d]).map(d=>`<div class="r s"><span>${c.conteo[d]} x ${money(d)}</span><span>${money(c.conteo[d]*d)}</span></div>`).join("")+(c.conteo.monedas?`<div class="r s"><span>Monedas</span><span>${money(c.conteo.monedas)}</span></div>`:""):""}
+    ${c.nota?`<hr><div class="s">Nota: ${esc(c.nota)}</div>`:""}<hr><div class="c s">Firma: ______________________</div><div class="c s" style="margin-top:6px">DL COMANDA PRO</div>`;
+}
+function cierreTxt(c){const dif=c.diferencia||0;
+  return `🔒 Cierre de caja · ${st.empresa.nombre}\n${fechaHora(c.abierta_en)} → ${fechaHora(c.cerrada_en)}\nCerró: ${c.cerrada_por||""}\n\nBase: ${money(c.base)}\n+ Ventas efectivo: ${money(c.efectivo)}\n+ Entradas: ${money(c.entradas)}\n− Salidas: ${money(c.salidas)}\n= Debe haber: ${money(c.esperado)}\nContado: ${money(c.contado)}\n${dif===0?"✅ Cuadra exacto":dif<0?"🔴 Faltante: "+money(-dif):"🟡 Sobrante: "+money(dif)}\n\nVentas (${c.cobros||0} cobros):\n💵 ${money(c.efectivo)} · 💳 ${money(c.tarjeta)} · 📱 ${money(c.transferencia)}\nPropinas: ${money(c.propinas)}${c.nota?"\n\nNota: "+c.nota:""}\n\nDL COMANDA PRO`;}
+function cierreOkSheet(c,movs){const dif=c.diferencia||0;
+  openSheet(`<div style="text-align:center"><div style="font-size:50px">${dif===0?"✅":dif<0?"🔴":"🟡"}</div><h3>Caja cerrada</h3><p class="hint">${dif===0?"Cuadró exacto":dif<0?"Faltante de "+money(-dif):"Sobrante de "+money(dif)} · Contado ${money(c.contado)}</p></div>
+    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir cierre</button><button class="btn" data-sh>📲 Enviar al dueño</button></div><button class="btn gold wide" data-x style="margin-top:8px">Listo</button>`,s=>{
+    s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>printHTML(cierreHTML(c,movs));s.querySelector("[data-sh]").onclick=()=>share(cierreTxt(c));});}
 function renderCuentas(){
+  renderCaja();
   const d=today();const all=[...st.ped.values()];
   const abiertasM=mesasAct().map(m=>({m,e:estadoMesa(m)})).filter(x=>x.e.k!=="libre").sort((a,b)=>(b.m.cuenta_en?1:0)-(a.m.cuenta_en?1:0)||String(a.m.cuenta_en||"").localeCompare(String(b.m.cuenta_en||"")));
   const huerf=abiertos().filter(p=>!p.mesa_id||!st.mesas.some(m=>m.id===p.mesa_id&&m.activa));
@@ -1358,9 +1480,11 @@ $("#cList").onclick=e=>{const b=e.target.closest("[data-cm]");if(b)mesaSheet(b.d
 $("#cPaid").onclick=e=>{const b=e.target.closest("[data-cb]");if(!b)return;const c=(st.cobros||[]).find(x=>x.id===b.dataset.cb);if(c)imprimirRecibo(c);};
 
 /* VENTAS (dueño) */
-let vData=null,vCob=[],vLoading=false;
+let vData=null,vCob=[],vCajas=[],vLoading=false;
 async function loadVentas(){
   $("#vDate").value=st.vDate;vLoading=true;render();
+  const d0=new Date(st.vDate+"T00:00:00-05:00"),d1=new Date(d0.getTime()+864e5);
+  sb.from("cajas").select("*").gte("abierta_en",d0.toISOString()).lt("abierta_en",d1.toISOString()).order("abierta_en").then(x=>{vCajas=x.data||[];render();});
   const [r,rc]=await Promise.all([sb.from("pedidos").select(SEL_PED).eq("fecha",st.vDate).limit(3000),sb.from("cobros").select("*,cobro_pagos(*)").eq("fecha",st.vDate).limit(2000)]);
   vLoading=false;if(r.error){toast(errMsg(r.error));return;}vData=r.data||[];vCob=rc.data||[];render();
 }
@@ -1380,11 +1504,18 @@ function renderVentas(){
     +(can.length?`<div class="row"><div class="grow"><div class="t">❌ Cancelados</div></div><span class="sub">${can.length} · ${money(can.reduce((x,p)=>x+p.total,0))}</span></div>`:"");
   const mes={};ok.forEach(p=>{const x=mes[p.mesero]||(mes[p.mesero]={n:0,t:0});x.n++;x.t+=p.total;});
   const ml=Object.entries(mes).sort((a,b)=>b[1].t-a[1].t);const mmax=ml.length?ml[0][1].t:1;
+  $("#vCajas").innerHTML=vCajas.map(c=>`<button class="row" data-vc="${c.id}"><div class="grow"><div class="t">${hora(c.abierta_en)} → ${c.cerrada_en?hora(c.cerrada_en):"abierta"}</div><div class="sub">${esc(c.abierta_por)}${c.cerrada_por?" → "+esc(c.cerrada_por):""} · base ${money(c.base)}${c.estado==="cerrada"?` · contado ${money(c.contado)}`:""}</div></div>${c.estado==="abierta"?'<span class="pill ok">Abierta</span>':c.diferencia===0?'<span class="pill ok">✅ Cuadró</span>':c.diferencia<0?`<span class="pill bad">Faltó ${money(-c.diferencia)}</span>`:`<span class="pill warn">Sobró ${money(c.diferencia)}</span>`}</button>`).join("")||'<div class="empty">No hubo cierres de caja este día</div>';
   $("#vMes").innerHTML=ml.map(([n,x])=>`<div class="row"><div class="grow"><div class="t">${esc(n)}</div><div class="sub">${x.n} pedido(s)</div><div class="meter"><i style="width:${Math.round(x.t/mmax*100)}%"></i></div></div><b class="num">${money(x.t)}</b></div>`).join("")||'<div class="empty">Sin pedidos este día</div>';
   const top=agrupar(ok).sort((a,b)=>b.cant-a.cant).slice(0,15);const tmax=top.length?top[0].cant:1;
   $("#vTop").innerHTML=top.map(i=>`<div class="row"><div class="grow"><div class="t">${esc(i.nombre)}</div><div class="meter"><i style="width:${Math.round(i.cant/tmax*100)}%"></i></div></div><b class="num">${i.cant}</b><span class="sub num" style="min-width:76px;text-align:right">${money(i.cant*i.precio)}</span></div>`).join("")||'<div class="empty">Sin productos</div>';
 }
 function shiftDay(n){const d=new Date(st.vDate+"T12:00:00");d.setDate(d.getDate()+n);st.vDate=d.toISOString().slice(0,10);loadVentas();}
+$("#vCajas").onclick=async e=>{const b=e.target.closest("[data-vc]");if(!b)return;const c=vCajas.find(x=>x.id===b.dataset.vc);if(!c)return;
+  if(c.estado==="abierta"){toast("Esa caja sigue abierta. Ciérrala desde Cuentas.");return;}
+  const mv=await sb.from("caja_movs").select("*").eq("caja_id",c.id).order("creado");
+  openSheet(`<h3>Cierre de caja</h3><p class="hint">${fechaHora(c.abierta_en)} → ${fechaHora(c.cerrada_en)}</p><div class="card tkprev" style="padding:12px;font-size:13.5px">${cierreHTML(c,mv.data||[]).replace(/<h1>[\s\S]*?<hr>/,"")}</div>
+    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir</button><button class="btn" data-sh>📲 Compartir</button></div><button class="btn ghost wide" data-x>Cerrar</button>`,s=>{
+    s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>printHTML(cierreHTML(c,mv.data||[]));s.querySelector("[data-sh]").onclick=()=>share(cierreTxt(c));});};
 $("#vPrev").onclick=()=>shiftDay(-1);$("#vNext").onclick=()=>shiftDay(1);$("#vHoy").onclick=()=>{st.vDate=today();loadVentas();};
 $("#vDate").onchange=e=>{if(e.target.value){st.vDate=e.target.value;loadVentas();}};
 $("#vShare").onclick=()=>{if(!vData)return;const ok=vData.filter(p=>p.estado!=="cancelado");const met={};vCob.forEach(c=>pagosDe(c).forEach(pg=>met[pg.metodo]=(met[pg.metodo]||0)+pg.monto));
