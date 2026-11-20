@@ -413,7 +413,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.4 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v1.5 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -753,7 +753,7 @@ async function loadProductos(){const r=await sb.from("productos").select("*").or
 const SEL_PED="*,pedido_items(id,producto_id,nombre,precio,cant,nota)";
 async function loadCobros(){
   if(st.rol==="mesero"){st.cobros=[];return;}
-  const r=await sb.from("cobros").select("*").eq("fecha",today()).order("creado",{ascending:false}).limit(500);
+  const r=await sb.from("cobros").select("*,cobro_pagos(*)").eq("fecha",today()).order("creado",{ascending:false}).limit(500);
   if(!r.error)st.cobros=r.data||[];
 }
 async function loadPedidos(first){
@@ -933,8 +933,11 @@ function cuentaHTML(titulo,mesa,ps,c){
   if(c){
     if(c.descuento)h+=`<div class="r"><span>Descuento</span><span>-${money(c.descuento)}</span></div>`;
     if(c.propina)h+=`<div class="r"><span>Propina voluntaria</span><span>${money(c.propina)}</span></div>`;
-    h+=`<div class="r big"><span>TOTAL</span><span>${money(c.total)}</span></div><hr><div class="r"><span>Pago</span><span>${(MET[c.metodo]||c.metodo).replace(/^\S+\s/,"")}</span></div>`;
-    if(c.recibido!=null)h+=`<div class="r"><span>Recibido</span><span>${money(c.recibido)}</span></div><div class="r"><span>Vueltas</span><span>${money(c.recibido-c.total)}</span></div>`;
+    h+=`<div class="r big"><span>TOTAL</span><span>${money(c.total)}</span></div><hr>`;
+    const pgs=pagosDe(c),nom=m=>(MET[m]||m).replace(/^\S+\s/,"");
+    if(pgs.length===1){h+=`<div class="r"><span>Pago</span><span>${nom(pgs[0].metodo)}</span></div>`;
+      if(pgs[0].recibido!=null)h+=`<div class="r"><span>Recibido</span><span>${money(pgs[0].recibido)}</span></div><div class="r"><span>Vueltas</span><span>${money(pgs[0].recibido-pgs[0].monto)}</span></div>`;}
+    else{h+=`<div class="b">Pagos (${pgs.length})</div>`+pgs.map(pg=>`<div class="r"><span>${pg.persona?esc(pg.persona)+" · ":""}${nom(pg.metodo)}</span><span>${money(pg.monto)}</span></div>${pg.recibido!=null?`<div class="r s"><span>&nbsp; recibido ${money(pg.recibido)}</span><span>vueltas ${money(pg.recibido-pg.monto)}</span></div>`:""}`).join("");}
     h+=`<div class="r"><span>Atendió</span><span>${esc(c.cajero)}</span></div>`;
   }else{
     h+=`<div class="r"><span>Propina sugerida 10%</span><span>${money(sub*.1)}</span></div><div class="r big"><span>TOTAL</span><span>${money(sub)}</span></div><div class="r"><span>Total con propina</span><span>${money(sub*1.1)}</span></div>`;
@@ -1019,6 +1022,7 @@ function cobrarSheet(mid){
       <label class="fld" style="margin-top:10px"><span>Descuento en pesos</span><input id="cDesc" inputmode="numeric" placeholder="$0"></label></details>
     <div class="bigtot"><span style="font-weight:800;color:var(--muted)">Total a pagar</span><b class="num" id="cTot">${money(sub)}</b></div>
     <div id="cDet" class="hint" style="margin:-4px 0 10px"></div>
+    <button class="btn wide" data-div style="margin:2px 0 12px">➗ Dividir la cuenta o pagar con varios medios</button>
     <div class="seg s3" id="cMet"><button class="on" data-m="efectivo">💵 Efectivo</button><button data-m="tarjeta">💳 Tarjeta</button><button data-m="transferencia">📱 Transf.</button></div>
     <div id="cEfW"><label class="fld"><span>Recibido en efectivo</span><input id="cEf" inputmode="numeric" placeholder="Exacto"></label>
       <div class="chips" id="cQuick" style="padding-top:0"></div><div id="cCambio" class="hint" style="font-size:15px"></div></div>
@@ -1042,6 +1046,7 @@ function cobrarSheet(mid){
     $s("#cMet").onclick=ev=>{const b=ev.target.closest("[data-m]");if(!b)return;met=b.dataset.m;s.querySelectorAll("#cMet button").forEach(x=>x.classList.toggle("on",x===b));$s("#cEfW").hidden=met!=="efectivo";upd();};
     $s("#cQuick").onclick=ev=>{const b=ev.target.closest("[data-q]");if(!b)return;$s("#cEf").value=(+b.dataset.q).toLocaleString("es-CO");upd();};
     $s("[data-x]").onclick=()=>mesaSheet(mid);
+    $s("[data-div]").onclick=()=>{upd();dividirSheet(mid,{sub,desc,prop,tot:total()});};
     upd();
     const ok=$s("[data-ok]");ok.onclick=async()=>{
       const rec=met==="efectivo"?num($s("#cEf").value)||null:null;
@@ -1053,9 +1058,75 @@ function cobrarSheet(mid){
       }catch(err){toast(errMsg(err));ok.disabled=false;}};
   });
 }
+/* ---------- dividir cuenta / pago mixto ---------- */
+function dividirSheet(mid,base){
+  const m=st.mesas.find(x=>x.id===mid);const e=estadoMesa(m);const T=base.tot;
+  const num=v=>+String(v||"").replace(/\D/g,"")||0;
+  const unidades=[];agrupar(e.ps).forEach(i=>{for(let k=0;k<i.cant&&unidades.length<80;k++)unidades.push({nombre:i.nombre,precio:i.precio});});
+  let modo="iguales",n=2,asig=unidades.map(()=>0),mix=[{metodo:"efectivo",monto:0,recibido:null},{metodo:"tarjeta",monto:0,recibido:null}];
+  let partes=[];
+  const reparto=(pesos)=>{ // reparte T según pesos (subtotales); el último absorbe el redondeo
+    const tot=pesos.reduce((a,b)=>a+b,0)||1;let acc=0;const idx=pesos.map((w,i)=>i).filter(i=>pesos[i]>0);
+    return pesos.map((w,i)=>{if(!w)return 0;if(i===idx[idx.length-1])return T-acc;const v=Math.round(w*T/tot/50)*50;acc+=v;return v;});};
+  const calcular=()=>{
+    const prev=partes;
+    if(modo==="iguales"){const b=Math.floor(T/n/100)*100;partes=Array.from({length:n},(_,i)=>({persona:`Persona ${i+1}`,monto:i<n-1?b:T-b*(n-1)}));}
+    else if(modo==="productos"){const subs=Array.from({length:n},(_,i)=>unidades.reduce((a,u,k)=>a+(asig[k]===i?u.precio:0),0));const ms=reparto(subs);
+      partes=Array.from({length:n},(_,i)=>({persona:`Persona ${i+1}`,monto:ms[i],items:unidades.filter((u,k)=>asig[k]===i),sub:subs[i]}));}
+    else partes=mix.map((x,i)=>({persona:"",monto:x.monto,metodo:x.metodo,recibido:x.recibido}));
+    partes.forEach((pt,i)=>{const o=prev[i]||{};if(modo!=="mixto"){pt.metodo=o.metodo||"efectivo";pt.recibido=o.metodo==="efectivo"||!o.metodo?o.recibido??null:null;}});
+  };
+  const metSeg=(i,mt)=>`<div class="seg s3" data-mi="${i}" style="margin:8px 0">${["efectivo","tarjeta","transferencia"].map(k=>`<button type="button" data-mt="${k}" class="${mt===k?"on":""}">${MET[k].replace("Transferencia","Transf.")}</button>`).join("")}</div>`;
+  const draw=()=>{
+    calcular();const s=$("#sheet");const suma=partes.reduce((a,p)=>a+(p.monto||0),0),falta=T-suma;
+    const sinAsignar=modo==="productos"?partes.filter(p=>p.monto>0).length<1:false;
+    s.innerHTML=`<div class="grab"></div><h3>Dividir ${esc(m.nombre)}</h3><p class="hint">Total a pagar <b>${money(T)}</b>${base.prop?` (incluye propina ${money(base.prop)})`:""}${base.desc?` · descuento ${money(base.desc)}`:""}</p>
+      <div class="seg s3" id="dModo"><button data-md="iguales" class="${modo==="iguales"?"on":""}">👥 Partes iguales</button><button data-md="productos" class="${modo==="productos"?"on":""}">🍽️ Por lo que pidió</button><button data-md="mixto" class="${modo==="mixto"?"on":""}">🔀 Varios medios</button></div>
+      ${modo!=="mixto"?`<div class="toggle"><span>¿Entre cuántas personas?</span><div class="stepper"><button data-n="-1">−</button><b class="num">${n}</b><button data-n="1">+</button></div></div>`:""}
+      ${modo==="productos"?`<p class="hint" style="margin:0 0 8px">Toca el número de la persona que pidió cada producto.</p><div class="card" style="margin-bottom:12px">${unidades.map((u,k)=>`<div class="row" style="flex-wrap:wrap;gap:6px"><div class="grow"><div class="t">${esc(u.nombre)}</div><div class="sub num">${money(u.precio)}</div></div><div class="chips" style="padding:0">${Array.from({length:n},(_,i)=>`<button class="chip ${asig[k]===i?"on":""}" data-u="${k}" data-p="${i}" style="padding:6px 11px">${i+1}</button>`).join("")}</div></div>`).join("")}</div>`:""}
+      ${partes.map((p,i)=>modo==="productos"&&!p.monto?"":`<div class="ped" style="padding-bottom:4px"><div class="ph"><b>${modo==="mixto"?`Pago ${i+1}`:esc(p.persona)}</b>${modo==="productos"?`<span class="sub" style="font-size:12px;color:var(--muted);font-weight:700">${p.items.length} producto(s)</span>`:""}
+          ${modo==="mixto"?(mix.length>1?`<button class="btn ghost sm" data-del="${i}" style="margin-left:auto">✕</button>`:""):`<b class="num" style="margin-left:auto;font-size:18px">${money(p.monto)}</b>`}${modo!=="mixto"?`<button class="btn ghost sm" data-prp="${i}" title="Imprimir su cuenta">🖨️</button>`:""}</div>
+        <div style="padding:0 12px">${modo==="mixto"?`<label class="fld" style="margin:8px 0 0"><span>Monto</span><div class="inrow"><input data-mm="${i}" inputmode="numeric" value="${p.monto?p.monto.toLocaleString("es-CO"):""}" placeholder="$0">${falta>0?`<button class="btn sm" data-fill="${i}" style="flex:none">Completar</button>`:""}</div></label>`:""}
+        ${metSeg(i,p.metodo)}
+        ${p.metodo==="efectivo"?`<label class="fld" style="margin-bottom:6px"><span>Recibido (opcional)</span><input data-rc="${i}" inputmode="numeric" value="${p.recibido?p.recibido.toLocaleString("es-CO"):""}" placeholder="Exacto"></label><div class="hint" data-vu="${i}" style="margin-bottom:8px">${p.recibido?(p.recibido>=p.monto?`Vueltas: <b style="color:var(--ok)">${money(p.recibido-p.monto)}</b>`:`Faltan: <b style="color:var(--bad)">${money(p.monto-p.recibido)}</b>`):""}</div>`:""}</div></div>`).join("")}
+      ${modo==="mixto"?`<button class="btn wide" data-add style="margin-bottom:10px">+ Agregar otro pago</button>`:""}
+      <div class="bigtot"><span style="font-weight:800;color:var(--muted)">${falta===0?"✅ Cuadra":falta>0?"Falta":"Sobra"}</span><b class="num" style="${falta?"background:none;color:var(--bad);-webkit-text-fill-color:var(--bad)":""}">${money(Math.abs(falta)||T)}</b></div>
+      <div class="acts"><button class="btn" data-x>Volver</button><button class="btn gold" data-ok ${falta||sinAsignar?"disabled":""}>Cobrar en ${partes.filter(p=>p.monto>0).length} pagos</button></div>`;
+  };
+  openSheet("",()=>{});draw();const s=$("#sheet");
+  s.onclick=async ev=>{const t=ev.target;
+    const md=t.closest("[data-md]");if(md){modo=md.dataset.md;partes=[];draw();return;}
+    const dn=t.closest("[data-n]");if(dn){n=Math.max(2,Math.min(20,n+ +dn.dataset.n));asig=asig.map(a=>Math.min(a,n-1));draw();return;}
+    const u=t.closest("[data-u]");if(u){asig[+u.dataset.u]=+u.dataset.p;draw();return;}
+    const mt=t.closest("[data-mt]");if(mt){const i=+mt.closest("[data-mi]").dataset.mi;const tgt=modo==="mixto"?mix[i]:partes[i];tgt.metodo=mt.dataset.mt;if(mt.dataset.mt!=="efectivo")tgt.recibido=null;draw();return;}
+    const ad=t.closest("[data-add]");if(ad){mix.push({metodo:"transferencia",monto:0,recibido:null});draw();return;}
+    const dl=t.closest("[data-del]");if(dl){mix.splice(+dl.dataset.del,1);draw();return;}
+    const fl=t.closest("[data-fill]");if(fl){const i=+fl.dataset.fill;const otros=mix.reduce((a,x,k)=>a+(k===i?0:x.monto),0);mix[i].monto=Math.max(0,T-otros);draw();return;}
+    const pr=t.closest("[data-prp]");if(pr){const p=partes[+pr.dataset.prp];
+      if(modo==="productos")printHTML(cuentaHTML(`CUENTA · ${esc(p.persona).toUpperCase()}`,m.nombre,[{total:p.sub,pedido_items:p.items.map(x=>({...x,cant:1}))}],null).replace(/<div class="r"><span>Propina sugerida[\s\S]*?<\/div><div class="r big"><span>TOTAL<\/span><span>[^<]*<\/span><\/div><div class="r"><span>Total con propina<\/span><span>[^<]*<\/span><\/div>/,`${p.monto>p.sub?`<div class="r"><span>Propina (su parte)</span><span>${money(p.monto-p.sub)}</span></div>`:p.monto<p.sub?`<div class="r"><span>Descuento (su parte)</span><span>-${money(p.sub-p.monto)}</span></div>`:""}<div class="r big"><span>A PAGAR</span><span>${money(p.monto)}</span></div>`));
+      else printHTML(cuentaHTML(`CUENTA DIVIDIDA · PARTE ${+pr.dataset.prp+1} DE ${n}`,m.nombre,e.ps,null).replace(/<div class="r"><span>Propina sugerida[\s\S]*?<\/div><div class="r big"><span>TOTAL<\/span><span>[^<]*<\/span><\/div><div class="r"><span>Total con propina<\/span><span>[^<]*<\/span><\/div>/,`<div class="r"><span>Total mesa</span><span>${money(T)}</span></div><div class="r big"><span>PARTE ${+pr.dataset.prp+1}</span><span>${money(p.monto)}</span></div>`));
+      return;}
+    if(t.closest("[data-x]")){cobrarSheet(mid);return;}
+    const ok=t.closest("[data-ok]");if(ok){
+      const pagos=partes.filter(p=>p.monto>0).map(p=>({metodo:p.metodo,monto:p.monto,recibido:p.metodo==="efectivo"&&p.recibido?p.recibido:null,persona:p.persona||null}));
+      if(pagos.some(p=>p.recibido!=null&&p.recibido<p.monto)){toast("Hay un pago en efectivo donde no alcanza lo recibido");return;}
+      ok.disabled=true;
+      try{const r=await rpc("cobrar_mesa",{p_mesa:mid,p_metodo:pagos[0].metodo,p_propina:base.prop,p_descuento:base.desc,p_recibido:null,p_pagos:pagos,p_dividido:modo});
+        await sync();cobroOkSheet((st.cobros||[]).find(x=>x.id===r.id)||{id:r.id,mesa:m.nombre,subtotal:r.subtotal,descuento:r.descuento,propina:r.propina,total:r.total,metodo:"mixto",cajero:st.usuario,creado:new Date().toISOString(),cobro_pagos:pagos});
+      }catch(err){toast(errMsg(err),4000);ok.disabled=false;}}
+  };
+  s.oninput=ev=>{const t=ev.target;
+    if(t.dataset.mm!=null){const v=num(t.value);t.value=v?v.toLocaleString("es-CO"):"";mix[+t.dataset.mm].monto=v;
+      const pos=t.selectionStart;const i=+t.dataset.mm;clearTimeout(s._t);s._t=setTimeout(()=>{draw();const el=s.querySelector(`[data-mm="${i}"]`);if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}},700);return;}
+    if(t.dataset.rc!=null){const v=num(t.value);t.value=v?v.toLocaleString("es-CO"):"";const i=+t.dataset.rc;
+      if(modo==="mixto")mix[i].recibido=v||null;partes[i].recibido=v||null;const p=partes[i];
+      const vu=s.querySelector(`[data-vu="${i}"]`);if(vu)vu.innerHTML=v?(v>=p.monto?`Vueltas: <b style="color:var(--ok)">${money(v-p.monto)}</b>`:`Faltan: <b style="color:var(--bad)">${money(p.monto-v)}</b>`):"";}
+  };
+}
 function cobroOkSheet(c){
-  openSheet(`<div style="text-align:center"><div style="font-size:52px">✅</div><h3>Cobrado ${money(c.total)}</h3><p class="hint">${esc(c.mesa)} quedó libre · ${MET[c.metodo]||c.metodo}</p>
-    ${c.recibido!=null?`<div class="pinbox num" style="letter-spacing:1px;font-size:34px">Vueltas ${money(c.recibido-c.total)}</div>`:""}</div>
+  openSheet(`<div style="text-align:center"><div style="font-size:52px">✅</div><h3>Cobrado ${money(c.total)}</h3><p class="hint">${esc(c.mesa)} quedó libre · ${METX[c.metodo]||c.metodo}</p>
+    ${pagosDe(c).filter(pg=>pg.recibido!=null&&pg.recibido>pg.monto).map(pg=>`<div class="pinbox num" style="letter-spacing:1px;font-size:${pagosDe(c).length>1?24:34}px">${pg.persona&&pagosDe(c).length>1?esc(pg.persona)+": ":""}Vueltas ${money(pg.recibido-pg.monto)}</div>`).join("")}
+    ${pagosDe(c).length>1?`<p class="hint" style="text-align:left">${pagosDe(c).map(pg=>`${pg.persona?esc(pg.persona)+" · ":""}${MET[pg.metodo]} <b>${money(pg.monto)}</b>`).join("<br>")}</p>`:""}</div>
     <div class="acts"><button class="btn" data-pr>🖨️ Imprimir recibo</button><button class="btn gold" data-x>Listo</button></div>`,s=>{
     s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>imprimirRecibo(c);});
 }
@@ -1224,9 +1295,11 @@ function renderCuentas(){
     +(huerf.length?`<div class="row"><div class="grow"><div class="t">Pedidos de mesas eliminadas</div><div class="sub">${huerf.length} sin cobrar · ${money(huerf.reduce((s,p)=>s+p.total,0))}</div></div></div>`:"")
     ||'<div class="empty">No hay cuentas abiertas</div>';
   $("#cpN").textContent=cob.length;
-  $("#cPaid").innerHTML=cob.slice(0,80).map(c=>`<button class="row" data-cb="${c.id}"><div class="grow"><div class="t">${esc(c.mesa)}</div><div class="sub">${hora(c.creado)} · ${MET[c.metodo]||c.metodo} · ${esc(c.cajero)}${c.propina?` · propina ${money(c.propina)}`:""}${c.descuento?` · desc. ${money(c.descuento)}`:""}</div></div><b class="num">${money(c.total)}</b><span>🖨️</span></button>`).join("")||'<div class="empty">Aún no hay cobros hoy</div>';
+  $("#cPaid").innerHTML=cob.slice(0,80).map(c=>`<button class="row" data-cb="${c.id}"><div class="grow"><div class="t">${esc(c.mesa)}</div><div class="sub">${hora(c.creado)} · ${METX[c.metodo]||c.metodo}${pagosDe(c).length>1?` (${pagosDe(c).length} pagos)`:""} · ${esc(c.cajero)}${c.propina?` · propina ${money(c.propina)}`:""}${c.descuento?` · desc. ${money(c.descuento)}`:""}</div></div><b class="num">${money(c.total)}</b><span>🖨️</span></button>`).join("")||'<div class="empty">Aún no hay cobros hoy</div>';
 }
 const MET={efectivo:"💵 Efectivo",tarjeta:"💳 Tarjeta",transferencia:"📱 Transferencia"};
+const METX={...MET,mixto:"🔀 Varios medios"};
+const pagosDe=c=>(c.cobro_pagos&&c.cobro_pagos.length)?c.cobro_pagos:[{metodo:c.metodo,monto:c.total,recibido:c.recibido}];
 $("#cList").onclick=e=>{const b=e.target.closest("[data-cm]");if(b)mesaSheet(b.dataset.cm);};
 $("#cPaid").onclick=e=>{const b=e.target.closest("[data-cb]");if(!b)return;const c=(st.cobros||[]).find(x=>x.id===b.dataset.cb);if(c)imprimirRecibo(c);};
 
@@ -1234,7 +1307,7 @@ $("#cPaid").onclick=e=>{const b=e.target.closest("[data-cb]");if(!b)return;const
 let vData=null,vCob=[],vLoading=false;
 async function loadVentas(){
   $("#vDate").value=st.vDate;vLoading=true;render();
-  const [r,rc]=await Promise.all([sb.from("pedidos").select(SEL_PED).eq("fecha",st.vDate).limit(3000),sb.from("cobros").select("*").eq("fecha",st.vDate).limit(2000)]);
+  const [r,rc]=await Promise.all([sb.from("pedidos").select(SEL_PED).eq("fecha",st.vDate).limit(3000),sb.from("cobros").select("*,cobro_pagos(*)").eq("fecha",st.vDate).limit(2000)]);
   vLoading=false;if(r.error){toast(errMsg(r.error));return;}vData=r.data||[];vCob=rc.data||[];render();
 }
 function renderVentas(){
@@ -1245,7 +1318,7 @@ function renderVentas(){
   const tiempos=ok.filter(p=>p.listo_en).map(p=>(new Date(p.listo_en)-new Date(p.creado))/60000);
   const prom=tiempos.length?Math.round(tiempos.reduce((a2,b2)=>a2+b2,0)/tiempos.length):0;
   $("#vKpis").innerHTML=`<div class="kpi hl"><span>Ventas cobradas</span><b class="num">${money(venta)}</b></div><div class="kpi"><span>Propinas</span><b class="num">${money(prop)}</b></div><div class="kpi"><span>Pedidos · ticket prom.</span><b class="num">${ok.length} · ${money(vCob.length?venta/vCob.length:0)}</b></div><div class="kpi"><span>Tiempo cocina prom.</span><b class="num">${tiempos.length?prom+" min":"—"}</b></div>`;
-  const met={};vCob.forEach(c=>met[c.metodo]=(met[c.metodo]||0)+c.total);
+  const met={};vCob.forEach(c=>pagosDe(c).forEach(pg=>met[pg.metodo]=(met[pg.metodo]||0)+pg.monto));
   $("#vPago").innerHTML=Object.keys(MET).map(k=>`<div class="row"><div class="grow"><div class="t">${MET[k]}</div><div class="meter"><i style="width:${caja?Math.round((met[k]||0)/caja*100):0}%"></i></div></div><b class="num">${money(met[k]||0)}</b></div>`).join("")
     +`<div class="row"><div class="grow"><div class="t">Total en caja</div><div class="sub">incluye propinas</div></div><b class="num">${money(caja)}</b></div>`
     +(desc?`<div class="row"><div class="grow"><div class="t">🏷️ Descuentos</div></div><span class="sub">−${money(desc)}</span></div>`:"")
@@ -1260,7 +1333,7 @@ function renderVentas(){
 function shiftDay(n){const d=new Date(st.vDate+"T12:00:00");d.setDate(d.getDate()+n);st.vDate=d.toISOString().slice(0,10);loadVentas();}
 $("#vPrev").onclick=()=>shiftDay(-1);$("#vNext").onclick=()=>shiftDay(1);$("#vHoy").onclick=()=>{st.vDate=today();loadVentas();};
 $("#vDate").onchange=e=>{if(e.target.value){st.vDate=e.target.value;loadVentas();}};
-$("#vShare").onclick=()=>{if(!vData)return;const ok=vData.filter(p=>p.estado!=="cancelado");const met={};vCob.forEach(c=>met[c.metodo]=(met[c.metodo]||0)+c.total);
+$("#vShare").onclick=()=>{if(!vData)return;const ok=vData.filter(p=>p.estado!=="cancelado");const met={};vCob.forEach(c=>pagosDe(c).forEach(pg=>met[pg.metodo]=(met[pg.metodo]||0)+pg.monto));
   const top=agrupar(ok).sort((a2,b2)=>b2.cant-a2.cant).slice(0,5);
   share(`📊 ${st.empresa.nombre} · ${st.vDate}\n\nVentas: ${money(vCob.reduce((x,c)=>x+c.subtotal-c.descuento,0))}\nPropinas: ${money(vCob.reduce((x,c)=>x+c.propina,0))}\nPedidos: ${ok.length}\n`+Object.keys(MET).map(k=>`${MET[k]}: ${money(met[k]||0)}`).join("\n")+`\n\nTop:\n`+top.map(i=>`• ${i.cant}× ${i.nombre}`).join("\n")+`\n\nDL COMANDA PRO`);};
 $("#vCsv").onclick=()=>{
@@ -1270,6 +1343,8 @@ $("#vCsv").onclick=()=>{
   vData.forEach(p=>(p.pedido_items||[]).forEach(i=>L.push([hora(p.creado),p.numero,p.mesa,p.mesero,i.nombre,i.cant,i.precio,i.precio*i.cant,i.nota||"",p.estado,p.pagado?"Sí":"No",p.metodo||""])));
   L.push([],["COBROS"],["Hora","Mesa","Subtotal","Descuento","Propina","Total","Medio de pago","Recibido","Atendió","Pedidos"]);
   vCob.slice().reverse().forEach(c=>L.push([hora(c.creado),c.mesa,c.subtotal,c.descuento,c.propina,c.total,c.metodo,c.recibido==null?"":c.recibido,c.cajero,c.pedidos]));
+  L.push([],["PAGOS"],["Hora","Mesa","Persona","Medio de pago","Monto","Recibido"]);
+  vCob.slice().reverse().forEach(c=>pagosDe(c).forEach(pg=>L.push([hora(c.creado),c.mesa,pg.persona||"",pg.metodo,pg.monto,pg.recibido==null?"":pg.recibido])));
   const csv="\ufeff"+L.map(r=>r.map(q).join(";")).join("\r\n");
   const a2=document.createElement("a");a2.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a2.download=`ventas-${st.vDate}.csv`;document.body.appendChild(a2);a2.click();setTimeout(()=>{URL.revokeObjectURL(a2.href);a2.remove();},2000);
   toast("⬇️ Archivo descargado. Ábrelo con Excel o Google Sheets");

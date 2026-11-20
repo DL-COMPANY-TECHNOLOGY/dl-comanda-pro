@@ -1,5 +1,5 @@
 // DL COMANDA PRO · service worker (instalar la app, abrirla rápido y mostrar avisos)
-const CACHE = "comanda-pro-v1.4";
+const CACHE = "comanda-pro-v1.5";
 const SHELL = ["./", "index.html", "legal.html", "config.js", "manifest.json", "logo.svg", "dl-company.png",
   "icon-192.png", "icon-512.png", "icon-maskable-192.png", "icon-maskable-512.png", "apple-touch-icon.png"];
 
