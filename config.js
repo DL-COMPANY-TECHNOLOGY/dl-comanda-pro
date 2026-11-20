@@ -5,7 +5,8 @@ window.APP_CONFIG = {
   SUPABASE_ANON_KEY: "sb_publishable_r0uZjerEFfWNXmS31rk8Og_96zh-Ub7",
   WHATSAPP: "573218641539",
   // Precios de los planes (pesos colombianos por mes). Cambia aquí y se actualiza en toda la app.
-  PRECIOS: { pro: 39900, premium: 69900 },
+  PRECIOS: { pro: 30000, premium: 50000 },
+  LANZAMIENTO: true,   // precio de lanzamiento -50% (muestra el doble tachado). Pon false para quitarlo
   // Clave pública para avisos push (la privada solo vive en el servidor)
   VAPID_PUBLIC: "BFYDQ43E8KWjY3hvlpJdAwyLHjMVmC0okVBQZ55EuBSbxxb2RmiH1Y4A1iiscm61bKSwze6eLGnqwJW425cXo_E"
 };

@@ -133,6 +133,10 @@ html[data-theme="light"] .mesa{background:linear-gradient(160deg,#fff,#fbf8ee)}
 .propbtns{display:grid;gap:10px;margin:14px 0 8px}.propbtns .btn{padding:16px;font-size:16px}
 .mesa::before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:transparent}
 .mesa.cocina::before{background:var(--warn)}.mesa.listo::before{background:var(--goldGrad)}.mesa.ocupada::before{background:var(--grad)}
+.mesa.cobrar{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}.mesa.cobrar::before{background:var(--bad)}
+.mesa.cobrar.flash{animation:rojo 1s ease-in-out infinite}
+@keyframes rojo{0%,100%{box-shadow:0 0 0 1px var(--bad),0 0 10px rgba(255,92,122,.25)}50%{box-shadow:0 0 0 3px var(--bad),0 0 40px rgba(255,92,122,.75);background:var(--badSoft)}}
+.mx.rojo,.cobrarTag{color:var(--bad)!important;font-weight:800}
 @keyframes glowp{50%{box-shadow:0 0 0 2px var(--gold),0 0 36px rgba(212,175,55,.55)}}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;font-weight:700;color:var(--muted);margin-top:12px}
 .legend span{display:flex;align-items:center;gap:5px}.legend i{width:8px;height:8px;border-radius:9px;display:inline-block}
@@ -314,10 +318,16 @@ body.standalone .dl-only{display:none!important}
 .plan.top{border:2px solid var(--gold);box-shadow:var(--glow)}
 .plan .pn{font:700 20px "Space Grotesk",Manrope,sans-serif}.plan .pp{font:700 26px "Space Grotesk",Manrope,sans-serif;margin:4px 0}.plan .pp small{font-size:13px;color:var(--muted);font-weight:700}
 .plan ul{list-style:none;padding:0;margin:10px 0;font-size:13.5px;font-weight:600}.plan li{padding:4px 0;display:flex;gap:8px}.plan li.no{color:var(--muted);text-decoration:line-through;opacity:.7}
+.plan .pp s{font-size:15px;color:var(--muted);font-weight:700;margin-right:6px;text-decoration-thickness:2px;text-decoration-color:var(--bad)}
+.plan .off{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:900;color:#fff;background:var(--bad);padding:2px 8px;border-radius:99px;vertical-align:middle}
+.lanz{margin:6px 0 12px;padding:12px 14px;border-radius:16px;text-align:center;background:var(--goldGrad);color:#1a1300;box-shadow:0 0 24px rgba(212,175,55,.4)}
+.lanz b{display:block;font-size:17px;font-weight:900;letter-spacing:.3px}.lanz span{font-size:13px;font-weight:700}
 .plan .tag{position:absolute;top:-11px;right:14px;background:var(--goldGrad);color:#1b1404;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
 .plan .cur{position:absolute;top:-11px;left:14px;background:var(--ok);color:#03140c;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
 .mesa.lock,.prod.lock{opacity:.45;filter:grayscale(.6)}
 .lockb{font-size:11px;font-weight:800;color:var(--gold)}
+.ptag{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;letter-spacing:.2px;padding:2px 7px;border-radius:999px;color:#1a1300;background:var(--goldGrad);white-space:nowrap;vertical-align:middle;box-shadow:0 0 10px rgba(212,175,55,.35)}
+.mesa .ptag,.prod .ptag{position:absolute;top:7px;right:7px;font-size:9.5px;padding:1px 6px}
 /* footer */
 .dev-footer{text-align:center;padding:20px 16px 120px;margin-top:22px;border-top:1px solid var(--line)}
 .dev-mini{display:flex;align-items:center;justify-content:center;gap:10px;text-align:left;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:700}
@@ -340,6 +350,39 @@ body.standalone .dl-only{display:none!important}
 .scanov .sc-top button{background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px}
 .scanov #reader{flex:1;width:100%}
 .scanov .sc-hint{color:#ddd;text-align:center;font-size:13px;padding:12px 16px 22px}
+/* ---------- guía interactiva ---------- */
+.tour{position:fixed;inset:0;z-index:60;display:none}
+.tour.on{display:block}
+.tblock{position:absolute;inset:0;background:transparent}
+.tspot{position:fixed;border-radius:16px;border:2px solid var(--gold);box-shadow:0 0 0 9999px rgba(2,4,10,.76),0 0 26px rgba(212,175,55,.6);transition:all .28s ease;pointer-events:none}
+.tspot.none{left:50%!important;top:45%!important;width:0!important;height:0!important;border:0;box-shadow:0 0 0 9999px rgba(2,4,10,.8)}
+.tspot::after{content:"";position:absolute;inset:-7px;border-radius:20px;border:2px solid var(--gold);opacity:0;animation:tpulse 1.6s ease-out infinite}
+.tspot.none::after{display:none}
+@keyframes tpulse{0%{opacity:.7;transform:scale(.97)}100%{opacity:0;transform:scale(1.08)}}
+.ttip{position:fixed;width:min(350px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;background:linear-gradient(180deg,#141b30,#0a1020);border:1px solid rgba(212,175,55,.55);border-radius:18px;padding:15px 16px 13px;color:#eef2fb;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 30px rgba(212,175,55,.2);transition:top .28s ease,left .28s ease}
+.ttip .tstep{font:800 11px/1 ui-monospace,monospace;letter-spacing:.12em;color:#e8c766;text-transform:uppercase;margin:0 0 7px}
+.ttip h4{margin:0 0 6px;font-size:17px;font-weight:800;line-height:1.25;padding-right:36px}
+.ttip.center h4{padding:0}
+.ttip p{margin:0;color:#aab4c8;font-size:14px;line-height:1.45;font-weight:600}
+.ttip p b{color:#fff}
+.ttip ul{margin:8px 0 0;padding:0 0 0 2px;list-style:none;text-align:left;color:#cfd6e4;font-size:13.5px;line-height:1.45;font-weight:600}
+.ttip ul li{margin:3px 0}
+.ttip .tprice{display:inline-block;margin:2px 0 6px;font-size:22px;font-weight:900;color:#e8c766}
+.ttip .tlock{display:block;margin-top:8px;color:#ffb547;font-size:12.5px;font-weight:800}
+.ttip .tacts{display:flex;align-items:center;gap:8px;margin-top:13px}
+.ttip .tacts .tskip{background:none;border:0;color:#8a94a6;font-weight:700;font-size:13px;padding:8px 4px;cursor:pointer;margin-right:auto}
+.ttip .tacts button.tb{border:1px solid rgba(212,175,55,.45);background:transparent;color:#eef2fb;font-weight:800;font-size:14px;padding:9px 14px;border-radius:12px;cursor:pointer}
+.ttip .tacts button.tn{background:var(--goldGrad);border:0;color:#1a1300}
+.ttip .tdots{display:flex;gap:4px;margin-top:11px;justify-content:center;flex-wrap:wrap}
+.ttip .tdots i{width:6px;height:6px;border-radius:9px;background:rgba(255,255,255,.18)}
+.ttip .tdots i.on{width:16px;background:#d4af37}
+.ttip.center{left:50%!important;top:50%!important;transform:translate(-50%,-50%);text-align:center}
+.ttip.center .tacts{justify-content:center}.ttip.center .tacts .tskip{margin-right:0}
+.ttip .tbig{font-size:40px;line-height:1;margin:2px 0 8px}
+.ttip .tvoz{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:11px;border:1px solid rgba(212,175,55,.45);background:transparent;color:#fff;font-size:16px;cursor:pointer;display:grid;place-items:center}
+.ttip .tvoz.hab{border-color:#d4af37;box-shadow:0 0 12px rgba(212,175,55,.5);animation:tvz 1.2s ease-in-out infinite}
+@keyframes tvz{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.ttip .tbar{height:3px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:10px;overflow:hidden}.ttip .tbar i{display:block;height:100%;width:0;background:var(--goldGrad)}
 </style>
 </head>
 <body class="locked">
@@ -360,7 +403,7 @@ body.standalone .dl-only{display:none!important}
   <section class="view" id="v-mesas">
     <div id="mBanner"></div>
     <div class="mgrid" id="mGrid"></div>
-    <div class="legend"><span><i style="background:var(--muted);opacity:.5"></i>Libre</span><span><i style="background:var(--warn)"></i>En cocina</span><span><i style="background:var(--gold)"></i>Listo para recoger</span><span><i style="background:var(--acc)"></i>Cuenta abierta</span><span><i style="background:var(--acc2)"></i>Pidió la cuenta</span></div>
+    <div class="legend"><span><i style="background:var(--muted);opacity:.5"></i>Libre</span><span><i style="background:var(--warn)"></i>En cocina</span><span><i style="background:var(--gold)"></i>Listo para recoger</span><span><i style="background:var(--acc)"></i>Cuenta abierta</span><span><i style="background:var(--acc2)"></i>Pidió la cuenta</span><span><i style="background:var(--bad)"></i>Sin cobrar +15 min</span></div>
   </section>
 
   <section class="view" id="v-orden">
@@ -431,7 +474,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.8 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v1.9 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -441,6 +484,7 @@ body.standalone .dl-only{display:none!important}
 </div>
 
 <nav class="tabs" id="tabs"></nav>
+<div class="tour" id="tour"><div class="tblock"></div><div class="tspot"></div><div class="ttip" role="dialog" aria-live="polite"></div></div>
 
 <div class="login on" id="login">
   <button class="hbtn themebtn ltheme" type="button" aria-label="Modo día / noche">
@@ -762,6 +806,7 @@ async function boot(){
     const v=LS.get("dc_view_"+rol,null);go(TABS[rol].some(t=>t[0]===v)?v:TABS[rol][0][0]);
     subscribe();startPoll();ensurePush();
     if(st.rol!=="mesero")wake(wakeWanted()&&st.view==="cocina");
+    clearTimeout(tourT);tourT=setTimeout(maybeTour,1200);
   }catch(e){console.error(e);toast("No se pudo cargar: "+errMsg(e),4000);showLogin(true);}
   finally{st.booting=false;}
 }
@@ -786,10 +831,25 @@ const PL=()=>st.plan||PLAN_FULL;
 const feat=k=>PL().limites[k]===true;
 const lim=k=>PL().limites[k]==null?null:+PL().limites[k];
 const PLAN_TXT={gratis:"Gratis",pro:"Pro",premium:"Premium"};
-const PRECIOS=CFG.PRECIOS||{pro:39900,premium:69900};
+const PRECIOS=CFG.PRECIOS||{pro:30000,premium:50000};
+const LANZ=CFG.LANZAMIENTO!==false; // precio de lanzamiento: -50% (se muestra el doble tachado)
 const FEAT_PLAN={push:"pro",imprimir:"pro",dividir:"pro",caja:"pro",excel:"pro",mover:"pro",estaciones:"premium",stock:"premium"};
 const FEAT_TXT={push:"Avisos con la app cerrada o el celular bloqueado",imprimir:"Imprimir comandas, cuentas y recibos",dividir:"Dividir la cuenta y pagar con varios medios",caja:"Caja con apertura, salidas y cierre con arqueo",excel:"Descargar las ventas en Excel",mover:"Cambiar y juntar mesas",estaciones:"Estaciones cocina y bar separadas",stock:"Control de stock y lector de código de barras",historial:"Ver ventas de días anteriores"};
-function quiere(k){if(feat(k))return true;planSheet(`${FEAT_TXT[k]||"Esta función"} es del plan ${PLAN_TXT[FEAT_PLAN[k]||"pro"]}.`,FEAT_PLAN[k]);return false;}
+/* prueba Premium de 7 días: marca lo que no trae el plan Gratis */
+/* bono: quien compra Pro recibe 7 días de Premium. Se marca lo que no trae su plan base */
+const BASE_LIM={gratis:{mesas:5,productos:20,usuarios:2,pedidos_dia:15},pro:{mesas:8,productos:80,usuarios:4,pedidos_dia:50}};
+const NIVEL={gratis:0,pro:1,premium:2};
+const planBase=()=>{const P=PL();return P.plan!=="premium"?null:P.prueba?"gratis":P.bono?"pro":null;};
+const diasPrueba=()=>{const P=PL(),v=P.prueba?P.vence:P.bono?P.bono_vence:null;return v?Math.max(0,Math.ceil((new Date(v+"T23:59:59-05:00")-Date.now())/864e5)):0;};
+const enPrueba=()=>!!(planBase()&&diasPrueba()>0);
+const GRATIS=new Proxy({},{get:(o,k)=>(BASE_LIM[planBase()]||{})[k]});
+const diasTxt=d=>d===1?"1 día":d+" días";
+function premTag(k,corto){if(!enPrueba()||(k&&(!FEAT_PLAN[k]||NIVEL[FEAT_PLAN[k]]<=NIVEL[planBase()])))return "";return `<span class="ptag" title="Incluido en tu prueba Premium: ${diasTxt(diasPrueba())}">⭐ Premium${corto?"":" · "+diasTxt(diasPrueba())}</span>`;}
+const fueraGratis=(lista,id,k)=>enPrueba()&&GRATIS[k]!=null&&!rango(lista,id,GRATIS[k]);
+const pruebaNom=()=>PL().bono?"bono de bienvenida Premium":"prueba Premium";
+function avisoPrueba(k){const key="dc_av_"+k+"_"+today();if(LS.get(key,0))return;LS.set(key,1);
+  const d=diasPrueba();toast(`⭐ ${FEAT_TXT[k]||"Esta función"} es del plan ${PLAN_TXT[FEAT_PLAN[k]||"pro"]}. La tienes gratis por tu ${pruebaNom()}: te ${d===1?"queda":"quedan"} ${diasTxt(d)}.`,5000);}
+function quiere(k){if(feat(k)){if(enPrueba()&&FEAT_PLAN[k]&&NIVEL[FEAT_PLAN[k]]>NIVEL[planBase()])avisoPrueba(k);return true;}planSheet(`${FEAT_TXT[k]||"Esta función"} es del plan ${PLAN_TXT[FEAT_PLAN[k]||"pro"]}.`,FEAT_PLAN[k]);return false;}
 function rango(lista,id,l){if(l==null)return true;const i=lista.findIndex(x=>x.id===id);return i>-1&&i<l;}
 const mesaOK=id=>rango(st.mesas.filter(m=>m.activa),id,lim("mesas"));
 const prodOK=id=>rango(st.productos.filter(p=>p.activo),id,lim("productos"));
@@ -798,13 +858,14 @@ function planSheet(motivo,recom){
   const cur=PL().plan;
   const L=(ok,t)=>`<li class="${ok?"":"no"}">${ok?"✅":"✖️"} ${t}</li>`;
   const card=(k,precio,items,extra)=>`<div class="plan ${k==="premium"?"top":""}">${k==="premium"?'<span class="tag">⭐ TODO INCLUIDO</span>':""}${cur===k?'<span class="cur">Tu plan</span>':""}
-    <div class="pn">${PLAN_TXT[k]}</div><div class="pp">${precio?money(precio)+'<small> /mes</small>':"$0"}</div><ul>${items}</ul>
+    <div class="pn">${PLAN_TXT[k]}</div><div class="pp">${precio?(LANZ?`<s>${money(precio*2)}</s>`:"")+money(precio)+'<small> /mes</small>'+(LANZ?'<span class="off">-50%</span>':""):"$0"}</div><ul>${items}</ul>
     ${k!=="gratis"&&cur!==k&&st.rol==="dueno"?`<a class="btn ${k==="premium"?"gold":"pri"} wide" style="display:block;text-align:center;text-decoration:none" href="${waPlan(k)}" target="_blank" rel="noopener">Quiero el plan ${PLAN_TXT[k]}</a>`:""}${extra||""}</div>`;
   openSheet(`<h3>${motivo?"🔒 "+esc(motivo):"Planes DL COMANDA PRO"}</h3>
-    <p class="hint">${st.rol==="dueno"?"Escoge el plan que mejor le sirva a tu restaurante. Lo activamos por WhatsApp en minutos.":"Pídele al dueño del restaurante que active un plan."}${PL().prueba&&PL().vence?` Estás en la <b>prueba Premium</b> hasta el ${new Date(PL().vence+"T12:00:00").toLocaleDateString("es-CO")}.`:""}</p>
+    <p class="hint">${st.rol==="dueno"?"Escoge el plan que mejor le sirva a tu restaurante. Lo activamos por WhatsApp en minutos.":"Pídele al dueño del restaurante que active un plan."}${enPrueba()?` Estás en tu <b>${pruebaNom()}</b>: te ${diasPrueba()===1?"queda":"quedan"} ${diasTxt(diasPrueba())}.`:""}</p>
+    ${LANZ?`<div class="lanz"><b>🚀 LANZAMIENTO · 50% OFF</b><span>Por el estreno de DL COMANDA PRO, todos los planes a mitad de precio.</span></div>`:""}
     <div class="planes">
-      ${card("gratis",0,L(1,"Mesero → cocina en vivo")+L(1,"5 mesas · 20 productos")+L(1,"2 usuarios (1 mesero + 1 cocina)")+L(1,"25 pedidos al día")+L(1,"Propina preguntada y cobro simple")+L(1,"Ventas solo de hoy")+L(0,"Avisos con la app cerrada")+L(0,"Imprimir comandas y cuentas")+L(0,"Dividir cuenta · Caja y cierre")+L(0,"Excel · cambiar mesas"))}
-      ${card("pro",PRECIOS.pro,L(1,"Todo lo del plan Gratis")+L(1,"20 mesas · 150 productos")+L(1,"8 usuarios")+L(1,"Pedidos ilimitados")+L(1,"🔔 Avisos con la app cerrada")+L(1,"🖨️ Imprimir comandas, cuentas y recibos")+L(1,"➗ Dividir cuenta y pago mixto")+L(1,"💰 Caja con cierre y arqueo")+L(1,"Excel · cambiar y juntar mesas · 90 días de historial")+L(0,"Estaciones cocina / bar")+L(0,"Stock y código de barras"))}
+      ${card("gratis",0,L(1,"🎁 <b>3 días de Premium gratis</b> al registrarte")+L(1,"Mesero → cocina en vivo")+L(1,"5 mesas · 20 productos")+L(1,"2 usuarios (1 mesero + 1 cocina)")+L(1,"15 pedidos al día")+L(1,"Propina preguntada y cobro simple")+L(1,"Ventas solo de hoy")+L(0,"Avisos con la app cerrada")+L(0,"Imprimir comandas y cuentas")+L(0,"Dividir cuenta · Caja y cierre")+L(0,"Excel · cambiar mesas"))}
+      ${card("pro",PRECIOS.pro,L(1,"🎁 <b>7 días de Premium gratis</b> al activarlo")+L(1,"Todo lo del plan Gratis")+L(1,"8 mesas · 80 productos")+L(1,"4 usuarios")+L(1,"50 pedidos al día")+L(1,"🔔 Avisos con la app cerrada")+L(1,"🖨️ Imprimir comandas, cuentas y recibos")+L(1,"➗ Dividir cuenta y pago mixto")+L(1,"💰 Caja con conteo de billetes y cierre")+L(1,"Excel · cambiar y juntar mesas · 90 días de historial")+L(0,"Estaciones cocina / bar")+L(0,"Stock y código de barras"))}
       ${card("premium",PRECIOS.premium,L(1,"<b>Toda la app al 100%</b>")+L(1,"Mesas, productos y usuarios ilimitados")+L(1,"🍳🍹 Estaciones cocina y bar")+L(1,"📦 Stock y lector de código de barras")+L(1,"Historial ilimitado")+L(1,"Todo lo del plan Pro")+L(1,"⭐ Soporte prioritario por WhatsApp y sugerencias de mejora"))}
     </div>
     <p class="hint" style="text-align:center">Pago anual: <b>2 meses gratis</b>. Precios en pesos colombianos.</p>
@@ -815,9 +876,9 @@ function planCard(){
   const bar=(t,n,l)=>`<div class="row"><div class="grow"><div class="t" style="font-size:14px">${t}</div><div class="meter"><i style="width:${l?Math.min(100,Math.round(n/l*100)):12}%;${l&&n>=l?"background:var(--bad)":""}"></i></div></div><span class="sub num">${n||0}${l?" / "+l:" · ilimitado"}</span></div>`;
   const dias=P.vence?Math.ceil((new Date(P.vence+"T23:59:59-05:00")-Date.now())/864e5):null;
   return `<div class="card" style="border-color:var(--gold);margin-bottom:4px">
-    <div class="row" style="background:var(--goldSoft)"><div class="grow"><div class="t">${P.plan==="premium"?"⭐":P.plan==="pro"?"🚀":"🆓"} Plan ${PLAN_TXT[P.plan]}${P.prueba&&P.plan==="premium"?" · prueba":""}</div>
-      <div class="sub">${P.plan==="gratis"?"Funciones limitadas":dias!=null?(P.prueba?`Te quedan ${dias} día(s) de prueba`:`Vence el ${new Date(P.vence+"T12:00:00").toLocaleDateString("es-CO")} (${dias} días)`):"Sin vencimiento"}</div></div>
-      <button class="btn sm ${P.plan==="premium"&&!P.prueba?"":"gold"}" id="aPlanes">${P.plan==="premium"&&!P.prueba?"Ver planes":"Mejorar plan"}</button></div>
+    <div class="row" style="background:var(--goldSoft)"><div class="grow"><div class="t">${P.plan==="premium"?"⭐":P.plan==="pro"?"🚀":"🆓"} Plan ${P.bono?"Pro + bono Premium":PLAN_TXT[P.plan]}${P.prueba&&P.plan==="premium"?" · prueba":""}</div>
+      <div class="sub">${P.plan==="gratis"?"Funciones limitadas":dias!=null?(P.prueba?`Te ${diasPrueba()===1?"queda":"quedan"} ${diasTxt(diasPrueba())} de prueba`:`${P.bono?`🎁 Premium gratis ${diasTxt(diasPrueba())} más · Pro vence el`:"Vence el"} ${new Date(P.vence+"T12:00:00").toLocaleDateString("es-CO")} (${dias} días)`):"Sin vencimiento"}</div></div>
+      <button class="btn sm ${P.plan==="premium"&&!P.prueba&&!P.bono?"":"gold"}" id="aPlanes">${P.plan==="premium"&&!P.prueba&&!P.bono?"Ver planes":"Mejorar plan"}</button></div>
     ${bar("Mesas",u.mesas,L2.mesas)}${bar("Productos",u.productos,L2.productos)}${bar("Usuarios",u.usuarios,L2.usuarios)}${L2.pedidos_dia?bar("Pedidos hoy",u.pedidos_hoy,L2.pedidos_dia):""}</div>`;
 }
 async function loadCaja(){
@@ -875,7 +936,7 @@ function startPoll(){clearInterval(pollT);pollT=setInterval(()=>{if(!document.hi
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&st.ready){sync();if(!st.live)subscribe();if(st.view==="cocina"&&wakeWanted())wake(true);}});
 window.addEventListener("online",()=>{if(st.ready){sync();subscribe();}});
 window.addEventListener("offline",()=>setLive(false));
-setInterval(()=>{if(st.ready&&!document.hidden&&(st.view==="cocina"||st.view==="mesas"||st.view==="listos"))render();},30000);
+setInterval(()=>{if(!st.ready||document.hidden)return;avisoCobro();if(st.view==="cocina"||st.view==="mesas"||st.view==="listos"||st.view==="cuentas")render();},30000);
 
 function esMio(p){if(st.rol==="mesero")return p.mesero_id&&p.mesero_id===st.perfil.personal_id;return st.mine.has(p.id);}
 function notifyDiff(old,nw){
@@ -918,6 +979,15 @@ function estadoMesa(m){
   if(ps.some(p=>p.estado==="nuevo"||p.estado==="preparando")){const n=ps.filter(p=>p.estado==="nuevo"||p.estado==="preparando");return {k:"cocina",txt:n.length+" en cocina",ps,tot,desde:Math.min(...n.map(p=>new Date(p.creado).getTime()))};}
   return {k:"ocupada",txt:"Cuenta abierta",ps,tot};
 }
+/* recordatorio de cobro: mesa con todo entregado y sin pagar. Cada 15 min alumbra en rojo */
+const COBRAR_MIN=15;
+function sinCobrar(m,e){e=e||estadoMesa(m);if(e.k!=="ocupada"&&e.k!=="cuenta")return null;
+  const t=Math.max(...e.ps.map(p=>new Date(p.actualizado||p.creado).getTime()));const n=mins(t);
+  return n>=COBRAR_MIN?{min:n,flash:(n%COBRAR_MIN)<2,marca:Math.floor(n/COBRAR_MIN)}:null;}
+function avisoCobro(){if(st.rol==="cocina"&&!st.empresa)return;const vis=st.avisoCobro||(st.avisoCobro={});
+  mesasAct().forEach(m=>{const r=sinCobrar(m);if(!r){delete vis[m.id];return;}
+    if(vis[m.id]===undefined){vis[m.id]=r.marca;return;}
+    if(r.marca>vis[m.id]){vis[m.id]=r.marca;toast(`⏰ ${m.nombre} lleva ${durTxt(r.min)} sin cobrar`);vib([200,100,200]);}});}
 const EST={nuevo:["🔔 Nuevo","bad"],preparando:["🔥 Preparando","warn"],listo:["✅ Listo","gold"],entregado:["🍽️ Entregado","acc"],cancelado:["❌ Cancelado",""]};
 
 /* ---------- navegación ---------- */
@@ -994,6 +1064,46 @@ function printHTML(html){
   d.close();
   setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print();}catch(e){toast("No se pudo abrir la impresión");}setTimeout(()=>f.remove(),60000);},350);
 }
+/* ticket como imagen (igual al impreso) para enviar por WhatsApp */
+function ticketCanvas(html){
+  const box=document.createElement("div");box.innerHTML=String(html).replace(/<br\s*\/?>/gi," ").replace(/<\/div>(?=\S)/g,"</div> ");
+  const W=384,PAD=18,SC=2,FF='"Courier New",Courier,monospace';
+  const cv=document.createElement("canvas"),x=cv.getContext("2d");
+  const items=[];
+  const walk=el=>{[...el.childNodes].forEach(n=>{
+    if(n.nodeType===3){const t=n.textContent.replace(/\s+/g," ").trim();if(t)items.push({t,cls:""});return;}
+    if(n.nodeType!==1)return;const c=n.classList,tag=n.tagName;
+    if(tag==="HR"){items.push({hr:1});return;}
+    if(tag==="BR")return;
+    const st={c:c.contains("c")||tag==="H1",b:c.contains("b")||c.contains("big")||c.contains("xl")||tag==="H1"||tag==="B",
+      sz:tag==="H1"?20:c.contains("xl")?24:c.contains("big")?19:c.contains("s")?11.5:14,it:c.contains("n")};
+    if(c.contains("r")){const sp=[...n.children];items.push({...st,l:(sp[0]?sp[0].textContent:"").replace(/\s+/g," ").trim(),r:sp.length>1?sp[sp.length-1].textContent.replace(/\s+/g," ").trim():""});return;}
+    if([...n.children].some(k=>/^(DIV|H1|HR)$/.test(k.tagName))){walk(n);return;}
+    items.push({...st,t:n.textContent.replace(/\s+/g," ").trim()});});};
+  walk(box);
+  const font=it=>`${it.it?"italic ":""}${it.b?"700 ":"400 "}${it.sz||14}px ${FF}`;
+  const wrap=(t,maxW)=>{const ws=t.split(" "),out=[];let ln="";ws.forEach(w=>{const tr=ln?ln+" "+w:w;if(x.measureText(tr).width>maxW&&ln){out.push(ln);ln=w;}else ln=tr;});if(ln)out.push(ln);return out.length?out:[""];};
+  const plan=()=>{let y=PAD;const ops=[];
+    items.forEach(it=>{if(it.hr){ops.push({hr:1,y:y+6});y+=13;return;}
+      x.font=font(it);const lh=Math.round((it.sz||14)*1.38);
+      if(it.l!=null){const rw=it.r?x.measureText(it.r).width:0;const ls=wrap(it.l,W-PAD*2-rw-10);
+        ls.forEach((t,k)=>{ops.push({t,f:font(it),y:y+lh*0.78,al:"l"});if(k===0&&it.r)ops.push({t:it.r,f:font(it),y:y+lh*0.78,al:"r"});y+=lh;});return;}
+      if(!it.t)return;wrap(it.t,W-PAD*2-(it.it?16:0)).forEach(t=>{ops.push({t,f:font(it),y:y+lh*0.78,al:it.c?"c":"l",ind:it.it?16:0});y+=lh;});});
+    return {ops,h:y+PAD};};
+  const {ops,h}=plan();cv.width=W*SC;cv.height=Math.ceil(h)*SC;x.scale(SC,SC);
+  x.fillStyle="#fff";x.fillRect(0,0,W,h);x.fillStyle="#000";x.strokeStyle="#000";
+  ops.forEach(o=>{if(o.hr){x.setLineDash([4,3]);x.lineWidth=1;x.beginPath();x.moveTo(PAD,o.y+.5);x.lineTo(W-PAD,o.y+.5);x.stroke();x.setLineDash([]);return;}
+    x.font=o.f;x.textAlign=o.al==="r"?"right":o.al==="c"?"center":"left";x.fillText(o.t,o.al==="r"?W-PAD:o.al==="c"?W/2:PAD+(o.ind||0),o.y);});
+  return cv;
+}
+async function enviarTicket(html,txt,nombre){
+  try{const cv=ticketCanvas(html);const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    const file=new File([blob],(nombre||"ticket").replace(/[^\w-]+/g,"_")+".png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:nombre||"Ticket"});}catch(e){}return;}
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
+    toast("Imagen del ticket descargada: adjúntala en WhatsApp",4000);
+  }catch(e){share(txt);}
+}
 const fechaHora=t=>new Date(t||Date.now()).toLocaleString("es-CO",{timeZone:"America/Bogota",day:"2-digit",month:"2-digit",year:"numeric",hour:"numeric",minute:"2-digit"});
 function imprimirComanda(p){
   printHTML(`<h1>${p.estacion==="bar"&&estOn()?"BAR":"COMANDA"} #${p.numero}</h1><div class="c xl">${esc(p.mesa)}</div><div class="c">${esc(p.mesero)} · ${hora(p.creado)}</div><hr>`+
@@ -1027,17 +1137,19 @@ function cuentaHTML(titulo,mesa,ps,c,opt){
   }
   return h+`<hr><div class="c s">${LEY_PROP}<br>Este documento no es factura electrónica.</div><div class="c" style="margin-top:6px">¡Gracias por su visita!</div><div class="c s">DL COMANDA PRO</div>`;
 }
-async function imprimirRecibo(c){
+async function reciboHTML(c){
   let ps=[...st.ped.values()].filter(p=>p.cobro_id===c.id);
   if(!ps.length){const r=await sb.from("pedidos").select(SEL_PED).eq("cobro_id",c.id);ps=r.data||[];}
-  printHTML(cuentaHTML("RECIBO DE PAGO",c.mesa,ps,c));
+  return cuentaHTML("RECIBO DE PAGO",c.mesa,ps,c);
 }
+async function imprimirRecibo(c){printHTML(await reciboHTML(c));}
+async function enviarRecibo(c){enviarTicket(await reciboHTML(c),`🧾 ${st.empresa.nombre}\n${c.mesa} · Pagado ${money(c.total)}`,"Recibo "+c.mesa);}
 
 /* MESAS */
 function renderMesas(){
   notifBanner($("#mBanner"));
   if(st.rol==="dueno"){const P=PL();const dias=P.vence?Math.ceil((new Date(P.vence+"T23:59:59-05:00")-Date.now())/864e5):null;
-    const msg=P.plan==="gratis"?`🆓 Plan Gratis: ${P.uso&&P.uso.pedidos_hoy||0} de ${lim("pedidos_dia")} pedidos hoy.`:P.prueba&&dias!=null&&dias<=5?`⭐ Tu prueba Premium termina en ${dias} día(s).`:"";
+    const msg=P.plan==="gratis"?`🆓 Plan Gratis: ${P.uso&&P.uso.pedidos_hoy||0} de ${lim("pedidos_dia")} pedidos hoy.`:P.plan==="pro"&&lim("pedidos_dia")&&(P.uso&&P.uso.pedidos_hoy||0)>=lim("pedidos_dia")-10?`🚀 Plan Pro: ${P.uso.pedidos_hoy} de ${lim("pedidos_dia")} pedidos hoy.`:enPrueba()?(PL().bono?`⭐ <span><b>Bono de bienvenida:</b> tienes Premium gratis ${diasTxt(diasPrueba())} más. Luego sigues con tu plan Pro y lo marcado con ⭐ se bloquea.</span>`:`⭐ <span><b>Prueba Premium gratis:</b> te ${diasPrueba()===1?"queda":"quedan"} ${diasTxt(diasPrueba())}. Lo marcado con ⭐ se bloquea al terminar si no activas un plan.</span>`):"";
     if(msg)$("#mBanner").insertAdjacentHTML("beforeend",`<div class="banner" style="margin-top:8px">${msg}<button class="btn sm gold" data-plan>Ver planes</button></div>`);
     const bp=$("#mBanner [data-plan]");if(bp)bp.onclick=()=>planSheet();}
   const ms=mesasAct();
@@ -1045,7 +1157,8 @@ function renderMesas(){
   $("#mGrid").innerHTML=ms.map(m=>{const e=estadoMesa(m);
     let x="";if(e.k==="cocina")x="hace "+durTxt(mins(e.desde));else if(e.k==="cuenta")x=(m.cuenta_propina?"✅ Con propina":"Sin propina")+" · hace "+durTxt(mins(m.cuenta_en));else if(e.k!=="libre")x=e.ps.length+(e.ps.length>1?" pedidos":" pedido");
     if(e.k==="libre"&&!mesaOK(m.id))return `<button class="mesa libre lock" data-m="${m.id}"><span class="mn">${esc(m.nombre)}</span><span class="ms">🔒 Fuera del plan</span><span class="mt" style="font-size:12.5px;color:var(--gold)">Mejorar plan ›</span></button>`;
-    return `<button class="mesa ${e.k}" data-m="${m.id}"><span class="mn">${esc(m.nombre)}</span><span class="ms">${e.txt}</span>${x?`<span class="mx">${x}</span>`:""}<span class="mt num">${e.k==="libre"?'<span style="color:var(--muted);font-size:13px">+ Tomar pedido</span>':money(e.k==="cuenta"&&m.cuenta_propina?e.tot+propDe(e.tot):e.tot)}</span></button>`;}).join("");
+    const sc=sinCobrar(m,e);if(sc)x=`⏰ ${durTxt(sc.min)} sin cobrar`;
+    return `<button class="mesa ${e.k}${sc?" cobrar"+(sc.flash?" flash":""):""}" data-m="${m.id}">${fueraGratis(mesasAct(),m.id,"mesas")?premTag(null,1):""}<span class="mn">${esc(m.nombre)}</span><span class="ms">${e.txt}</span>${x?`<span class="mx${sc?" rojo":""}">${x}</span>`:""}<span class="mt num">${e.k==="libre"?'<span style="color:var(--muted);font-size:13px">+ Tomar pedido</span>':money(e.k==="cuenta"&&m.cuenta_propina?e.tot+propDe(e.tot):e.tot)}</span></button>`;}).join("");
 }
 $("#mGrid").onclick=e=>{const b=e.target.closest("[data-m]");if(!b)return;const m=st.mesas.find(x=>x.id===b.dataset.m);if(!m)return;
   const e2=estadoMesa(m);if(e2.k==="libre"&&!mesaOK(m.id)){planSheet(`Tu plan ${PLAN_TXT[PL().plan]} permite ${lim("mesas")} mesas.`,"pro");return;}if(e2.k==="libre")abrirOrden(m.id);else mesaSheet(m.id);};
@@ -1070,9 +1183,9 @@ function mesaSheet(mid){
       ${m.cuenta_en&&e.tot?`<div class="banner" style="background:rgba(168,85,247,.12);color:var(--acc2);border-color:rgba(168,85,247,.4)">🧾 ${esc(m.cuenta_por||"")} pidió la cuenta · ${m.cuenta_propina?`el cliente <b>&nbsp;acepta&nbsp;</b> la propina (${money(propDe(e.tot))}) → ${money(e.tot+propDe(e.tot))}`:"el cliente <b>&nbsp;no desea&nbsp;</b> propina"}<button class="btn sm" data-pc>Cambiar</button></div>`:""}
       <div class="acts"><button class="btn gold" data-new>+ Nuevo pedido</button>${e.tot&&!m.cuenta_en?`<button class="btn pri" data-pc>🧾 Pedir la cuenta</button>`:""}${puedeCobrar&&e.tot&&m.cuenta_en?`<button class="btn pri" data-cob>Cobrar</button>`:""}</div>
       ${puedeCobrar&&e.tot&&!m.cuenta_en?`<div class="acts"><button class="btn sm" data-cob>Cobrar directo</button></div>`:""}
-      ${e.tot?`<div class="acts"><button class="btn sm" data-pr>🖨️ Imprimir cuenta</button><button class="btn sm" data-sh>📲 Compartir</button><button class="btn sm" data-mv>↔️ Cambiar mesa</button></div>`:""}`;
+      ${e.tot?`<div class="acts"><button class="btn sm" data-pr>🖨️ Imprimir cuenta ${premTag("imprimir")}</button><button class="btn sm" data-sh>📲 Enviar por WhatsApp</button><button class="btn sm" data-mv>↔️ Cambiar mesa ${premTag("mover")}</button></div>`:""}`;
     s.querySelector("[data-new]").onclick=()=>{closeSheet();abrirOrden(mid);};
-    const sh=s.querySelector("[data-sh]");if(sh)sh.onclick=()=>share(cuentaTxt(m));
+    const sh=s.querySelector("[data-sh]");if(sh)sh.onclick=()=>enviarTicket(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_en?m.cuenta_propina:null}),cuentaTxt(m),"Cuenta "+m.nombre);
     const pr=s.querySelector("[data-pr]");if(pr)pr.onclick=()=>printHTML(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_en?m.cuenta_propina:null}));
     s.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>pedirCuentaSheet(mid));
     s.querySelectorAll("[data-cob]").forEach(b=>b.onclick=()=>cobrarSheet(mid));
@@ -1106,12 +1219,12 @@ function cuentaListaSheet(mid){
   const m=st.mesas.find(x=>x.id===mid);const e=estadoMesa(m);const tot=e.tot+(m.cuenta_propina?propDe(e.tot):0);
   openSheet(`<div style="text-align:center"><div style="font-size:48px">🧾</div><h3>Cuenta pedida · ${money(tot)}</h3>
     <p class="hint">${m.cuenta_propina?"Con propina voluntaria del 10% ("+money(propDe(e.tot))+")":"Sin propina"} · Caja ya fue avisada.</p></div>
-    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir cuenta</button><button class="btn" data-sh>📲 Compartir</button></div>
+    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir cuenta</button><button class="btn" data-sh>📲 Enviar por WhatsApp</button></div>
     ${st.rol!=="mesero"?`<button class="btn pri wide" data-cob style="margin-top:8px">Cobrar ahora</button>`:""}
     <button class="btn gold wide" data-x style="margin-top:8px">Listo</button>`,s=>{
     s.querySelector("[data-x]").onclick=closeSheet;
     s.querySelector("[data-pr]").onclick=()=>printHTML(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_propina}));
-    s.querySelector("[data-sh]").onclick=()=>share(cuentaTxt(m));
+    s.querySelector("[data-sh]").onclick=()=>enviarTicket(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_propina}),cuentaTxt(m),"Cuenta "+m.nombre);
     const cb=s.querySelector("[data-cob]");if(cb)cb.onclick=()=>cobrarSheet(mid);
   });
 }
@@ -1149,7 +1262,7 @@ function cobrarSheet(mid,sinCaja){
       <label class="fld" style="margin-top:10px"><span>Descuento en pesos</span><input id="cDesc" inputmode="numeric" placeholder="$0"></label></details>
     <div class="bigtot"><span style="font-weight:800;color:var(--muted)">Total a pagar</span><b class="num" id="cTot">${money(sub)}</b></div>
     <div id="cDet" class="hint" style="margin:-4px 0 10px"></div>
-    <button class="btn wide" data-div style="margin:2px 0 12px">➗ Dividir la cuenta o pagar con varios medios</button>
+    <button class="btn wide" data-div style="margin:2px 0 12px">➗ Dividir la cuenta o pagar con varios medios ${premTag("dividir")}</button>
     <div class="seg s3" id="cMet"><button class="on" data-m="efectivo">💵 Efectivo</button><button data-m="tarjeta">💳 Tarjeta</button><button data-m="transferencia">📱 Transf.</button></div>
     <div id="cEfW"><label class="fld"><span>Recibido en efectivo</span><input id="cEf" inputmode="numeric" placeholder="Exacto"></label>
       <div class="chips" id="cQuick" style="padding-top:0"></div><div id="cCambio" class="hint" style="font-size:15px"></div></div>
@@ -1191,7 +1304,7 @@ function dividirSheet(mid,base){
   const num=v=>+String(v||"").replace(/\D/g,"")||0;
   const unidades=[];agrupar(e.ps).forEach(i=>{for(let k=0;k<i.cant&&unidades.length<80;k++)unidades.push({nombre:i.nombre,precio:i.precio});});
   let modo="iguales",n=2,asig=unidades.map(()=>0),mix=[{metodo:"efectivo",monto:0,recibido:null},{metodo:"tarjeta",monto:0,recibido:null}];
-  let partes=[];
+  let partes=[],fijo={}; // fijo: montos escritos a mano por persona; el resto se reparte entre los demás
   const reparto=(pesos)=>{ // reparte T según pesos (subtotales); el último absorbe el redondeo
     const tot=pesos.reduce((a,b)=>a+b,0)||1;let acc=0;const idx=pesos.map((w,i)=>i).filter(i=>pesos[i]>0);
     return pesos.map((w,i)=>{if(!w)return 0;if(i===idx[idx.length-1])return T-acc;const v=Math.round(w*T/tot/50)*50;acc+=v;return v;});};
@@ -1201,6 +1314,12 @@ function dividirSheet(mid,base){
     else if(modo==="productos"){const subs=Array.from({length:n},(_,i)=>unidades.reduce((a,u,k)=>a+(asig[k]===i?u.precio:0),0));const ms=reparto(subs);
       partes=Array.from({length:n},(_,i)=>({persona:`Persona ${i+1}`,monto:ms[i],items:unidades.filter((u,k)=>asig[k]===i),sub:subs[i]}));}
     else partes=mix.map((x,i)=>({persona:"",monto:x.monto,metodo:x.metodo,recibido:x.recibido}));
+    if(modo!=="mixto"&&Object.keys(fijo).length){
+      Object.keys(fijo).forEach(k=>{if(+k>=partes.length)delete fijo[k];});
+      const F=Object.keys(fijo).reduce((a,k)=>a+fijo[k],0),libres=partes.map((p,i)=>i).filter(i=>fijo[i]==null&&(modo==="iguales"||partes[i].monto>0));
+      partes.forEach((pt,i)=>{if(fijo[i]!=null){pt.monto=fijo[i];pt.fijo=true;}});
+      const resto=Math.max(0,T-F),w=libres.map(i=>modo==="iguales"?1:partes[i].monto),wt=w.reduce((a,b)=>a+b,0)||1,red=modo==="iguales"?100:50;let acc=0;
+      libres.forEach((i,j)=>{const v=j===libres.length-1?resto-acc:Math.floor(w[j]*resto/wt/red)*red;partes[i].monto=Math.max(0,v);acc+=Math.max(0,v);});}
     partes.forEach((pt,i)=>{const o=prev[i]||{};if(modo!=="mixto"){pt.metodo=o.metodo||"efectivo";pt.recibido=o.metodo==="efectivo"||!o.metodo?o.recibido??null:null;}});
   };
   const metSeg=(i,mt)=>`<div class="seg s3" data-mi="${i}" style="margin:8px 0">${["efectivo","tarjeta","transferencia"].map(k=>`<button type="button" data-mt="${k}" class="${mt===k?"on":""}">${MET[k].replace("Transferencia","Transf.")}</button>`).join("")}</div>`;
@@ -1210,9 +1329,10 @@ function dividirSheet(mid,base){
     s.innerHTML=`<div class="grab"></div><h3>Dividir ${esc(m.nombre)}</h3><p class="hint">Total a pagar <b>${money(T)}</b>${base.prop?` (incluye propina ${money(base.prop)})`:""}${base.desc?` · descuento ${money(base.desc)}`:""}</p>
       <div class="seg s3" id="dModo"><button data-md="iguales" class="${modo==="iguales"?"on":""}">👥 Partes iguales</button><button data-md="productos" class="${modo==="productos"?"on":""}">🍽️ Por lo que pidió</button><button data-md="mixto" class="${modo==="mixto"?"on":""}">🔀 Varios medios</button></div>
       ${modo!=="mixto"?`<div class="toggle"><span>¿Entre cuántas personas?</span><div class="stepper"><button data-n="-1">−</button><b class="num">${n}</b><button data-n="1">+</button></div></div>`:""}
+      ${modo!=="mixto"?`<p class="hint" style="margin:0 0 8px">✏️ Puedes cambiar lo que paga cada persona: escribe su valor y el resto se reparte solo entre los demás.</p>`:""}
       ${modo==="productos"?`<p class="hint" style="margin:0 0 8px">Toca el número de la persona que pidió cada producto.</p><div class="card" style="margin-bottom:12px">${unidades.map((u,k)=>`<div class="row" style="flex-wrap:wrap;gap:6px"><div class="grow"><div class="t">${esc(u.nombre)}</div><div class="sub num">${money(u.precio)}</div></div><div class="chips" style="padding:0">${Array.from({length:n},(_,i)=>`<button class="chip ${asig[k]===i?"on":""}" data-u="${k}" data-p="${i}" style="padding:6px 11px">${i+1}</button>`).join("")}</div></div>`).join("")}</div>`:""}
       ${partes.map((p,i)=>modo==="productos"&&!p.monto?"":`<div class="ped" style="padding-bottom:4px"><div class="ph"><b>${modo==="mixto"?`Pago ${i+1}`:esc(p.persona)}</b>${modo==="productos"?`<span class="sub" style="font-size:12px;color:var(--muted);font-weight:700">${p.items.length} producto(s)</span>`:""}
-          ${modo==="mixto"?(mix.length>1?`<button class="btn ghost sm" data-del="${i}" style="margin-left:auto">✕</button>`:""):`<b class="num" style="margin-left:auto;font-size:18px">${money(p.monto)}</b>`}${modo!=="mixto"?`<button class="btn ghost sm" data-prp="${i}" title="Imprimir su cuenta">🖨️</button>`:""}</div>
+          ${modo==="mixto"?(mix.length>1?`<button class="btn ghost sm" data-del="${i}" style="margin-left:auto">✕</button>`:""):`<span style="margin-left:auto;display:flex;align-items:center;gap:4px">${p.fijo?`<button class="btn ghost sm" data-auto="${i}" title="Volver al valor automático" style="padding:6px 8px">↺</button>`:""}<input data-pm="${i}" inputmode="numeric" value="${p.monto?p.monto.toLocaleString("es-CO"):"0"}" aria-label="Valor que paga" style="width:118px;text-align:right;padding:8px 10px;border-radius:10px;border:1px solid ${p.fijo?"var(--gold)":"var(--line)"};background:var(--field);color:var(--ink);font-weight:800;font-size:17px"></span>`}${modo!=="mixto"?`<button class="btn ghost sm" data-prp="${i}" title="Imprimir su cuenta">🖨️</button>`:""}</div>
         <div style="padding:0 12px">${modo==="mixto"?`<label class="fld" style="margin:8px 0 0"><span>Monto</span><div class="inrow"><input data-mm="${i}" inputmode="numeric" value="${p.monto?p.monto.toLocaleString("es-CO"):""}" placeholder="$0">${falta>0?`<button class="btn sm" data-fill="${i}" style="flex:none">Completar</button>`:""}</div></label>`:""}
         ${metSeg(i,p.metodo)}
         ${p.metodo==="efectivo"?`<label class="fld" style="margin-bottom:6px"><span>Recibido (opcional)</span><input data-rc="${i}" inputmode="numeric" value="${p.recibido?p.recibido.toLocaleString("es-CO"):""}" placeholder="Exacto"></label><div class="hint" data-vu="${i}" style="margin-bottom:8px">${p.recibido?(p.recibido>=p.monto?`Vueltas: <b style="color:var(--ok)">${money(p.recibido-p.monto)}</b>`:`Faltan: <b style="color:var(--bad)">${money(p.monto-p.recibido)}</b>`):""}</div>`:""}</div></div>`).join("")}
@@ -1222,7 +1342,8 @@ function dividirSheet(mid,base){
   };
   openSheet("",()=>{});draw();const s=$("#sheet");
   s.onclick=async ev=>{const t=ev.target;
-    const md=t.closest("[data-md]");if(md){modo=md.dataset.md;partes=[];draw();return;}
+    const md=t.closest("[data-md]");if(md){modo=md.dataset.md;partes=[];fijo={};draw();return;}
+    const au=t.closest("[data-auto]");if(au){delete fijo[+au.dataset.auto];draw();return;}
     const dn=t.closest("[data-n]");if(dn){n=Math.max(2,Math.min(20,n+ +dn.dataset.n));asig=asig.map(a=>Math.min(a,n-1));draw();return;}
     const u=t.closest("[data-u]");if(u){asig[+u.dataset.u]=+u.dataset.p;draw();return;}
     const mt=t.closest("[data-mt]");if(mt){const i=+mt.closest("[data-mi]").dataset.mi;const tgt=modo==="mixto"?mix[i]:partes[i];tgt.metodo=mt.dataset.mt;if(mt.dataset.mt!=="efectivo")tgt.recibido=null;draw();return;}
@@ -1243,6 +1364,9 @@ function dividirSheet(mid,base){
       }catch(err){toast(errMsg(err),4000);ok.disabled=false;}}
   };
   s.oninput=ev=>{const t=ev.target;
+    if(t.dataset.pm!=null){const v=num(t.value);t.value=v?v.toLocaleString("es-CO"):"";const i=+t.dataset.pm;
+      if(t.value==="")return;fijo[i]=Math.min(v,T);if(Object.keys(fijo).length>=partes.length)Object.keys(fijo).forEach(k=>{if(+k!==i&&Object.keys(fijo).length>=partes.length)delete fijo[k];});
+      clearTimeout(s._t);s._t=setTimeout(()=>{draw();const el=s.querySelector(`[data-pm="${i}"]`);if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}},700);return;}
     if(t.dataset.mm!=null){const v=num(t.value);t.value=v?v.toLocaleString("es-CO"):"";mix[+t.dataset.mm].monto=v;
       const pos=t.selectionStart;const i=+t.dataset.mm;clearTimeout(s._t);s._t=setTimeout(()=>{draw();const el=s.querySelector(`[data-mm="${i}"]`);if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}},700);return;}
     if(t.dataset.rc!=null){const v=num(t.value);t.value=v?v.toLocaleString("es-CO"):"";const i=+t.dataset.rc;
@@ -1254,8 +1378,8 @@ function cobroOkSheet(c){
   openSheet(`<div style="text-align:center"><div style="font-size:52px">✅</div><h3>Cobrado ${money(c.total)}</h3><p class="hint">${esc(c.mesa)} quedó libre · ${METX[c.metodo]||c.metodo}</p>
     ${pagosDe(c).filter(pg=>pg.recibido!=null&&pg.recibido>pg.monto).map(pg=>`<div class="pinbox num" style="letter-spacing:1px;font-size:${pagosDe(c).length>1?24:34}px">${pg.persona&&pagosDe(c).length>1?esc(pg.persona)+": ":""}Vueltas ${money(pg.recibido-pg.monto)}</div>`).join("")}
     ${pagosDe(c).length>1?`<p class="hint" style="text-align:left">${pagosDe(c).map(pg=>`${pg.persona?esc(pg.persona)+" · ":""}${MET[pg.metodo]} <b>${money(pg.monto)}</b>`).join("<br>")}</p>`:""}</div>
-    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir recibo</button><button class="btn gold" data-x>Listo</button></div>`,s=>{
-    s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>imprimirRecibo(c);});
+    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir recibo</button><button class="btn" data-sh>📲 Enviar por WhatsApp</button></div><button class="btn gold wide" data-x style="margin-top:8px">Listo</button>`,s=>{
+    s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>imprimirRecibo(c);s.querySelector("[data-sh]").onclick=()=>enviarRecibo(c);});
 }
 
 /* TOMA DE PEDIDO */
@@ -1285,7 +1409,7 @@ function renderOrden(){
   $("#oGrid").innerHTML=list.length?list.map(p=>{const n=qtyOf(p.id),left=stockLeft(p),out=left!==null&&left<=0&&!n;
     const stk=p.stock==null?"":(p.stock<=0?'<span class="stk">Agotado</span>':(p.stock<=stockMin(p)?`<span class="stk">Quedan ${p.stock}</span>`:""));
     if(!prodOK(p.id))return `<button class="prod lock" data-lock="1"><span class="n">${esc(p.nombre)}</span><span class="lockb">🔒 Fuera del plan</span><span class="p num">${money(p.precio)}</span></button>`;
-    return `<button class="prod ${n?"sel":""} ${out?"out":""}" data-p="${p.id}">${n?`<span class="q">${n}</span>`:""}<span class="n">${esc(p.nombre)}</span>${stk}<span class="p num">${money(p.precio)}</span></button>`;}).join("")
+    return `<button class="prod ${n?"sel":""} ${out?"out":""}" data-p="${p.id}">${fueraGratis(st.productos.filter(x=>x.activo),p.id,"productos")?premTag(null,1):""}${n?`<span class="q">${n}</span>`:""}<span class="n">${esc(p.nombre)}</span>${stk}<span class="p num">${money(p.precio)}</span></button>`;}).join("")
     :`<div class="empty" style="grid-column:1/-1">${ps.length?"Nada coincide con la búsqueda":"El menú está vacío."+(st.rol==="dueno"?" Agrega productos en Admin.":"")}</div>`;
 }
 $("#oCats").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;oCat=b.dataset.c;renderOrden();};
@@ -1413,7 +1537,37 @@ window.addEventListener("resize",()=>{if(st.view==="cocina")render();});
 
 /* CUENTAS */
 /* ---------- CAJA: apertura, movimientos y cierre ---------- */
-const DENOM=[100000,50000,20000,10000,5000,2000,1000];
+const DENOM=[100000,50000,20000,10000,5000,2000,1000],MONEDAS=[1000,500,200,100,50];
+/* contador de billetes y monedas (apertura y cierre). Claves: "100000" billetes, "m500" monedas */
+function conteoHTML(pre){
+  const fila=(k,v,ico)=>`<div class="row" style="padding:8px 12px"><div class="grow"><div class="t num" style="font-size:15px">${ico} ${money(v)}</div></div><div class="stepper"><button data-ck="${k}" data-s="-1">−</button><input data-cq="${k}" inputmode="numeric" placeholder="0" style="width:50px;text-align:center;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-weight:800"><button data-ck="${k}" data-s="1">+</button></div><span class="sub num" data-cs="${k}" style="min-width:82px;text-align:right"></span></div>`;
+  return `<div id="${pre}Cnt"><div class="card" style="margin-bottom:10px"><div class="row" style="background:var(--goldSoft);padding:9px 12px"><div class="grow t">💵 Billetes</div><b class="num" data-cbt>$0</b></div>${DENOM.map(d=>fila(String(d),d,"")).join("")}</div>
+    <div class="card"><div class="row" style="background:var(--goldSoft);padding:9px 12px"><div class="grow t">🪙 Monedas</div><b class="num" data-cmt>$0</b></div>${MONEDAS.map(d=>fila("m"+d,d,"")).join("")}</div></div>`;
+}
+function conteoBind(s,pre,onChange,ini){
+  const box=s.querySelector("#"+pre+"Cnt"),cnt={};
+  const val=k=>+String(k).replace("m","");
+  const tot=()=>Object.keys(cnt).reduce((a,k)=>a+cnt[k]*val(k),0);
+  const upd=()=>{box.querySelectorAll("[data-cs]").forEach(el=>{const k=el.dataset.cs;el.textContent=cnt[k]?money(cnt[k]*val(k)):"";});
+    box.querySelectorAll("[data-cq]").forEach(el=>{if(document.activeElement!==el)el.value=cnt[el.dataset.cq]||"";});
+    box.querySelector("[data-cbt]").textContent=money(DENOM.reduce((a,d)=>a+(cnt[d]||0)*d,0));
+    box.querySelector("[data-cmt]").textContent=money(MONEDAS.reduce((a,d)=>a+(cnt["m"+d]||0)*d,0));onChange&&onChange();};
+  const set=o=>{Object.keys(cnt).forEach(k=>delete cnt[k]);if(o)Object.keys(o).forEach(k=>{if((DENOM.includes(+k)||/^m\d+$/.test(k))&&+o[k]>0)cnt[k]=+o[k];});upd();};
+  box.onclick=ev=>{const b=ev.target.closest("[data-ck]");if(!b)return;const k=b.dataset.ck;cnt[k]=Math.max(0,(cnt[k]||0)+ +b.dataset.s);if(!cnt[k])delete cnt[k];upd();};
+  box.oninput=ev=>{const k=ev.target.dataset.cq;if(!k)return;ev.target.value=ev.target.value.replace(/\D/g,"").slice(0,4);if(+ev.target.value)cnt[k]=+ev.target.value;else delete cnt[k];upd();};
+  set(ini);
+  return {total:tot,conteo:()=>Object.keys(cnt).length?{...cnt}:null,set};
+}
+function conteoLineas(o){if(!o)return "";
+  const b=DENOM.filter(d=>o[d]).map(d=>`<div class="r s"><span>${o[d]} x ${money(d)}</span><span>${money(o[d]*d)}</span></div>`).join("");
+  const m=MONEDAS.filter(d=>o["m"+d]).map(d=>`<div class="r s"><span>${o["m"+d]} x ${money(d)} (mon.)</span><span>${money(o["m"+d]*d)}</span></div>`).join("");
+  return b+m+(o.monedas?`<div class="r s"><span>Monedas</span><span>${money(o.monedas)}</span></div>`:"");}
+function noCajaHTML(r){const t=r.tarjeta||0,tr=r.transferencia||0,ef=r.efectivo||0,vt=ef+t+tr;
+  return `<div class="row" style="background:var(--field)"><div class="grow"><div class="t">Vendido en el turno</div><div class="sub">Efectivo + tarjeta + transferencia</div></div><b class="num">${money(vt)}</b></div>
+    <div class="row"><div class="grow">💵 Efectivo <span class="sub">· está en la caja</span></div><b class="num">${money(ef)}</b></div>
+    <div class="row"><div class="grow">💳 Tarjeta <span class="sub">· no está en la caja</span></div><b class="num" style="color:var(--acc)">${money(t)}</b></div>
+    <div class="row"><div class="grow">📱 Transferencia <span class="sub">· no está en la caja</span></div><b class="num" style="color:var(--acc)">${money(tr)}</b></div>
+    ${r.propinas?`<div class="row"><div class="grow sub">Incluye propinas por ${money(r.propinas)}</div></div>`:""}`;}
 function renderCaja(){
   const el=$("#cajaBox");if(!el)return;
   if(!feat("caja")){el.innerHTML=st.rol==="dueno"||st.rol==="cocina"?`<div class="card" style="padding:14px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:30px">💰</div><div class="grow"><div class="t" style="font-weight:800">Caja y cierre con arqueo <span class="lockb">🔒 Pro</span></div><div class="hint">Base, salidas, conteo de billetes y faltantes.</div></div><button class="btn sm gold" data-cjp>Ver planes</button></div></div>`:"";
@@ -1421,13 +1575,13 @@ function renderCaja(){
   if(!st.caja){el.innerHTML=`<div class="card" style="padding:16px;border-color:var(--line2)"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:34px">🔒</div><div class="grow"><div class="t" style="font-weight:800;font-size:16px">Caja cerrada</div><div class="hint">Ábrela con la base de efectivo para empezar a cobrar.</div></div><button class="btn gold" data-cj="abrir">Abrir caja</button></div></div>`;return;}
   const c=st.caja,r=st.cajaRes||{};
   el.innerHTML=`<div class="card" style="border-color:var(--gold);box-shadow:var(--glow)">
-    <div class="row" style="background:var(--goldSoft)"><div class="grow"><div class="t">💰 Caja abierta</div><div class="sub">desde ${hora(c.abierta_en)} · por ${esc(c.abierta_por)} · ${r.cobros||0} cobro(s)</div></div><span class="pill ok">Abierta</span></div>
-    <div class="row"><div class="grow">Base inicial</div><b class="num">${money(c.base)}</b></div>
+    <div class="row" style="background:var(--goldSoft)"><div class="grow"><div class="t">💰 Caja abierta ${premTag("caja")}</div><div class="sub">desde ${hora(c.abierta_en)} · por ${esc(c.abierta_por)} · ${r.cobros||0} cobro(s)</div></div><span class="pill ok">Abierta</span></div>
+    ${c.conteo_base?`<details class="row" style="display:block"><summary style="cursor:pointer;display:flex;justify-content:space-between"><span>Base inicial <span class="sub">· ver conteo</span></span><b class="num">${money(c.base)}</b></summary><div class="sub" style="padding-top:6px;font-size:13px">${DENOM.filter(d=>c.conteo_base[d]).map(d=>`${c.conteo_base[d]} × ${money(d)}`).concat(MONEDAS.filter(d=>c.conteo_base["m"+d]).map(d=>`${c.conteo_base["m"+d]} × ${money(d)} (mon.)`)).join(" · ")}</div></details>`:`<div class="row"><div class="grow">Base inicial</div><b class="num">${money(c.base)}</b></div>`}
     <div class="row"><div class="grow">💵 Ventas en efectivo</div><b class="num">${money(r.efectivo)}</b></div>
     ${r.entradas?`<div class="row"><div class="grow">➕ Entradas</div><b class="num">${money(r.entradas)}</b></div>`:""}
     ${r.salidas?`<div class="row"><div class="grow">➖ Salidas</div><b class="num">−${money(r.salidas)}</b></div>`:""}
     <div class="row"><div class="grow"><div class="t">Efectivo que debe haber</div></div><b class="num" style="font-size:20px;color:var(--gold)">${money(r.esperado)}</b></div>
-    <div class="row"><div class="grow sub">💳 Tarjeta ${money(r.tarjeta)} · 📱 Transf. ${money(r.transferencia)} · Propinas ${money(r.propinas)}</div></div>
+    ${noCajaHTML(r)}
     ${st.cajaMovs.length?`<details class="row" style="display:block"><summary class="sub" style="cursor:pointer;font-weight:800">Movimientos (${st.cajaMovs.length})</summary>${st.cajaMovs.map(m=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:13.5px;font-weight:600"><span>${m.tipo==="entrada"?"➕":"➖"} ${esc(m.motivo)} <span class="sub">· ${hora(m.creado)} · ${esc(m.por)}</span></span><b class="num">${m.tipo==="salida"?"−":""}${money(m.monto)}</b></div>`).join("")}</details>`:""}
     <div class="acts" style="padding:0 12px 12px"><button class="btn sm" data-cj="entrada">➕ Entrada</button><button class="btn sm" data-cj="salida">➖ Salida</button><button class="btn sm gold" data-cj="cerrar">🔒 Cerrar caja</button></div></div>`;
 }
@@ -1436,17 +1590,34 @@ $("#cajaBox").onclick=e=>{const b=e.target.closest("[data-cj]");if(!b)return;con
 function montoInput(ev){const v=+String(ev.target.value).replace(/\D/g,"");ev.target.value=v?v.toLocaleString("es-CO"):"";}
 const nmon=v=>+String(v||"").replace(/\D/g,"")||0;
 function abrirCajaSheet(despues,sinCaja){
-  const ult=LS.get("dc_base",100000);
-  openSheet(`<h3>🔓 Abrir caja</h3><p class="hint">${despues?"Para cobrar, primero abre la caja. ":""}Cuenta el efectivo con el que empiezas (la base para dar vueltas).</p>
-    <label class="fld"><span>Base inicial en efectivo</span><input id="cb" inputmode="numeric" value="${ult?ult.toLocaleString("es-CO"):""}" placeholder="$0"></label>
-    <div class="chips" style="padding-top:0">${[0,50000,100000,200000,300000].map(v=>`<button class="chip" data-b="${v}">${v?money(v):"Sin base"}</button>`).join("")}</div>
+  const ult=LS.get("dc_base",100000),ultC=LS.get("dc_base_conteo",null);let modo=LS.get("dc_base_modo","contar");
+  openSheet(`<h3>🔓 Abrir caja</h3><p class="hint">${despues?"Para cobrar, primero abre la caja. ":""}Cuenta los billetes y monedas con los que empiezas (la base para dar vueltas).</p>
+    <div class="seg" id="abModo"><button data-am="contar">Contar billetes y monedas</button><button data-am="total">Escribir total</button></div>
+    <div id="abC">${conteoHTML("ab")}${ultC?`<button class="btn ghost wide sm" data-rep style="margin-top:8px">↺ Usar el mismo conteo de la última vez</button>`:""}</div>
+    <div id="abT" hidden><label class="fld"><span>Base inicial en efectivo</span><input id="cb" inputmode="numeric" value="${ult?ult.toLocaleString("es-CO"):""}" placeholder="$0"></label>
+    <div class="chips" style="padding-top:0">${[0,50000,100000,200000,300000].map(v=>`<button class="chip" data-b="${v}">${v?money(v):"Sin base"}</button>`).join("")}</div></div>
+    <div class="bigtot"><span style="font-weight:800;color:var(--muted)">Base inicial</span><b class="num" id="abTot">$0</b></div>
     <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Abrir caja</button></div>
     ${sinCaja?`<button class="btn ghost wide" data-sin style="margin-top:6px">Cobrar sin abrir caja</button>`:""}`,s=>{
-    const i=s.querySelector("#cb");i.oninput=montoInput;
-    s.querySelector(".chips").onclick=ev=>{const b=ev.target.closest("[data-b]");if(b)i.value=(+b.dataset.b)?(+b.dataset.b).toLocaleString("es-CO"):"0";};
+    const i=s.querySelector("#cb");let C;
+    const base=()=>modo==="contar"?C.total():nmon(i.value);
+    const upd=()=>{if(C)s.querySelector("#abTot").textContent=money(base());};
+    C=conteoBind(s,"ab",upd);
+    const setModo=m=>{modo=m;s.querySelectorAll("#abModo button").forEach(x=>x.classList.toggle("on",x.dataset.am===m));s.querySelector("#abC").hidden=m!=="contar";s.querySelector("#abT").hidden=m!=="total";upd();};
+    s.querySelector("#abModo").onclick=ev=>{const b=ev.target.closest("[data-am]");if(b)setModo(b.dataset.am);};
+    const rep=s.querySelector("[data-rep]");if(rep)rep.onclick=()=>{C.set(ultC);toast("Conteo cargado: "+money(C.total()));};
+    i.oninput=ev=>{montoInput(ev);upd();};
+    s.querySelector(".chips").onclick=ev=>{const b=ev.target.closest("[data-b]");if(b){i.value=(+b.dataset.b)?(+b.dataset.b).toLocaleString("es-CO"):"0";upd();}};
     s.querySelector("[data-x]").onclick=closeSheet;
     const sn=s.querySelector("[data-sin]");if(sn)sn.onclick=sinCaja;
-    const ok=s.querySelector("[data-ok]");ok.onclick=async()=>{ok.disabled=true;try{const v=nmon(i.value);await rpc("abrir_caja",{p_base:v});LS.set("dc_base",v);await loadCaja();render();toast("🔓 Caja abierta con base "+money(v));if(despues)despues();else closeSheet();}catch(err){toast(errMsg(err));ok.disabled=false;}};
+    setModo(modo);
+    const ok=s.querySelector("[data-ok]");ok.onclick=async()=>{const v=base(),cj=modo==="contar"?C.conteo():null;
+      if(modo==="contar"&&!cj&&ok.dataset.z!=="1"){ok.dataset.z="1";toast("No has contado billetes ni monedas. Toca otra vez para abrir con base $0");return;}
+      ok.disabled=true;try{
+        try{await rpc("abrir_caja",{p_base:v,p_conteo:cj});}
+        catch(e1){if(e1&&(e1.code==="PGRST202"||/function|p_conteo/i.test(e1.message||"")))await rpc("abrir_caja",{p_base:v});else throw e1;}
+        LS.set("dc_base",v);LS.set("dc_base_modo",modo);if(cj)LS.set("dc_base_conteo",cj);
+        await loadCaja();render();toast("🔓 Caja abierta con base "+money(v));if(despues)despues();else closeSheet();}catch(err){toast(errMsg(err));ok.disabled=false;}};
   });
 }
 function movCajaSheet(tipo){
@@ -1465,8 +1636,8 @@ function movCajaSheet(tipo){
 function cerrarCajaSheet(){
   const r=st.cajaRes||{};const esp=r.esperado||0;
   const abiertas=mesasAct().filter(m=>estadoMesa(m).tot>0);
-  const cnt={};let modo="billetes";
-  openSheet(`<h3>🔒 Cerrar caja</h3><p class="hint">Cuenta el efectivo que hay en la caja. La app lo compara con lo que debería haber.</p>
+  let modo="billetes",C;
+  openSheet(`<h3>🔒 Cerrar caja</h3><p class="hint">Cuenta solo el efectivo que hay en la caja. Lo pagado con tarjeta o transferencia no se cuenta: la app lo separa sola.</p>
     ${abiertas.length?`<div class="banner">⚠️ Hay ${abiertas.length} mesa(s) sin cobrar: ${abiertas.slice(0,5).map(m=>esc(m.nombre)).join(", ")}. Sus ventas no entran en este cierre.</div>`:""}
     <div class="card" style="margin:12px 0">
       <div class="row"><div class="grow">Base</div><b class="num">${money(r.base)}</b></div>
@@ -1474,27 +1645,27 @@ function cerrarCajaSheet(){
       ${r.entradas?`<div class="row"><div class="grow">+ Entradas</div><b class="num">${money(r.entradas)}</b></div>`:""}
       ${r.salidas?`<div class="row"><div class="grow">− Salidas</div><b class="num">${money(r.salidas)}</b></div>`:""}
       <div class="row"><div class="grow"><div class="t">= Debe haber</div></div><b class="num" style="font-size:20px;color:var(--gold)">${money(esp)}</b></div></div>
-    <div class="seg" id="ccModo"><button class="on" data-cm="billetes">Contar billetes</button><button data-cm="total">Escribir total</button></div>
-    <div id="ccBill"><div class="card">${DENOM.map(d=>`<div class="row"><div class="grow"><div class="t num">${money(d)}</div></div><div class="stepper"><button data-d="${d}" data-s="-1">−</button><input data-q="${d}" inputmode="numeric" value="" placeholder="0" style="width:52px;text-align:center;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-weight:800"><button data-d="${d}" data-s="1">+</button></div><span class="sub num" data-st="${d}" style="min-width:84px;text-align:right"></span></div>`).join("")}
-      <div class="row"><div class="grow"><div class="t">Monedas</div></div><input id="ccMon" inputmode="numeric" placeholder="$0" style="width:120px;text-align:right;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-weight:800"></div></div></div>
+    ${(r.tarjeta||r.transferencia)?`<div class="card" style="margin:0 0 12px"><div class="row" style="background:var(--goldSoft)"><div class="grow t">Pagos que no se cuentan en la caja</div></div>
+      ${r.tarjeta?`<div class="row"><div class="grow">💳 Tarjeta</div><b class="num">${money(r.tarjeta)}</b></div>`:""}${r.transferencia?`<div class="row"><div class="grow">📱 Transferencia</div><b class="num">${money(r.transferencia)}</b></div>`:""}
+      <div class="row"><div class="grow"><div class="t">Total vendido</div><div class="sub">${money(r.efectivo)} efectivo + ${money((r.tarjeta||0)+(r.transferencia||0))} otros medios</div></div><b class="num">${money((r.efectivo||0)+(r.tarjeta||0)+(r.transferencia||0))}</b></div></div>`:""}
+    <div class="seg" id="ccModo"><button class="on" data-cm="billetes">Contar billetes y monedas</button><button data-cm="total">Escribir total</button></div>
+    <div id="ccBill">${conteoHTML("cc")}</div>
     <label class="fld" id="ccTotW" hidden style="margin-top:4px"><span>Efectivo contado</span><input id="ccTot" inputmode="numeric" placeholder="$0"></label>
     <div class="bigtot"><span style="font-weight:800;color:var(--muted)">Contado</span><b class="num" id="ccCont">$0</b></div>
     <div id="ccDif" class="banner" style="margin-top:0"></div>
     <label class="fld" style="margin-top:12px"><span>Nota (opcional)</span><input id="ccNota" maxlength="300" placeholder="Ej: faltante por billete falso"></label>
     <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Cerrar caja</button></div>`,s=>{
     const $s=q=>s.querySelector(q);
-    const contado=()=>modo==="total"?nmon($s("#ccTot").value):DENOM.reduce((a,d)=>a+(cnt[d]||0)*d,0)+nmon($s("#ccMon").value);
-    const upd=()=>{const c=contado(),dif=c-esp;$s("#ccCont").textContent=money(c);
-      DENOM.forEach(d=>{const el=s.querySelector(`[data-st="${d}"]`);if(el)el.textContent=cnt[d]?money(cnt[d]*d):"";});
+    const contado=()=>modo==="total"?nmon($s("#ccTot").value):C.total();
+    const upd=()=>{if(!C)return;const c=contado(),dif=c-esp;$s("#ccCont").textContent=money(c);
       const b=$s("#ccDif");b.className="banner"+(dif===0?" acc":"");b.style.cssText="margin-top:0;"+(dif<0?"background:var(--badSoft);color:var(--bad);border-color:rgba(255,92,122,.4)":dif>0?"":"background:var(--okSoft);color:var(--ok);border-color:rgba(46,242,160,.35)");
       b.innerHTML=dif===0?"✅ La caja cuadra exacto":dif<0?`🔴 Faltan <b>&nbsp;${money(-dif)}&nbsp;</b>`:`🟡 Sobran <b>&nbsp;${money(dif)}&nbsp;</b>`;};
     s.querySelector("#ccModo").onclick=ev=>{const b=ev.target.closest("[data-cm]");if(!b)return;modo=b.dataset.cm;s.querySelectorAll("#ccModo button").forEach(x=>x.classList.toggle("on",x===b));$s("#ccBill").hidden=modo!=="billetes";$s("#ccTotW").hidden=modo!=="total";upd();};
-    s.querySelector("#ccBill").onclick=ev=>{const b=ev.target.closest("[data-d]");if(!b)return;const d=+b.dataset.d;cnt[d]=Math.max(0,(cnt[d]||0)+ +b.dataset.s);s.querySelector(`[data-q="${d}"]`).value=cnt[d]||"";upd();};
-    s.querySelector("#ccBill").oninput=ev=>{const q=ev.target.dataset.q;if(q){ev.target.value=ev.target.value.replace(/\D/g,"").slice(0,4);cnt[q]=+ev.target.value||0;upd();}};
-    $s("#ccMon").oninput=ev=>{montoInput(ev);upd();};$s("#ccTot").oninput=ev=>{montoInput(ev);upd();};
+    C=conteoBind(s,"cc",()=>upd());
+    $s("#ccTot").oninput=ev=>{montoInput(ev);upd();};
     $s("[data-x]").onclick=closeSheet;upd();
     const ok=$s("[data-ok]");ok.onclick=()=>{const c=contado(),dif=c-esp;
-      const conteo=modo==="billetes"?{...Object.fromEntries(DENOM.filter(d=>cnt[d]).map(d=>[d,cnt[d]])),monedas:nmon($s("#ccMon").value)}:null,nota=$s("#ccNota").value;
+      const conteo=modo==="billetes"?C.conteo():null,nota=$s("#ccNota").value;
       confirmSheet("¿Cerrar la caja?",`Contado ${money(c)} · ${dif===0?"cuadra exacto":dif<0?"faltan "+money(-dif):"sobran "+money(dif)}. Después de cerrar no se puede modificar.`,"Cerrar caja",async()=>{
         const res=await rpc("cerrar_caja",{p_contado:c,p_conteo:conteo,p_nota:nota});
         const cr=await sb.from("cajas").select("*").eq("id",res.id).maybeSingle();
@@ -1510,18 +1681,19 @@ function cierreHTML(c,movs){
     <div class="r"><span>+ Entradas</span><span>${money(c.entradas)}</span></div><div class="r"><span>- Salidas</span><span>${money(c.salidas)}</span></div>
     <div class="r b"><span>= Debe haber</span><span>${money(c.esperado)}</span></div><div class="r b"><span>Contado</span><span>${money(c.contado)}</span></div>
     <div class="r big"><span>${dif===0?"CUADRA":dif<0?"FALTANTE":"SOBRANTE"}</span><span>${money(Math.abs(dif))}</span></div><hr>
-    <div class="b">Ventas del turno (${c.cobros||0} cobros)</div><div class="r"><span>Efectivo</span><span>${money(c.efectivo)}</span></div><div class="r"><span>Tarjeta</span><span>${money(c.tarjeta)}</span></div><div class="r"><span>Transferencia</span><span>${money(c.transferencia)}</span></div>
+    <div class="b">Ventas del turno (${c.cobros||0} cobros)</div><div class="r"><span>Efectivo (en caja)</span><span>${money(c.efectivo)}</span></div><div class="r"><span>Tarjeta (no en caja)</span><span>${money(c.tarjeta)}</span></div><div class="r"><span>Transf. (no en caja)</span><span>${money(c.transferencia)}</span></div>
     <div class="r b"><span>Total</span><span>${money(vt)}</span></div><div class="r s"><span>Incluye propinas</span><span>${money(c.propinas)}</span></div>${c.descuentos?`<div class="r s"><span>Descuentos dados</span><span>${money(c.descuentos)}</span></div>`:""}
     ${(movs||[]).length?`<hr><div class="b">Movimientos</div>`+movs.map(m=>`<div class="r s"><span>${m.tipo==="entrada"?"+":"-"} ${esc(m.motivo)}</span><span>${money(m.monto)}</span></div>`).join(""):""}
-    ${c.conteo?`<hr><div class="b">Conteo</div>`+DENOM.filter(d=>c.conteo[d]).map(d=>`<div class="r s"><span>${c.conteo[d]} x ${money(d)}</span><span>${money(c.conteo[d]*d)}</span></div>`).join("")+(c.conteo.monedas?`<div class="r s"><span>Monedas</span><span>${money(c.conteo.monedas)}</span></div>`:""):""}
+    ${c.conteo_base?`<hr><div class="b">Base inicial contada</div>`+conteoLineas(c.conteo_base):""}
+    ${c.conteo?`<hr><div class="b">Conteo al cerrar</div>`+conteoLineas(c.conteo):""}
     ${c.nota?`<hr><div class="s">Nota: ${esc(c.nota)}</div>`:""}<hr><div class="c s">Firma: ______________________</div><div class="c s" style="margin-top:6px">DL COMANDA PRO</div>`;
 }
 function cierreTxt(c){const dif=c.diferencia||0;
-  return `🔒 Cierre de caja · ${st.empresa.nombre}\n${fechaHora(c.abierta_en)} → ${fechaHora(c.cerrada_en)}\nCerró: ${c.cerrada_por||""}\n\nBase: ${money(c.base)}\n+ Ventas efectivo: ${money(c.efectivo)}\n+ Entradas: ${money(c.entradas)}\n− Salidas: ${money(c.salidas)}\n= Debe haber: ${money(c.esperado)}\nContado: ${money(c.contado)}\n${dif===0?"✅ Cuadra exacto":dif<0?"🔴 Faltante: "+money(-dif):"🟡 Sobrante: "+money(dif)}\n\nVentas (${c.cobros||0} cobros):\n💵 ${money(c.efectivo)} · 💳 ${money(c.tarjeta)} · 📱 ${money(c.transferencia)}\nPropinas: ${money(c.propinas)}${c.nota?"\n\nNota: "+c.nota:""}\n\nDL COMANDA PRO`;}
+  return `🔒 Cierre de caja · ${st.empresa.nombre}\n${fechaHora(c.abierta_en)} → ${fechaHora(c.cerrada_en)}\nCerró: ${c.cerrada_por||""}\n\nBase: ${money(c.base)}\n+ Ventas efectivo: ${money(c.efectivo)}\n+ Entradas: ${money(c.entradas)}\n− Salidas: ${money(c.salidas)}\n= Debe haber: ${money(c.esperado)}\nContado: ${money(c.contado)}\n${dif===0?"✅ Cuadra exacto":dif<0?"🔴 Faltante: "+money(-dif):"🟡 Sobrante: "+money(dif)}\n\nVentas (${c.cobros||0} cobros): ${money((c.efectivo||0)+(c.tarjeta||0)+(c.transferencia||0))}\n💵 Efectivo (en caja): ${money(c.efectivo)}\n💳 Tarjeta (no en caja): ${money(c.tarjeta)}\n📱 Transferencia (no en caja): ${money(c.transferencia)}\nPropinas: ${money(c.propinas)}${c.nota?"\n\nNota: "+c.nota:""}\n\nDL COMANDA PRO`;}
 function cierreOkSheet(c,movs){const dif=c.diferencia||0;
   openSheet(`<div style="text-align:center"><div style="font-size:50px">${dif===0?"✅":dif<0?"🔴":"🟡"}</div><h3>Caja cerrada</h3><p class="hint">${dif===0?"Cuadró exacto":dif<0?"Faltante de "+money(-dif):"Sobrante de "+money(dif)} · Contado ${money(c.contado)}</p></div>
-    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir cierre</button><button class="btn" data-sh>📲 Enviar al dueño</button></div><button class="btn gold wide" data-x style="margin-top:8px">Listo</button>`,s=>{
-    s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>printHTML(cierreHTML(c,movs));s.querySelector("[data-sh]").onclick=()=>share(cierreTxt(c));});}
+    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir cierre</button><button class="btn" data-sh>📲 Enviar por WhatsApp</button></div><button class="btn gold wide" data-x style="margin-top:8px">Listo</button>`,s=>{
+    s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>printHTML(cierreHTML(c,movs));s.querySelector("[data-sh]").onclick=()=>enviarTicket(cierreHTML(c,movs),cierreTxt(c),"Cierre de caja");});}
 function renderCuentas(){
   renderCaja();
   const d=today();const all=[...st.ped.values()];
@@ -1531,7 +1703,7 @@ function renderCuentas(){
   const totPag=cob.reduce((x,c)=>x+c.total,0),propHoy=cob.reduce((x,c)=>x+c.propina,0),totAb=abiertos().reduce((x,p)=>x+p.total,0);
   $("#cKpis").innerHTML=`<div class="kpi hl"><span>Cobrado hoy</span><b class="num">${money(totPag)}</b></div><div class="kpi"><span>Por cobrar</span><b class="num">${money(totAb)}</b></div><div class="kpi"><span>Mesas abiertas</span><b class="num">${abiertasM.length}</b></div><div class="kpi"><span>Propinas hoy</span><b class="num">${money(propHoy)}</b></div>`;
   $("#cN").textContent=abiertasM.length;
-  $("#cList").innerHTML=abiertasM.map(({m,e})=>`<button class="row" data-cm="${m.id}"><div class="grow"><div class="t">${esc(m.nombre)}</div><div class="sub">${m.cuenta_en?`🧾 Pidió la cuenta hace ${durTxt(mins(m.cuenta_en))} · ${m.cuenta_propina?"✅ con propina":"sin propina"}`:`${e.ps.length} pedido(s) · ${e.txt}`}</div></div><b class="num">${money(e.tot+(m.cuenta_en&&m.cuenta_propina?propDe(e.tot):0))}</b><span class="pill ${m.cuenta_en?"acc":"gold"}">Cobrar ›</span></button>`).join("")
+  $("#cList").innerHTML=abiertasM.map(({m,e})=>`<button class="row" data-cm="${m.id}"><div class="grow"><div class="t">${esc(m.nombre)}</div><div class="sub">${m.cuenta_en?`🧾 Pidió la cuenta hace ${durTxt(mins(m.cuenta_en))} · ${m.cuenta_propina?"✅ con propina":"sin propina"}`:`${e.ps.length} pedido(s) · ${e.txt}`}${(sc=>sc?` · <span class="cobrarTag">⏰ ${durTxt(sc.min)} sin cobrar</span>`:"")(sinCobrar(m,e))}</div></div><b class="num">${money(e.tot+(m.cuenta_en&&m.cuenta_propina?propDe(e.tot):0))}</b><span class="pill ${m.cuenta_en?"acc":"gold"}">Cobrar ›</span></button>`).join("")
     +(huerf.length?`<div class="row"><div class="grow"><div class="t">Pedidos de mesas eliminadas</div><div class="sub">${huerf.length} sin cobrar · ${money(huerf.reduce((s,p)=>s+p.total,0))}</div></div></div>`:"")
     ||'<div class="empty">No hay cuentas abiertas</div>';
   $("#cpN").textContent=cob.length;
@@ -1553,6 +1725,7 @@ async function loadVentas(){
   vLoading=false;if(r.error){toast(errMsg(r.error));return;}vData=r.data||[];vCob=rc.data||[];render();
 }
 function renderVentas(){
+  {const b=$("#vCsv");if(b&&!b.disabled)b.innerHTML="⬇️ Descargar Excel "+premTag("excel");}
   const hl=lim("historial");
   if(hl!=null){const dias=Math.round((new Date(today()+"T12:00:00")-new Date(st.vDate+"T12:00:00"))/864e5);
     if(dias>=hl){$("#vKpis").innerHTML=`<div class="card" style="grid-column:1/-1;padding:18px;text-align:center"><div style="font-size:34px">🔒</div><div class="t" style="font-weight:800;margin:6px 0">Tu plan ${PLAN_TXT[PL().plan]} muestra ${hl===1?"solo las ventas de hoy":"los últimos "+hl+" días"}</div><button class="btn gold" data-vh>Ver planes</button></div>`;
@@ -1582,26 +1755,98 @@ $("#vCajas").onclick=async e=>{const b=e.target.closest("[data-vc]");if(!b)retur
   if(c.estado==="abierta"){toast("Esa caja sigue abierta. Ciérrala desde Cuentas.");return;}
   const mv=await sb.from("caja_movs").select("*").eq("caja_id",c.id).order("creado");
   openSheet(`<h3>Cierre de caja</h3><p class="hint">${fechaHora(c.abierta_en)} → ${fechaHora(c.cerrada_en)}</p><div class="card tkprev" style="padding:12px;font-size:13.5px">${cierreHTML(c,mv.data||[]).replace(/<h1>[\s\S]*?<hr>/,"")}</div>
-    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir</button><button class="btn" data-sh>📲 Compartir</button></div><button class="btn ghost wide" data-x>Cerrar</button>`,s=>{
-    s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>printHTML(cierreHTML(c,mv.data||[]));s.querySelector("[data-sh]").onclick=()=>share(cierreTxt(c));});};
+    <div class="acts"><button class="btn" data-pr>🖨️ Imprimir</button><button class="btn" data-sh>📲 Enviar por WhatsApp</button></div><button class="btn ghost wide" data-x>Cerrar</button>`,s=>{
+    s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-pr]").onclick=()=>printHTML(cierreHTML(c,mv.data||[]));s.querySelector("[data-sh]").onclick=()=>enviarTicket(cierreHTML(c,movs),cierreTxt(c),"Cierre de caja");});};
 $("#vPrev").onclick=()=>shiftDay(-1);$("#vNext").onclick=()=>shiftDay(1);$("#vHoy").onclick=()=>{st.vDate=today();loadVentas();};
 $("#vDate").onchange=e=>{if(e.target.value){st.vDate=e.target.value;loadVentas();}};
 $("#vShare").onclick=()=>{if(!vData)return;const ok=vData.filter(p=>p.estado!=="cancelado");const met={};vCob.forEach(c=>pagosDe(c).forEach(pg=>met[pg.metodo]=(met[pg.metodo]||0)+pg.monto));
   const top=agrupar(ok).sort((a2,b2)=>b2.cant-a2.cant).slice(0,5);
   share(`📊 ${st.empresa.nombre} · ${st.vDate}\n\nVentas: ${money(vCob.reduce((x,c)=>x+c.subtotal-c.descuento,0))}\nPropinas: ${money(vCob.reduce((x,c)=>x+c.propina,0))}\nPedidos: ${ok.length}\n`+Object.keys(MET).map(k=>`${MET[k]}: ${money(met[k]||0)}`).join("\n")+`\n\nTop:\n`+top.map(i=>`• ${i.cant}× ${i.nombre}`).join("\n")+`\n\nDL COMANDA PRO`);};
-$("#vCsv").onclick=()=>{
+/* Excel profesional (.xlsx) con resumen, cobros, pagos, productos y detalle */
+let _xlsLib=null;
+function cargarExcelJS(){if(window.ExcelJS)return Promise.resolve(window.ExcelJS);
+  return _xlsLib||(_xlsLib=new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";sc.onload=()=>ok(window.ExcelJS);sc.onerror=()=>{_xlsLib=null;no(new Error("Sin conexión para generar el Excel"));};document.head.appendChild(sc);}));}
+async function exportarExcel(){
+  const XL=await cargarExcelJS();const e=st.empresa;
+  const NAVY="FF0B1426",GOLD="FFD4AF37",GOLDL="FFFBF5E1",ZEBRA="FFF7F8FB",LINE="FFE3D7A8",MONEY='"$"#,##0';
+  const fecha=new Date(st.vDate+"T12:00:00-05:00").toLocaleDateString("es-CO",{timeZone:"America/Bogota",weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const nomMet=k=>({efectivo:"Efectivo",tarjeta:"Tarjeta",transferencia:"Transferencia",mixto:"Varios medios"}[k]||k||"");
+  const nomEst=k=>({nuevo:"Nuevo",preparando:"Preparando",listo:"Listo",entregado:"Entregado",cancelado:"Cancelado"}[k]||k||"");
+  const wb=new XL.Workbook();wb.creator="DL COMANDA PRO";wb.created=new Date();
+  const borde={top:{style:"thin",color:{argb:LINE}},bottom:{style:"thin",color:{argb:LINE}},left:{style:"thin",color:{argb:LINE}},right:{style:"thin",color:{argb:LINE}}};
+  const cab=(ws,sub,cols)=>{ // encabezado con marca
+    ws.mergeCells(1,1,1,cols);const t=ws.getCell(1,1);t.value=e.nombre.toUpperCase();t.font={bold:true,size:16,color:{argb:GOLD}};t.fill={type:"pattern",pattern:"solid",fgColor:{argb:NAVY}};t.alignment={vertical:"middle",horizontal:"left",indent:1};ws.getRow(1).height=30;
+    ws.mergeCells(2,1,2,cols);const s2=ws.getCell(2,1);s2.value=`NIT ${e.nit}  ·  ${sub}  ·  ${fecha}`;s2.font={size:10,color:{argb:"FFFFFFFF"}};s2.fill={type:"pattern",pattern:"solid",fgColor:{argb:NAVY}};s2.alignment={horizontal:"left",indent:1};ws.getRow(2).height=18;
+    ws.getRow(3).height=8;};
+  const tabla=(ws,fila,heads,rows,fmt,tot)=>{ // fmt: índices de columnas en pesos; tot: índices a sumar
+    const hr=ws.getRow(fila);heads.forEach((h,i)=>{const c=hr.getCell(i+1);c.value=h;c.font={bold:true,color:{argb:NAVY}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:GOLD}};c.alignment={vertical:"middle",horizontal:"center",wrapText:true};c.border=borde;});hr.height=22;
+    rows.forEach((r,k)=>{const row=ws.getRow(fila+1+k);r.forEach((v,i)=>{const c=row.getCell(i+1);c.value=v;c.border=borde;c.alignment={vertical:"middle",wrapText:typeof v==="string"&&v.length>28};if(fmt.includes(i))c.numFmt=MONEY;if(k%2)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:ZEBRA}};});});
+    if(rows.length){ws.autoFilter={from:{row:fila,column:1},to:{row:fila+rows.length,column:heads.length}};}
+    if(tot&&rows.length){const tr=ws.getRow(fila+rows.length+1);const c0=tr.getCell(1);c0.value="TOTAL";
+      for(let i=0;i<heads.length;i++){const c=tr.getCell(i+1);c.font={bold:true,color:{argb:NAVY}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:GOLDL}};c.border={...borde,top:{style:"medium",color:{argb:GOLD}}};
+        if(tot.includes(i)){const L=String.fromCharCode(65+i);c.value={formula:`SUBTOTAL(9,${L}${fila+1}:${L}${fila+rows.length})`,result:rows.reduce((a,r)=>a+(+r[i]||0),0)};if(fmt.includes(i))c.numFmt=MONEY;}}}
+    if(!rows.length){ws.mergeCells(fila+1,1,fila+1,heads.length);const c=ws.getCell(fila+1,1);c.value="Sin registros";c.font={italic:true,color:{argb:"FF8A94A6"}};c.alignment={horizontal:"center"};}
+    ws.views=[{state:"frozen",ySplit:fila}];};
+  const cobros=vCob.slice().reverse(),peds=(vData||[]);
+  const ventas=cobros.reduce((a,c)=>a+c.subtotal-c.descuento,0),prop=cobros.reduce((a,c)=>a+c.propina,0),desc=cobros.reduce((a,c)=>a+c.descuento,0),total=cobros.reduce((a,c)=>a+c.total,0);
+  const porMet={efectivo:0,tarjeta:0,transferencia:0};cobros.forEach(c=>pagosDe(c).forEach(pg=>{porMet[pg.metodo]=(porMet[pg.metodo]||0)+pg.monto;}));
+  const okP=peds.filter(p=>p.estado!=="cancelado"),prod={};okP.forEach(p=>(p.pedido_items||[]).forEach(i=>{const x=prod[i.nombre]||(prod[i.nombre]={c:0,v:0});x.c+=i.cant;x.v+=i.cant*i.precio;}));
+  const top=Object.keys(prod).map(k=>[k,prod[k].c,prod[k].v]).sort((a,b)=>b[2]-a[2]);
+
+  // 1. Resumen
+  const r=wb.addWorksheet("Resumen",{properties:{tabColor:{argb:GOLD}},pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  r.columns=[{width:34},{width:20},{width:14}];cab(r,"Resumen de ventas",3);
+  const sec=(fila,t)=>{r.mergeCells(fila,1,fila,3);const c=r.getCell(fila,1);c.value=t;c.font={bold:true,size:12,color:{argb:NAVY}};c.border={bottom:{style:"medium",color:{argb:GOLD}}};r.getRow(fila).height=22;};
+  const kv=(fila,k,v,money,big)=>{const a=r.getCell(fila,1),b=r.getCell(fila,2);a.value=k;b.value=v;a.border=b.border=borde;if(money)b.numFmt=MONEY;b.alignment={horizontal:"right"};
+    if(big){[a,b].forEach(c=>{c.font={bold:true,size:13,color:{argb:NAVY}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:GOLDL}};});}};
+  let f=4;sec(f++,"Totales del día");
+  kv(f++,"Ventas (sin propinas)",ventas,1);kv(f++,"Propinas voluntarias",prop,1);kv(f++,"Descuentos dados",desc,1);kv(f++,"TOTAL COBRADO",total,1,1);
+  kv(f++,"Cuentas cobradas",cobros.length);kv(f++,"Pedidos (sin cancelados)",okP.length);kv(f++,"Ticket promedio",cobros.length?Math.round(total/cobros.length):0,1);
+  if(peds.length-okP.length)kv(f++,"Pedidos cancelados",peds.length-okP.length);
+  f++;sec(f++,"Por medio de pago");
+  [["Efectivo","efectivo"],["Tarjeta","tarjeta"],["Transferencia","transferencia"]].forEach(([n,k])=>{kv(f,n,porMet[k]||0,1);const c=r.getCell(f,3);c.value=total?(porMet[k]||0)/total:0;c.numFmt="0.0%";c.border=borde;c.alignment={horizontal:"right"};f++;});
+  f++;sec(f++,"Productos más vendidos");
+  const hr=r.getRow(f++);["Producto","Vendido","Cantidad"].forEach((h,i)=>{const c=hr.getCell(i+1);c.value=h;c.font={bold:true,color:{argb:NAVY}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:GOLD}};c.border=borde;c.alignment={horizontal:i?"center":"left"};});
+  top.slice(0,10).forEach((t,k)=>{const row=r.getRow(f++);row.getCell(1).value=t[0];row.getCell(2).value=t[2];row.getCell(2).numFmt=MONEY;row.getCell(3).value=t[1];[1,2,3].forEach(i=>{const c=row.getCell(i);c.border=borde;if(k%2)c.fill={type:"pattern",pattern:"solid",fgColor:{argb:ZEBRA}};});row.getCell(3).alignment={horizontal:"center"};});
+  if(!top.length){r.getCell(f++,1).value="Sin ventas";}
+  f++;r.mergeCells(f,1,f,3);const pie=r.getCell(f,1);pie.value=`Generado con DL COMANDA PRO · ${new Date().toLocaleString("es-CO",{timeZone:"America/Bogota"})}`;pie.font={size:9,italic:true,color:{argb:"FF8A94A6"}};
+
+  // 2. Cobros
+  const c=wb.addWorksheet("Cobros",{properties:{tabColor:{argb:"FF22E4FF"}},pageSetup:{orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  c.columns=[{width:11},{width:14},{width:13},{width:12},{width:12},{width:14},{width:16},{width:13},{width:16},{width:10}];cab(c,"Cobros",10);
+  tabla(c,4,["Hora","Mesa","Subtotal","Descuento","Propina","Total","Medio de pago","Recibido","Atendió","Pedidos"],
+    cobros.map(x=>[hora(x.creado),x.mesa,x.subtotal,x.descuento,x.propina,x.total,nomMet(x.metodo),x.recibido==null?null:x.recibido,x.cajero,x.pedidos]),[2,3,4,5,7],[2,3,4,5]);
+
+  // 3. Pagos
+  const pg=wb.addWorksheet("Pagos",{properties:{tabColor:{argb:"FF2EF2A0"}}});
+  pg.columns=[{width:11},{width:14},{width:16},{width:17},{width:14},{width:14},{width:13}];cab(pg,"Pagos recibidos",7);
+  const filasPg=[];cobros.forEach(x=>pagosDe(x).forEach(p=>filasPg.push([hora(x.creado),x.mesa,p.persona||"—",nomMet(p.metodo),p.monto,p.recibido==null?null:p.recibido,p.recibido!=null&&p.recibido>p.monto?p.recibido-p.monto:null])));
+  tabla(pg,4,["Hora","Mesa","Persona","Medio de pago","Monto","Recibido","Vueltas"],filasPg,[4,5,6],[4]);
+
+  // 4. Productos
+  const pr=wb.addWorksheet("Productos",{properties:{tabColor:{argb:"FFFFB547"}}});
+  pr.columns=[{width:30},{width:12},{width:16},{width:12}];cab(pr,"Ventas por producto",4);
+  tabla(pr,4,["Producto","Cantidad","Vendido","% del total"],top.map(t=>[t[0],t[1],t[2],null]),[2],[1,2]);
+  const tv=top.reduce((a,t)=>a+t[2],0);top.forEach((t,k)=>{const cc=pr.getCell(5+k,4);cc.value=tv?t[2]/tv:0;cc.numFmt="0.0%";});
+
+  // 5. Detalle de pedidos
+  const d=wb.addWorksheet("Detalle de pedidos",{properties:{tabColor:{argb:"FFA855F7"}},pageSetup:{orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  d.columns=[{width:11},{width:9},{width:12},{width:14},{width:24},{width:9},{width:12},{width:13},{width:34},{width:12},{width:9},{width:15}];cab(d,"Detalle de pedidos",12);
+  const filasD=[];peds.forEach(p=>(p.pedido_items||[]).forEach(i=>filasD.push([hora(p.creado),p.numero,p.mesa,p.mesero,i.nombre,i.cant,i.precio,i.precio*i.cant,i.nota||"",nomEst(p.estado),p.pagado?"Sí":"No",nomMet(p.metodo)])));
+  tabla(d,4,["Hora","Pedido","Mesa","Mesero","Producto","Cant.","Precio","Subtotal","Nota","Estado","Pagado","Medio de pago"],filasD,[6,7],[5,7]);
+  filasD.forEach((x,k)=>{if(x[9]==="Cancelado")for(let i=1;i<=12;i++){const cc=d.getCell(5+k,i);cc.font={strike:true,color:{argb:"FFB04050"}};}});
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const name=`Ventas ${e.nombre} ${st.vDate}.xlsx`.replace(/[\\/:*?"<>|]+/g,"");
+  const a2=document.createElement("a");a2.href=URL.createObjectURL(blob);a2.download=name;document.body.appendChild(a2);a2.click();setTimeout(()=>{URL.revokeObjectURL(a2.href);a2.remove();},4000);
+  toast("📊 Excel descargado: "+name,3500);
+}
+$("#vCsv").onclick=async ev=>{
   if(!quiere("excel"))return;
   if(!vData)return;
-  const q=v=>{v=String(v==null?"":v);return /[;"\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;};
-  const L=[["DETALLE DE PEDIDOS",st.empresa.nombre,"NIT "+st.empresa.nit,st.vDate],["Hora","Pedido","Mesa","Mesero","Producto","Cantidad","Precio","Subtotal","Nota","Estado","Pagado","Medio de pago"]];
-  vData.forEach(p=>(p.pedido_items||[]).forEach(i=>L.push([hora(p.creado),p.numero,p.mesa,p.mesero,i.nombre,i.cant,i.precio,i.precio*i.cant,i.nota||"",p.estado,p.pagado?"Sí":"No",p.metodo||""])));
-  L.push([],["COBROS"],["Hora","Mesa","Subtotal","Descuento","Propina","Total","Medio de pago","Recibido","Atendió","Pedidos"]);
-  vCob.slice().reverse().forEach(c=>L.push([hora(c.creado),c.mesa,c.subtotal,c.descuento,c.propina,c.total,c.metodo,c.recibido==null?"":c.recibido,c.cajero,c.pedidos]));
-  L.push([],["PAGOS"],["Hora","Mesa","Persona","Medio de pago","Monto","Recibido"]);
-  vCob.slice().reverse().forEach(c=>pagosDe(c).forEach(pg=>L.push([hora(c.creado),c.mesa,pg.persona||"",pg.metodo,pg.monto,pg.recibido==null?"":pg.recibido])));
-  const csv="\ufeff"+L.map(r=>r.map(q).join(";")).join("\r\n");
-  const a2=document.createElement("a");a2.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a2.download=`ventas-${st.vDate}.csv`;document.body.appendChild(a2);a2.click();setTimeout(()=>{URL.revokeObjectURL(a2.href);a2.remove();},2000);
-  toast("⬇️ Archivo descargado. Ábrelo con Excel o Google Sheets");
+  const b=ev.currentTarget;b.disabled=true;const t=b.innerHTML;b.innerHTML="⏳ Generando Excel…";
+  try{await exportarExcel();}catch(err){toast(err.message||"No se pudo generar el Excel",4000);}finally{b.disabled=false;b.innerHTML=t;}
 };
 
 /* ADMIN (dueño) */
@@ -1610,13 +1855,13 @@ function renderAdmin(){
   const e=st.empresa;
   $("#aPlan").innerHTML=planCard();$("#aPlanes").onclick=()=>planSheet();
   $("#aEmp").innerHTML=`<div class="row"><div class="grow"><div class="t">${esc(e.nombre)}</div><div class="sub">NIT ${esc(e.nit)}</div></div><span class="pill gold">${PLAN_TXT[PL().plan]}</span></div>
-    <label class="row" style="cursor:pointer"><div class="grow"><div class="t">🍳🍹 Estaciones cocina y bar${feat("estaciones")?"":' <span class="lockb">🔒 Premium</span>'}</div><div class="sub">${e.estaciones?"Activas: las bebidas van al bar y los platos a cocina, cada uno con su aviso":"Apagadas: todo llega a una sola cocina"}</div></div><input type="checkbox" id="aEst" ${e.estaciones?"checked":""} style="width:22px;height:22px;accent-color:#d4af37"></label>
+    <label class="row" style="cursor:pointer"><div class="grow"><div class="t">🍳🍹 Estaciones cocina y bar${feat("estaciones")?"":' <span class="lockb">🔒 Premium</span>'}</div>${premTag("estaciones")?`<div style="margin:4px 0 2px">${premTag("estaciones")}</div>`:""}<div class="sub">${e.estaciones?"Activas: las bebidas van al bar y los platos a cocina, cada uno con su aviso":"Apagadas: todo llega a una sola cocina"}</div></div><input type="checkbox" id="aEst" ${e.estaciones?"checked":""} style="width:22px;height:22px;accent-color:#d4af37"></label>
     <button class="row" id="aShareAcc"><div class="grow"><div class="t">📲 Enviar datos de acceso al personal</div><div class="sub">Nombre del restaurante, NIT y enlace de la app</div></div><span>›</span></button>`;
   $("#aEst").onchange=async ev=>{const v=ev.target.checked;if(v&&!quiere("estaciones")){ev.target.checked=false;return;}ev.target.disabled=true;
     try{await rpc("config_estaciones",{p_activar:v});st.empresa.estaciones=v;toast(v?"🍹 Estaciones activas. Revisa en el Menú qué va al bar.":"Estaciones apagadas",3500);render();}
     catch(err){ev.target.checked=!v;toast(errMsg(err));}finally{ev.target.disabled=false;}};
   $("#aShareAcc").onclick=()=>share(`🍽️ Ingreso a DL COMANDA PRO\n\nAbre: ${location.origin+location.pathname}\nToca "🍽️ Personal" y escribe:\n• Restaurante: ${e.nombre}\n• NIT: ${e.nit}\n\nLuego tu usuario y tu PIN (te los da el dueño).`);
-  $("#aPer").innerHTML=st.personal.map(p=>`<button class="row" data-per="${p.id}"><div class="grow"><div class="t">${esc(p.usuario)}</div><div class="sub">${p.rol==="mesero"?"🧑‍🍳 Mesero":"🔥 Cocina / Caja"}${p.bloqueado_hasta&&new Date(p.bloqueado_hasta)>new Date()?" · 🔒 bloqueado":""}</div></div>${p.activo&&!rango(st.personal.filter(x=>x.activo),p.id,lim("usuarios"))?'<span class="lockb">🔒 fuera del plan</span>':""}<span class="pill ${p.activo?"ok":""}">${p.activo?"Activo":"Inactivo"}</span></button>`).join("")||'<div class="empty">Crea a tus meseros y a cocina / caja para que entren con su PIN.</div>';
+  $("#aPer").innerHTML=st.personal.map(p=>`<button class="row" data-per="${p.id}"><div class="grow"><div class="t">${esc(p.usuario)}${fueraGratis(st.personal.filter(x=>x.activo),p.id,"usuarios")?" "+premTag():""}</div><div class="sub">${p.rol==="mesero"?"🧑‍🍳 Mesero":"🔥 Cocina / Caja"}${p.bloqueado_hasta&&new Date(p.bloqueado_hasta)>new Date()?" · 🔒 bloqueado":""}</div></div>${p.activo&&!rango(st.personal.filter(x=>x.activo),p.id,lim("usuarios"))?'<span class="lockb">🔒 fuera del plan</span>':""}<span class="pill ${p.activo?"ok":""}">${p.activo?"Activo":"Inactivo"}</span></button>`).join("")||'<div class="empty">Crea a tus meseros y a cocina / caja para que entren con su PIN.</div>';
   const cats={};st.productos.forEach(p=>(cats[p.categoria]=cats[p.categoria]||[]).push(p));
   $("#aProd").innerHTML=Object.keys(cats).map(c=>`<div class="row" style="background:var(--goldSoft);padding:8px 14px"><b style="font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)">${esc(c)}</b></div>`+cats[c].map(p=>`<button class="row" data-pr="${p.id}"><div class="grow"><div class="t" style="${p.activo?"":"opacity:.5;text-decoration:line-through"}">${esc(p.nombre)}</div><div class="sub">${estOn()?(p.estacion==="bar"?"🍹 Bar · ":"🍳 Cocina · "):""}${!p.activo?"Agotado / oculto":p.stock==null?"Disponible":p.stock<=0?"⚠️ Sin stock":p.stock<=stockMin(p)?`⚠️ Quedan ${p.stock}`:`Stock: ${p.stock}`}</div></div><b class="num">${money(p.precio)}</b></button>`).join("")).join("")||'<div class="empty">Agrega los platos y bebidas de tu menú</div>';
   $("#aMesas").innerHTML=st.mesas.map(m=>`<button class="row" data-ms="${m.id}"><div class="grow"><div class="t" style="${m.activa?"":"opacity:.5"}">${esc(m.nombre)}</div><div class="sub">${m.activa?"Activa":"Oculta"} · orden ${m.orden}</div></div><span>›</span></button>`).join("")||'<div class="empty">Crea tus mesas</div>';
@@ -1795,6 +2040,7 @@ $("#meBtn").onclick=()=>{
     <div class="toggle"><span>🔊 Probar sonido de aviso</span><button class="btn sm" data-snd>Probar</button></div>
     ${st.rol!=="mesero"?`<div class="toggle"><span>🖨️ Ancho del papel de la impresora</span><div class="seg" id="papel" style="margin:0;min-width:150px"><button data-w="58" class="${papel()===58?"on":""}">58 mm</button><button data-w="80" class="${papel()===80?"on":""}">80 mm</button></div></div>`:""}
     ${st.rol!=="mesero"?`<label class="toggle"><span>💡 Pantalla siempre encendida en Cocina</span><input type="checkbox" id="wk" ${wakeWanted()?"checked":""}></label>`:""}
+    <button class="btn wide" data-guia style="margin-bottom:8px">🧭 Ver guía de la app</button>
     <button class="dlbtn ol dl-only" data-install style="margin-bottom:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Descargar app en este celular</button>
     <div class="acts" style="flex-direction:column"><a class="btn" style="text-align:center;text-decoration:none" href="${WA}?text=${encodeURIComponent("Hola DL Company, necesito ayuda con DL COMANDA PRO")}" target="_blank" rel="noopener">💬 Soporte por WhatsApp</a>
     ${st.rol==="dueno"?'<button class="btn" data-pw>🔑 Cambiar contraseña</button>':""}<button class="btn bad" data-out>Cerrar sesión</button></div>`,s=>{
@@ -1804,8 +2050,150 @@ $("#meBtn").onclick=()=>{
     s.querySelector("[data-snd]").onclick=()=>{unlockAudio();setTimeout(()=>{st.rol==="mesero"?sndListo():sndNuevo();vib([200,80,200]);},60);};
     const wk=s.querySelector("#wk");if(wk)wk.onchange=()=>{LS.set("dc_wake",wk.checked);wake(wk.checked&&st.view==="cocina");};
     const pw=s.querySelector("[data-pw]");if(pw)pw.onclick=newPasswordSheet;
+    s.querySelector("[data-guia]").onclick=()=>{closeSheet();setTimeout(()=>startTour(true),250);};
     s.querySelector("[data-out]").onclick=()=>confirmSheet("¿Cerrar sesión?",st.rol==="dueno"?"Tendrás que ingresar con tu correo y contraseña.":"Para volver a entrar necesitas tu usuario y PIN.","Cerrar sesión",async()=>{const anon=st.rol!=="dueno";closeSheet();await quitarPush();teardown();await sb.auth.signOut();showLogin(true);loginPanel(anon?"empForm":"loginForm");},true);});
 };
+
+/* ---------- guía interactiva: primer ingreso de cada rol y desde el menú ---------- */
+const VOZ={ok:"speechSynthesis" in window&&"SpeechSynthesisUtterance" in window,on:LS.get("dc_tour_voz",true),voz:null,tok:0,t:null,bar:null};
+function elegirVoz(){if(!VOZ.ok)return;const L=speechSynthesis.getVoices()||[];for(const p of ["es-co","es-us","es-419","es-mx","es-es","es"]){const v=L.find(x=>(x.lang||"").replace("_","-").toLowerCase().startsWith(p));if(v){VOZ.voz=v;return;}}}
+if(VOZ.ok){elegirVoz();try{speechSynthesis.addEventListener("voiceschanged",elegirVoz);}catch(e){}}
+const limpioVoz=x=>String(x||"").replace(/<li>/g,". ").replace(/<[^>]+>/g," ").replace(/&nbsp;/g," ").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,"").replace(/[›‹·•→]/g,", ").replace(/\$([\d.]+)/g,"$1 pesos").replace(/\s+/g," ").replace(/\s+([,.;:])/g,"$1").replace(/([.,])\s*[.,]+/g,"$1").trim();
+function callar(){VOZ.tok++;clearTimeout(VOZ.t);if(VOZ.bar)VOZ.bar.style.transition="none";if(VOZ.ok)try{speechSynthesis.cancel();}catch(e){}const b=document.querySelector("#tour .tvoz");if(b)b.classList.remove("hab");}
+function leer(s,i,last){
+  if(!VOZ.ok||!VOZ.on||!TOUR)return;callar();const tok=VOZ.tok;
+  const tt=limpioVoz(s.t),texto=tt+(/[.!?:]$/.test(tt)?" ":". ")+limpioVoz(s.p+(s.lista?"<li>"+s.lista.join("<li>"):""));
+  const u=new SpeechSynthesisUtterance(texto);u.lang=VOZ.voz?VOZ.voz.lang:"es-CO";if(VOZ.voz)u.voice=VOZ.voz;u.rate=1.02;
+  const est=Math.max(2500,texto.split(/\s+/).length*400+1200),btn=document.querySelector("#tour .tvoz"),bar=VOZ.bar=document.querySelector("#tour .tbar i");let empezo=false;
+  const avanzar=()=>{if(tok!==VOZ.tok||!TOUR||TOUR.i!==i)return;if(btn)btn.classList.remove("hab");if(!last)VOZ.t=setTimeout(()=>{if(tok===VOZ.tok&&TOUR&&TOUR.i===i)showStep(i+1,1);},900);};
+  u.onstart=()=>{if(tok!==VOZ.tok)return;empezo=true;if(btn)btn.classList.add("hab");
+    if(bar){bar.style.transition="none";bar.style.width="0";void bar.offsetWidth;bar.style.transition=`width ${est}ms linear`;bar.style.width="100%";}
+    clearTimeout(VOZ.t);VOZ.t=setTimeout(()=>{if(tok===VOZ.tok){try{if(!speechSynthesis.speaking)avanzar();}catch(e){}}},est+4000);};
+  u.onend=()=>{if(empezo)avanzar();};
+  u.onerror=()=>{if(btn)btn.classList.remove("hab");};
+  try{speechSynthesis.speak(u);}catch(e){return;}
+  setTimeout(()=>{if(tok===VOZ.tok&&!empezo){const b=document.querySelector("#tour .tbar");if(b)b.remove();}},1800);
+}
+let TOUR=null,tourT=null;
+const tourOn=()=>$("#tour").classList.contains("on");
+const tkey=r=>"dc_tour_"+r+"_"+((st.user&&st.user.id)||"local");
+const visible=el=>{if(!el)return false;const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(el).visibility!=="hidden";};
+const lockTxt=k=>feat(k)?(enPrueba()&&NIVEL[FEAT_PLAN[k]]>NIVEL[planBase()]?`<span class="tlock" style="color:#e8c766">⭐ Incluido en tu ${pruebaNom()}; luego es del plan ${PLAN_TXT[FEAT_PLAN[k]]}</span>`:""):`<span class="tlock">🔒 Disponible desde el plan ${PLAN_TXT[FEAT_PLAN[k]]}</span>`;
+
+function planesSteps(){
+  const P=PL(),txt=P.bono?"Pro + bono Premium":PLAN_TXT[P.plan]+(P.prueba?" (prueba)":"");
+  return [
+    {view:"admin",el:"#aPlan",t:"⭐ Tu plan y los planes",p:`Lo último y muy importante: tu plan actual es <b>${txt}</b>${enPrueba()?` y te ${diasPrueba()===1?"queda":"quedan"} <b>${diasTxt(diasPrueba())}</b>`:""}. Aquí ves cuántas mesas, productos y usuarios usas y cuántos te permite tu plan.`},
+    {t:"Plan Gratis",big:"🆓",price:"$0",p:"Para probar lo esencial:",lista:["🎁 <b>3 días de Premium gratis</b> al registrarte","✅ Mesero → cocina en vivo","✅ 5 mesas · 20 productos · 2 usuarios","✅ 15 pedidos al día","✅ Propina preguntada y cobro simple","✅ Ventas solo de hoy","🔒 Sin avisos con la app cerrada, imprimir, dividir cuenta, caja, Excel ni cambiar mesas"]},
+    {t:"Plan Pro",big:"🚀",price:(LANZ?`<s style="font-size:15px;color:#8a94a6;margin-right:6px">${money(PRECIOS.pro*2)}</s>`:"")+money(PRECIOS.pro)+" /mes",p:"Lo que un restaurante usa todos los días:",lista:["🎁 <b>7 días de Premium gratis</b> al activarlo","✅ 8 mesas · 80 productos · 4 usuarios","✅ 50 pedidos al día","✅ 🔔 Avisos aunque el celular esté bloqueado","✅ 🖨️ Imprimir comandas, cuentas y recibos","✅ ➗ Dividir cuenta y pago mixto","✅ 💰 Caja con conteo de billetes y cierre","✅ 📊 Excel, cambiar mesas y 90 días de historial"]},
+    {t:"Plan Premium",big:"⭐",price:(LANZ?`<s style="font-size:15px;color:#8a94a6;margin-right:6px">${money(PRECIOS.premium*2)}</s>`:"")+money(PRECIOS.premium)+" /mes",p:"<b>Toda la app al 100%</b>:",lista:["✅ Mesas, productos y usuarios ilimitados","✅ 🍳🍹 Estaciones cocina y bar separadas","✅ 📦 Stock y lector de código de barras","✅ Historial de ventas ilimitado","✅ Todo lo del plan Pro","✅ Soporte prioritario por WhatsApp"]},
+    {t:"¿Cómo funciona la prueba?",big:"🎁",p:`Toda cuenta nueva tiene <b>3 días de Premium gratis</b>. Lo que no es del plan Gratis sale con la etiqueta <span class="ptag">⭐ Premium</span>; al terminar la prueba pasas al plan Gratis y eso se bloquea, <b>sin cobros automáticos</b> y sin perder tu información.<br><br>${LANZ?"🚀 Por el <b>lanzamiento</b>, los planes están con <b>50% de descuento</b>. ":""}Para activar un plan toca <b>Ver planes</b> y escríbenos por WhatsApp. Pago anual: <b>2 meses gratis</b>.`,fin:"Ver planes",finAct:()=>planSheet()}
+  ];
+}
+function duenoSteps(){
+  return [
+    {t:"👋 ¡Bienvenido a DL COMANDA PRO!",big:"🍽️",p:"Te muestro en 2 minutos cómo funciona: el mesero toma el pedido en el celular, la cocina lo recibe al instante y avisa cuando está listo. La guía habla y avanza sola; toca el parlante 🔊 para silenciarla."},
+    {el:".brand",t:"Tu restaurante",p:"Aquí ves el nombre del restaurante y con qué usuario entraste."},
+    {el:"#live",t:"🟢 En vivo",p:"Indica que la app está conectada: todo lo que haga el mesero, la cocina o la caja se ve al instante en todos los celulares."},
+    {view:"mesas",el:"#mGrid",t:"1. Las mesas",p:"Cada tarjeta es una mesa. Toca una mesa <b>libre</b> para tomar el pedido: eliges los productos, agregas notas (ej: sin cebolla) y tocas <b>Revisar y enviar</b>. La cocina lo recibe con sonido."},
+    {view:"mesas",el:".legend",t:"Los colores de las mesas",p:"<b>Gris</b> libre, <b>naranja</b> en cocina, <b>dorado</b> listo para recoger, <b>azul</b> cuenta abierta, <b>morado</b> pidió la cuenta y <b>rojo</b> lleva más de 15 minutos sin cobrar, para que no se olvide."},
+    {view:"mesas",el:"#mGrid",t:"Mesa ocupada",p:"Toca una mesa ocupada para ver sus pedidos, agregar otro, <b>pedir la cuenta</b>, enviarla por WhatsApp o cambiar de mesa."+lockTxt("mover")},
+    {view:"mesas",el:"#mGrid",t:"🧾 Pedir la cuenta",p:"Antes de llevar la cuenta, la app le recuerda al mesero preguntar: <b>¿desea incluir la propina voluntaria del 10%?</b> La respuesta le llega a la caja con un aviso."},
+    {view:"cocina",el:".kboard",t:"2. La cocina",p:"Los pedidos llegan solos con sonido. Toca <b>🔥 Preparar</b> y luego <b>✅ Listo</b>: el mesero recibe una alerta con sonido y vibración para recogerlo."},
+    {view:"cocina",el:"#kEst",t:"🍳🍹 Cocina y bar",p:"Si activas las estaciones, las bebidas van al bar y los platos a la cocina, cada uno con su aviso."+lockTxt("estaciones")},
+    {view:"cuentas",el:"#cajaBox",t:"3. La caja",p:"Abre la caja contando los <b>billetes y monedas</b> de la base. Registra entradas y salidas, y al final <b>cierra la caja</b>: la app te dice si cuadra, si falta o si sobra. Tarjeta y transferencia van aparte."+lockTxt("caja")},
+    {view:"cuentas",el:"#cKpis",t:"Lo del día",p:"Cuánto se ha cobrado, cuánto falta por cobrar, las mesas abiertas y las propinas."},
+    {view:"cuentas",el:"#cList",t:"💵 Cobrar",p:"Toca una cuenta para cobrar en efectivo, tarjeta o transferencia. La app calcula las vueltas, la propina y el descuento. También puedes <b>dividir la cuenta</b> entre varias personas y cambiar lo que paga cada una."+lockTxt("dividir")},
+    {view:"cuentas",el:"#cPaid",t:"Cobrado hoy",p:"Aquí quedan todos los cobros del día. Toca uno para <b>imprimir o enviar el recibo por WhatsApp</b>."+lockTxt("imprimir")},
+    {view:"ventas",el:"#vKpis",t:"4. Ventas",p:"Mira las ventas de cualquier día con las flechas o el calendario: total, propinas y pedidos."},
+    {view:"ventas",el:"#vCajas",t:"Cierres de caja",p:"Cada cierre queda guardado con quién abrió, quién cerró, el conteo y si cuadró."},
+    {view:"ventas",el:"#vMes",t:"Por mesero y lo más pedido",p:"Cuánto vendió cada mesero y cuáles son los productos estrella."},
+    {view:"ventas",el:"#vCsv",t:"📊 Excel y WhatsApp",p:"Descarga las ventas en un <b>Excel ordenado</b> o envía el resumen del día por WhatsApp a tu socio o contador."+lockTxt("excel")},
+    {view:"admin",el:"#aEmp",t:"5. Administración",p:"Edita el nombre de tu restaurante y activa las estaciones cocina y bar. Desde aquí también envías los datos de acceso a tu personal."},
+    {view:"admin",el:"#aPerNew",t:"Tu personal",p:"Crea a tus <b>meseros</b> y a <b>cocina / caja</b>. La app les da un <b>PIN</b>: entran en <b>🍽️ Personal</b> con el nombre del restaurante, el NIT, su usuario y su PIN."},
+    {view:"admin",el:"#aProdNew",t:"Tus productos",p:"Agrega tus productos con precio y categoría. Puedes ocultar los que se agotan para que el mesero no los pida."},
+    {view:"admin",el:"#aMesaNew",t:"Tus mesas",p:"Crea, renombra u ordena tus mesas (ej: Mesa 1, Barra, Terraza 2)."},
+    {el:"#meBtn",t:"Tu cuenta y ajustes",p:"Activa los <b>avisos</b> para que te lleguen con el celular bloqueado, prueba el sonido, elige el papel de la impresora, <b>descarga la app</b>, escribe a soporte o <b>vuelve a ver esta guía</b>."},
+    {el:"#themeBtn",t:"Modo día y noche",p:"Cambia entre el modo oscuro y el modo día con bordes dorados."},
+    ...planesSteps()
+  ];
+}
+const nomGuia=()=>st.usuario&&!Object.values(ROL_TXT).includes(st.usuario)?", "+esc(st.usuario):"";
+function meseroSteps(){
+  return [
+    {t:"👋 ¡Hola"+nomGuia()+"!",big:"🧑‍🍳",p:"Te muestro rápido cómo tomar pedidos con DL COMANDA PRO."},
+    {view:"mesas",el:"#mGrid",t:"Toma el pedido",p:"Toca una mesa <b>libre</b>, elige los productos (cada toque suma 1), agrega notas como <b>sin cebolla</b> y toca <b>Revisar y enviar</b>. La cocina lo recibe al instante."},
+    {view:"mesas",el:".legend",t:"Los colores",p:"<b>Naranja</b> en cocina, <b>dorado</b> listo para recoger, <b>azul</b> cuenta abierta, <b>morado</b> pidió la cuenta y <b>rojo</b> lleva más de 15 minutos sin cobrar."},
+    {view:"mesas",el:"#mGrid",t:"🔔 Cuando esté listo",p:"Cuando la cocina marque el pedido listo te suena una alerta con vibración. Recógelo y márcalo como <b>entregado</b>."},
+    {view:"mesas",el:"#mGrid",t:"🧾 Pedir la cuenta",p:"Toca la mesa y <b>Pedir la cuenta</b>. Pregúntale al cliente: <b>¿desea incluir la propina voluntaria del 10%?</b> La caja recibe la respuesta."},
+    {view:"listos",el:'#tabs [data-v="listos"]',t:"Mis pedidos",p:"Aquí ves lo que está listo para recoger, lo que sigue en cocina y lo que ya entregaste hoy."},
+    {el:"#meBtn",t:"Activa los avisos",p:"Toca aquí y activa los <b>avisos</b> para que la alerta te llegue aunque el celular esté bloqueado. También puedes volver a ver esta guía."},
+    {t:"¡Listo! 💪",big:"✅",p:"Ya puedes tomar pedidos. Si tienes dudas, pregúntale al dueño del restaurante.",fin:"Empezar",finAct:()=>go("mesas")}
+  ];
+}
+function cocinaSteps(){
+  return [
+    {t:"👋 ¡Hola"+nomGuia()+"!",big:"🔥",p:"Te muestro cómo recibir los pedidos y cobrar con DL COMANDA PRO."},
+    {view:"cocina",el:".kboard",t:"Los pedidos llegan solos",p:"Cada pedido nuevo suena y aparece en <b>🔔 Nuevos</b>. Toca <b>🔥 Preparar</b> y luego <b>✅ Listo</b>: el mesero recibe la alerta."},
+    {view:"cocina",el:"#kEst",t:"Cocina o bar",p:"Elige si este celular es de la cocina o del bar para ver solo lo tuyo."},
+    {view:"cuentas",el:"#cajaBox",t:"La caja",p:"Abre la caja contando los billetes y monedas de la base y ciérrala al final del turno: la app te dice si cuadra."+lockTxt("caja")},
+    {view:"cuentas",el:"#cList",t:"Cobrar",p:"Cuando una mesa <b>pide la cuenta</b> te llega un aviso con la respuesta de la propina. Toca la cuenta, elige el medio de pago y listo."},
+    {view:"mesas",el:"#mGrid",t:"Las mesas",p:"También ves todas las mesas y su estado. La mesa en <b>rojo</b> lleva más de 15 minutos sin cobrar."},
+    {el:"#meBtn",t:"Tu cuenta y ajustes",p:"Activa los avisos, elige el <b>papel de la impresora</b> (58 u 80 mm) y deja la <b>pantalla siempre encendida</b> en la cocina. También puedes volver a ver esta guía."},
+    {t:"¡Listo! 💪",big:"✅",p:"Ya puedes recibir pedidos.",fin:"Ir a la cocina",finAct:()=>go("cocina")}
+  ];
+}
+function startTour(force){
+  if(tourOn()||!st.ready)return;
+  const steps=st.rol==="dueno"?duenoSteps():st.rol==="mesero"?meseroSteps():cocinaSteps();
+  TOUR={steps,i:0,prev:st.view};LS.set(tkey(st.rol),1);
+  $("#tour").classList.add("on");$("#orderbar").style.visibility="hidden";showStep(0,1);
+}
+function endTour(skip){
+  callar();if(!TOUR)return;const s=TOUR.steps[TOUR.i],t=TOUR;TOUR=null;
+  $("#tour").classList.remove("on");$("#orderbar").style.visibility="";
+  if(!skip&&s&&s.finAct)s.finAct();else go(TABS[st.rol].some(x=>x[0]===t.prev)?t.prev:TABS[st.rol][0][0]);
+}
+async function showStep(i,dir){
+  if(!TOUR)return;const steps=TOUR.steps;
+  if(i<0)i=0;if(i>=steps.length){endTour(false);return;}
+  const s=steps[i];TOUR.i=i;
+  if(s.view&&s.view!==st.view&&TABS[st.rol].some(x=>x[0]===s.view))go(s.view);
+  await new Promise(r=>setTimeout(r,s.view?180:20));
+  const el=s.el?document.querySelector(s.el):null;
+  if(s.el&&!visible(el))return showStep(i+(dir||1),dir||1);
+  if(el){el.scrollIntoView({block:"center",behavior:"smooth"});await new Promise(r=>setTimeout(r,330));}
+  if(!TOUR||TOUR.i!==i)return;
+  const tip=$("#tour .ttip"),n=steps.length,last=i===n-1;
+  tip.className="ttip"+(el?"":" center");
+  tip.innerHTML=`${VOZ.ok?`<button class="tvoz" type="button" data-tv aria-label="${VOZ.on?"Silenciar la guía":"Activar la voz"}">${VOZ.on?"🔊":"🔇"}</button>`:""}<div class="tstep">Guía · ${i+1} de ${n}</div>${s.big?`<div class="tbig">${s.big}</div>`:""}<h4>${s.t}</h4>${s.price?`<div class="tprice">${s.price}</div>`:""}<p>${s.p}</p>${s.lista?`<ul>${s.lista.map(x=>`<li>${x}</li>`).join("")}</ul>`:""}
+    <div class="tacts">${last?"":`<button class="tskip" type="button" data-ts>Saltar guía</button>`}${i>0?`<button class="tb" type="button" data-tp>‹</button>`:""}<button class="tb tn" type="button" data-tn>${last?(s.fin||"Terminar"):(i===0?"Empezar ›":"Siguiente ›")}</button></div>
+    <div class="tdots">${steps.map((_,j)=>`<i class="${j===i?"on":""}"></i>`).join("")}</div>${VOZ.ok&&VOZ.on&&!last?`<div class="tbar"><i></i></div>`:""}`;
+  tip.querySelector("[data-tn]").onclick=()=>{callar();last?endTour(false):showStep(i+1,1);};
+  const tp=tip.querySelector("[data-tp]");if(tp)tp.onclick=()=>{callar();showStep(i-1,-1);};
+  const ts=tip.querySelector("[data-ts]");if(ts)ts.onclick=()=>endTour(true);
+  const tv=tip.querySelector("[data-tv]");if(tv)tv.onclick=()=>{VOZ.on=!VOZ.on;LS.set("dc_tour_voz",VOZ.on);if(!VOZ.on)callar();showStep(i,1);};
+  place(el);leer(s,i,last);
+}
+function place(el){
+  const spot=$("#tour .tspot"),tip=$("#tour .ttip");
+  if(!el){spot.classList.add("none");tip.style.left="";tip.style.top="";return;}
+  spot.classList.remove("none");
+  const r=el.getBoundingClientRect(),pad=6,vw=innerWidth,vh=innerHeight;
+  const top=Math.max(4,r.top-pad),h=Math.min(r.height+pad*2,vh*.55);
+  spot.style.left=(r.left-pad)+"px";spot.style.top=top+"px";spot.style.width=(r.width+pad*2)+"px";spot.style.height=h+"px";
+  const tw=tip.offsetWidth,th=tip.offsetHeight;
+  let tt=top+h+12;if(tt+th>vh-8)tt=top-th-12;if(tt<8)tt=Math.max(8,vh-th-8);
+  let tl=r.left+r.width/2-tw/2;tl=Math.max(12,Math.min(vw-tw-12,tl));
+  tip.style.left=tl+"px";tip.style.top=tt+"px";
+}
+addEventListener("resize",()=>{if(TOUR){const s=TOUR.steps[TOUR.i];place(s&&s.el?document.querySelector(s.el):null);}});
+addEventListener("scroll",()=>{if(TOUR){const s=TOUR.steps[TOUR.i];if(s&&s.el)place(document.querySelector(s.el));}},{passive:true});
+function maybeTour(){
+  if(!st.ready||tourOn()||LS.get(tkey(st.rol),0))return;
+  if($("#scrim").classList.contains("on")||$(".alert.on")){clearTimeout(tourT);tourT=setTimeout(maybeTour,4000);return;}
+  startTour();
+}
 
 /* PWA: descargar / instalar */
 let installEvt=null;

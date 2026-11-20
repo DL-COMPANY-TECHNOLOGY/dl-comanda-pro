@@ -62,4 +62,11 @@ supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo c
 - [x] Pago dividido (partes iguales o por lo que pidió cada uno) y pago con varios medios
 - [x] Pedir la cuenta: el mesero pregunta al cliente por la propina voluntaria del 10% y caja recibe el aviso
 - [x] Caja: apertura con base, entradas y salidas, cierre con conteo de billetes, faltante/sobrante e historial
-- [x] Planes Gratis / Pro / Premium con prueba Premium de 14 días (activar: `select activar_plan('NIT', 'pro', 1);` en el SQL Editor)
+- [x] Planes Gratis / Pro / Premium con prueba Premium de 3 días y bono de 7 días de Premium al comprar Pro (activar: `select activar_plan('NIT', 'pro', 1);` en el SQL Editor)
+- [x] Precio de lanzamiento -50%: Pro $30.000 y Premium $50.000 al mes (en `config.js`: `LANZAMIENTO: false` para quitarlo)
+- [x] Conteo de billetes y monedas al abrir y cerrar la caja; tarjeta y transferencia separadas del efectivo
+- [x] Mesa en rojo cada 15 minutos sin cobrar
+- [x] Ticket como imagen por WhatsApp (cuenta, recibo y cierre de caja)
+- [x] Valores editables al dividir la cuenta
+- [x] Excel profesional (.xlsx) con resumen, cobros, pagos, productos y detalle
+- [x] Guía interactiva con voz para dueño, mesero y cocina, con los planes al final
