@@ -312,6 +312,19 @@ body.standalone .dl-only{display:none!important}
 .dev-links a{font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;text-decoration:none;color:var(--gold);cursor:pointer}
 .dev-links.ll a{color:var(--muted)}
 .dev-copy{margin:12px 0 0;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.prod.out{opacity:.45;pointer-events:none;filter:grayscale(.6)}
+.prod .stk{font-size:11px;font-weight:800;color:var(--warn,#ffb547)}
+.prod.out .stk{color:var(--bad,#ff5c7a)}
+.lk-status{margin:-2px 0 12px;font-size:12px;line-height:1.45;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(127,127,127,.08)}
+.lk-status.hit{border-color:rgba(16,185,129,.55);background:rgba(16,185,129,.12)}
+.lk-status.miss{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.1)}
+.inrow{display:flex;gap:8px}.inrow input{flex:1;min-width:0}
+.scanov{position:fixed;inset:0;z-index:200;background:#000;display:none;flex-direction:column}
+.scanov.on{display:flex}
+.scanov .sc-top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;color:#fff;font-weight:800}
+.scanov .sc-top button{background:rgba(255,255,255,.15);border:0;color:#fff;width:38px;height:38px;border-radius:12px;font-size:18px}
+.scanov #reader{flex:1;width:100%}
+.scanov .sc-hint{color:#ddd;text-align:center;font-size:13px;padding:12px 16px 22px}
 </style>
 </head>
 <body class="locked">
@@ -399,7 +412,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.1 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v1.2 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -477,6 +490,7 @@ body.standalone .dl-only{display:none!important}
 </div></div>
 <div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
+<div class="scanov" id="scanOv"><div class="sc-top"><b>Escanear código de barras</b><button type="button" id="scClose" aria-label="Cerrar escáner">✕</button></div><div id="reader"></div><p class="sc-hint">Apunta la cámara al código de barras del producto</p></div>
 
 <script>
 (function(){
@@ -906,6 +920,11 @@ function abrirOrden(mid){
 function saveDraft(){if(!st.orden)return;if(st.orden.lines.length||st.orden.nota)LS.set("dc_draft_"+st.orden.mid,{lines:st.orden.lines,nota:st.orden.nota});else LS.del("dc_draft_"+st.orden.mid);}
 const prodsAct=()=>st.productos.filter(p=>p.activo);
 function qtyOf(pid){return st.orden?st.orden.lines.filter(l=>l.pid===pid).reduce((s,l)=>s+l.cant,0):0;}
+// Stock: null = no se controla (platos preparados). Si se controla, no deja pedir más de lo que hay.
+const stockMin=p=>p.stock_min!=null?p.stock_min:3;
+function stockLeft(p){return p.stock==null?null:p.stock-qtyOf(p.id);}
+function puedeSumar(pid){const p=st.productos.find(x=>x.id===pid);if(!p||p.stock==null)return true;
+  if(stockLeft(p)<=0){toast(p.stock<=0?`${p.nombre} está agotado`:`Solo quedan ${p.stock} de ${p.nombre}`);vib([40,30,40]);return false;}return true;}
 function renderOrden(){
   if(!st.orden){go("mesas");return;}
   const m=st.mesas.find(x=>x.id===st.orden.mid);
@@ -914,14 +933,17 @@ function renderOrden(){
   if(!cats.includes(oCat))oCat="Todo";
   $("#oCats").innerHTML=cats.map(c=>`<button class="chip ${c===oCat?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
   const q=$("#oQ").value.trim().toLowerCase();
-  const list=ps.filter(p=>(oCat==="Todo"||p.categoria===oCat)&&(!q||p.nombre.toLowerCase().includes(q)));
-  $("#oGrid").innerHTML=list.length?list.map(p=>{const n=qtyOf(p.id);return `<button class="prod ${n?"sel":""}" data-p="${p.id}">${n?`<span class="q">${n}</span>`:""}<span class="n">${esc(p.nombre)}</span><span class="p num">${money(p.precio)}</span></button>`;}).join("")
+  const list=ps.filter(p=>(oCat==="Todo"||p.categoria===oCat)&&(!q||p.nombre.toLowerCase().includes(q)||(p.codigo&&p.codigo.includes(q))));
+  $("#oGrid").innerHTML=list.length?list.map(p=>{const n=qtyOf(p.id),left=stockLeft(p),out=left!==null&&left<=0&&!n;
+    const stk=p.stock==null?"":(p.stock<=0?'<span class="stk">Agotado</span>':(p.stock<=stockMin(p)?`<span class="stk">Quedan ${p.stock}</span>`:""));
+    return `<button class="prod ${n?"sel":""} ${out?"out":""}" data-p="${p.id}">${n?`<span class="q">${n}</span>`:""}<span class="n">${esc(p.nombre)}</span>${stk}<span class="p num">${money(p.precio)}</span></button>`;}).join("")
     :`<div class="empty" style="grid-column:1/-1">${ps.length?"Nada coincide con la búsqueda":"El menú está vacío."+(st.rol==="dueno"?" Agrega productos en Admin.":"")}</div>`;
 }
 $("#oCats").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;oCat=b.dataset.c;renderOrden();};
 $("#oQ").oninput=()=>renderOrden();
 $("#oBack").onclick=()=>{saveDraft();go("mesas");};
 $("#oGrid").onclick=e=>{const b=e.target.closest("[data-p]");if(!b||!st.orden)return;
+  if(!puedeSumar(b.dataset.p))return;
   const l=st.orden.lines.find(x=>x.pid===b.dataset.p&&!x.nota);if(l)l.cant=Math.min(99,l.cant+1);else st.orden.lines.push({pid:b.dataset.p,cant:1,nota:""});
   vib(15);saveDraft();renderOrden();renderOrderbar();};
 function ordenTot(){return st.orden?st.orden.lines.reduce((s,l)=>{const p=st.productos.find(x=>x.id===l.pid);return s+(p?p.precio*l.cant:0);},0):0;}
@@ -947,7 +969,7 @@ function revisarSheet(){
   openSheet("",s=>{draw(s);
     s.onclick=async e=>{const d=e.target.closest("[data-dec]"),i=e.target.closest("[data-inc]");
       if(d){o.lines[+d.dataset.dec].cant--;saveDraft();draw(s);renderOrden();renderOrderbar();if(!o.lines.length)closeSheet();return;}
-      if(i){const l=o.lines[+i.dataset.inc];l.cant=Math.min(99,l.cant+1);saveDraft();draw(s);renderOrden();renderOrderbar();return;}
+      if(i){const l=o.lines[+i.dataset.inc];if(!puedeSumar(l.pid))return;l.cant=Math.min(99,l.cant+1);saveDraft();draw(s);renderOrden();renderOrderbar();return;}
       if(e.target.closest("[data-x]")){closeSheet();return;}
       const sd=e.target.closest("[data-send]");if(sd)enviar(sd);};
     s.oninput=e=>{const n=e.target.closest("[data-note]");if(n){o.lines[+n.dataset.note].nota=n.value;saveDraft();}if(e.target.id==="rNota"){o.nota=e.target.value;saveDraft();}};
@@ -1090,7 +1112,7 @@ function renderAdmin(){
   $("#aShareAcc").onclick=()=>share(`🍽️ Ingreso a DL COMANDA PRO\n\nAbre: ${location.origin+location.pathname}\nToca "🍽️ Personal" y escribe:\n• Restaurante: ${e.nombre}\n• NIT: ${e.nit}\n\nLuego tu usuario y tu PIN (te los da el dueño).`);
   $("#aPer").innerHTML=st.personal.map(p=>`<button class="row" data-per="${p.id}"><div class="grow"><div class="t">${esc(p.usuario)}</div><div class="sub">${p.rol==="mesero"?"🧑‍🍳 Mesero":"🔥 Cocina / Caja"}${p.bloqueado_hasta&&new Date(p.bloqueado_hasta)>new Date()?" · 🔒 bloqueado":""}</div></div><span class="pill ${p.activo?"ok":""}">${p.activo?"Activo":"Inactivo"}</span></button>`).join("")||'<div class="empty">Crea a tus meseros y a cocina / caja para que entren con su PIN.</div>';
   const cats={};st.productos.forEach(p=>(cats[p.categoria]=cats[p.categoria]||[]).push(p));
-  $("#aProd").innerHTML=Object.keys(cats).map(c=>`<div class="row" style="background:var(--goldSoft);padding:8px 14px"><b style="font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)">${esc(c)}</b></div>`+cats[c].map(p=>`<button class="row" data-pr="${p.id}"><div class="grow"><div class="t" style="${p.activo?"":"opacity:.5;text-decoration:line-through"}">${esc(p.nombre)}</div><div class="sub">${p.activo?"Disponible":"Agotado / oculto"}</div></div><b class="num">${money(p.precio)}</b></button>`).join("")).join("")||'<div class="empty">Agrega los platos y bebidas de tu menú</div>';
+  $("#aProd").innerHTML=Object.keys(cats).map(c=>`<div class="row" style="background:var(--goldSoft);padding:8px 14px"><b style="font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)">${esc(c)}</b></div>`+cats[c].map(p=>`<button class="row" data-pr="${p.id}"><div class="grow"><div class="t" style="${p.activo?"":"opacity:.5;text-decoration:line-through"}">${esc(p.nombre)}</div><div class="sub">${!p.activo?"Agotado / oculto":p.stock==null?"Disponible":p.stock<=0?"⚠️ Sin stock":p.stock<=stockMin(p)?`⚠️ Quedan ${p.stock}`:`Stock: ${p.stock}`}</div></div><b class="num">${money(p.precio)}</b></button>`).join("")).join("")||'<div class="empty">Agrega los platos y bebidas de tu menú</div>';
   $("#aMesas").innerHTML=st.mesas.map(m=>`<button class="row" data-ms="${m.id}"><div class="grow"><div class="t" style="${m.activa?"":"opacity:.5"}">${esc(m.nombre)}</div><div class="sub">${m.activa?"Activa":"Oculta"} · orden ${m.orden}</div></div><span>›</span></button>`).join("")||'<div class="empty">Crea tus mesas</div>';
 }
 $("#aEmpEdit").onclick=()=>openSheet(`<h3>Datos del restaurante</h3><p class="hint">Si cambias el nombre, tu personal debe escribir el nombre nuevo al ingresar. El NIT solo lo cambia DL COMPANY.</p>
@@ -1123,21 +1145,110 @@ $("#aPer").onclick=e=>{const b=e.target.closest("[data-per]");if(!b)return;const
     s.querySelector("[data-pin]").onclick=()=>confirmSheet("¿PIN nuevo para "+p.usuario+"?","El PIN anterior deja de servir y se cierra su sesión.","Generar PIN",async()=>{const pin=await rpc("regenerar_pin",{p_id:p.id});await loadPersonal();pinSheet(p.usuario,p.rol,pin);});
     s.querySelector("[data-del]").onclick=()=>confirmSheet("¿Eliminar a "+p.usuario+"?","Ya no podrá ingresar. Sus pedidos anteriores se conservan.","Eliminar",async()=>{await rpc("eliminar_personal",{p_id:p.id});await loadPersonal();closeSheet();toast("Eliminado");},true);});};
 
+/* ---------- escáner de código de barras ---------- */
+let h5=null;
+function loadScanLib(){
+  if(window.Html5Qrcode)return Promise.resolve();
+  return new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js";sc.onload=res;sc.onerror=()=>rej(new Error("lib"));document.head.appendChild(sc);});
+}
+async function openScanner(onCode){
+  try{await loadScanLib();}catch(e){toast("No se pudo cargar el escáner. Revisa tu conexión.");return;}
+  $("#scanOv").classList.add("on");
+  try{
+    const F=window.Html5QrcodeSupportedFormats;
+    h5=new Html5Qrcode("reader",{verbose:false,formatsToSupport:F?[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128,F.ITF]:undefined,experimentalFeatures:{useBarCodeDetectorIfSupported:true}});
+    let done=false;
+    await h5.start({facingMode:"environment"},{fps:12,qrbox:(w,h)=>({width:Math.min(w*.85,320),height:Math.min(h*.4,160)})},txt=>{if(done)return;done=true;vib(60);closeScanner().then(()=>onCode(String(txt).trim().replace(/\s+/g,"")));},()=>{});
+  }catch(e){closeScanner();toast("No se pudo abrir la cámara. Revisa el permiso de cámara.",3500);}
+}
+function closeScanner(){const hide=()=>$("#scanOv").classList.remove("on");if(h5){const x=h5;h5=null;return x.stop().then(()=>{try{x.clear();}catch(e){}hide();}).catch(hide);}hide();return Promise.resolve();}
+$("#scClose").onclick=()=>closeScanner();
+
+/* ---------- búsqueda automática por código de barras ----------
+   1) Catálogo DL (tabla catalogo)  2) Open Food Facts, Open Beauty Facts y Open Products Facts */
+const LK_SOURCES=[["https://world.openfoodfacts.org","Open Food Facts"],["https://world.openbeautyfacts.org","Open Beauty Facts"],["https://world.openproductsfacts.org","Open Products Facts"]];
+const lkCache={};let lkSeq=0;
+const lkTimeout=(pr,ms)=>Promise.race([pr,new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")),ms))]);
+const lkCode=c=>{c=String(c||"").replace(/\D/g,"");return c.length>=8&&c.length<=14?c:"";};
+const lkNorm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
+function lkName(p){
+  let n=String(p.product_name_es||p.product_name||p.generic_name_es||p.generic_name||"").trim();if(!n)return "";
+  const brand=String(p.brands||"").split(",")[0].trim(),qty=String(p.quantity||"").trim(),nn=lkNorm(n);
+  if(brand&&!nn.includes(lkNorm(brand)))n+=" "+brand;
+  if(qty&&!nn.replace(/\s/g,"").includes(lkNorm(qty).replace(/\s/g,"")))n+=" "+qty;
+  n=n.replace(/\s+/g," ").trim();return (n.charAt(0).toUpperCase()+n.slice(1)).slice(0,60);
+}
+async function lkCatalogo(code){
+  if(!sb||!st.user)return null;
+  try{const {data}=await lkTimeout(sb.from("catalogo").select("nombre,cat").eq("codigo",code).maybeSingle(),4000);
+    if(data&&data.nombre)return {nombre:data.nombre.slice(0,60),cat:data.cat||"",fuente:"catálogo DL"};}catch(e){}
+  return null;
+}
+async function lkOpenFacts(code){
+  const tries=LK_SOURCES.map(([host,label])=>lkTimeout(fetch(`${host}/api/v2/product/${code}.json?fields=product_name,product_name_es,generic_name,generic_name_es,brands,quantity`).then(r=>r.ok?r.json():null),6000)
+    .then(d=>{const n=d&&d.status===1&&d.product?lkName(d.product):"";if(!n)throw new Error("no");return {nombre:n,cat:"",fuente:label};}));
+  try{return await Promise.any(tries);}catch(e){return null;}
+}
+async function lookupCodigo(code){
+  if(code in lkCache)return lkCache[code];
+  const r=(await lkCatalogo(code))||(navigator.onLine===false?null:await lkOpenFacts(code));
+  lkCache[code]=r;return r;
+}
+async function lookupFill(s,raw){
+  const code=lkCode(raw),box=s.querySelector("#lk");if(!box)return;
+  if(!code||st.productos.some(x=>x.codigo===code)){box.hidden=true;return;}
+  const seq=++lkSeq;box.hidden=false;box.className="lk-status";box.textContent="🔎 Buscando el producto…";
+  const r=await lookupCodigo(code);
+  if(seq!==lkSeq||!s.isConnected||lkCode(s.querySelector("#pb").value)!==code)return;
+  if(!r){box.className="lk-status miss";box.textContent="No encontramos este código en la base de datos. Escribe el nombre.";return;}
+  const n=s.querySelector("#pn");if(!n.value.trim())n.value=r.nombre;
+  if(r.cat&&!s.querySelector("#pc").value.trim())s.querySelector("#pc").value=r.cat;
+  const ps=s.querySelector("#ps");if(ps&&!ps.checked){ps.checked=true;ps.onchange&&ps.onchange();}
+  box.className="lk-status hit";box.innerHTML=`✅ <b>${esc(r.nombre)}</b><br>Encontrado en ${esc(r.fuente)}. Pon el <b>precio</b> y el <b>stock</b> y guarda.`;
+  toast("✅ Producto encontrado");
+  const pp=s.querySelector("#pp");if(pp&&!pp.value)setTimeout(()=>{try{pp.focus();}catch(e){}},120);
+}
+// Cada producto nuevo con código alimenta el catálogo común (sin precios ni stock)
+function aportarCatalogo(codigo,nombre,cat){
+  const code=lkCode(codigo);if(!code||!sb||!st.user||!nombre)return;
+  if(lkCache[code]&&lkCache[code].fuente==="catálogo DL")return;
+  sb.from("catalogo").insert({codigo:code,nombre:String(nombre).slice(0,120),cat:cat?String(cat).slice(0,40):null}).then(r=>{if(!r.error)lkCache[code]={nombre,cat:cat||"",fuente:"catálogo DL"};},()=>{});
+}
+
 function prodSheet(p){
   const cats=[...new Set(st.productos.map(x=>x.categoria))];
   openSheet(`<h3>${p?"Editar producto":"Nuevo producto"}</h3>
     <label class="fld"><span>Nombre</span><input id="pn" maxlength="60" value="${esc(p?p.nombre:"")}" placeholder="Ej: Bandeja paisa"></label>
     <div class="two"><label class="fld"><span>Categoría</span><input id="pc" maxlength="30" list="catl" value="${esc(p?p.categoria:(cats[0]||"Platos"))}"><datalist id="catl">${cats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist></label>
     <label class="fld"><span>Precio</span><input id="pp" inputmode="numeric" value="${p?p.precio.toLocaleString("es-CO"):""}" placeholder="0"></label></div>
+    <label class="fld"><span>Código de barras (opcional, para bebidas y empacados)</span><div class="inrow"><input id="pb" inputmode="numeric" autocomplete="off" value="${esc(p&&p.codigo||"")}" placeholder="Escanéalo o escríbelo"><button type="button" class="btn" id="pbScan" style="flex:0 0 auto">📷 Escanear</button></div></label>
+    <p class="lk-status" id="lk" hidden></p>
+    <label class="toggle"><span>Controlar stock (bebidas y productos empacados)</span><input type="checkbox" id="ps" ${p&&p.stock!=null?"checked":""}></label>
+    <div class="two" id="psW" ${p&&p.stock!=null?"":"hidden"}><label class="fld"><span>Stock actual</span><input id="psq" inputmode="numeric" value="${p&&p.stock!=null?p.stock:""}" placeholder="0"></label>
+    <label class="fld"><span>Avisar cuando queden</span><input id="psm" inputmode="numeric" value="${p&&p.stock_min!=null?p.stock_min:""}" placeholder="3"></label></div>
+    <p class="hint" id="psH" ${p&&p.stock!=null?"":"hidden"} style="margin:-4px 0 12px">Al enviar un pedido se descuenta solo; si se cancela, vuelve. Cuando llega a 0 sale <b>Agotado</b> y no se puede pedir.</p>
     <label class="toggle"><span>Disponible (si se agota, apágalo)</span><input type="checkbox" id="pa" ${!p||p.activo?"checked":""}></label>
     <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Guardar</button></div>
     ${p?`<div class="acts"><button class="btn bad" data-del>Eliminar producto</button></div>`:""}`,s=>{
     s.querySelector("#pp").oninput=e=>{const v=+e.target.value.replace(/\D/g,"");e.target.value=v?v.toLocaleString("es-CO"):"";};
     s.querySelector("[data-x]").onclick=closeSheet;
+    const ps=s.querySelector("#ps");ps.onchange=()=>{s.querySelector("#psW").hidden=!ps.checked;s.querySelector("#psH").hidden=!ps.checked;if(ps.checked)setTimeout(()=>s.querySelector("#psq").focus(),30);};
+    const pb=s.querySelector("#pb");
+    if(!p){pb.onchange=()=>lookupFill(s,pb.value);}
+    s.querySelector("#pbScan").onclick=()=>openScanner(code=>{pb.value=code;const o=st.productos.find(x=>x.codigo===code);
+      if(o&&(!p||o.id!==p.id)){toast("Ojo: ese código ya es de "+o.nombre);return;}if(!p)lookupFill(s,code);});
     s.querySelector("[data-ok]").onclick=async()=>{const d={nombre:s.querySelector("#pn").value.trim().replace(/\s+/g," "),categoria:s.querySelector("#pc").value.trim()||"General",precio:+s.querySelector("#pp").value.replace(/\D/g,"")||0,activo:s.querySelector("#pa").checked};
       if(d.nombre.length<2){toast("Escribe el nombre");return;}
+      const cod=pb.value.replace(/\D/g,"");
+      if(cod&&(cod.length<8||cod.length>14)){toast("El código de barras debe tener de 8 a 14 números");return;}
+      const dup=cod&&st.productos.find(x=>x.codigo===cod&&(!p||x.id!==p.id));if(dup){toast("Ese código ya es de "+dup.nombre);return;}
+      d.codigo=cod||null;
+      if(ps.checked){const q=s.querySelector("#psq").value.replace(/\D/g,""),mn=s.querySelector("#psm").value.replace(/\D/g,"");d.stock=Math.min(1000000,+q||0);d.stock_min=mn===""?null:Math.min(100000,+mn);}
+      else{d.stock=null;d.stock_min=null;}
       const r=p?await sb.from("productos").update(d).eq("id",p.id):await sb.from("productos").insert({...d,empresa_id:st.empresa.id,orden:st.productos.length+1});
-      if(r.error){toast(errMsg(r.error));return;}await loadProductos();closeSheet();render();toast("Guardado ✓");};
+      if(r.error){toast(errMsg(r.error));return;}
+      if(!p&&cod)aportarCatalogo(cod,d.nombre,d.categoria);
+      await loadProductos();closeSheet();render();toast("Guardado ✓");};
     const del=s.querySelector("[data-del]");if(del)del.onclick=()=>confirmSheet("¿Eliminar "+p.nombre+"?","Los pedidos anteriores conservan el nombre y precio. Si solo se agotó, mejor apágalo.","Eliminar",async()=>{const r=await sb.from("productos").delete().eq("id",p.id);if(r.error)throw r.error;await loadProductos();closeSheet();render();toast("Eliminado");},true);});
 }
 $("#aProdNew").onclick=()=>prodSheet(null);

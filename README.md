@@ -30,11 +30,12 @@ manifest.json, sw.js  Instalación como app (PWA) y avisos
 logo.svg + íconos     Marca DL COMANDA PRO
 dl-company.png        Logo de DL COMPANY -TECHNOLOGY-
 supabase/schema.sql   Tablas, seguridad (RLS), funciones y tiempo real
+supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo común (v1.2)
 ```
 
 ## Nube (Supabase)
 
-- El esquema ya está aplicado. Para un proyecto nuevo: SQL Editor → pegar `supabase/schema.sql` → Run.
+- El esquema ya está aplicado. Para un proyecto nuevo: SQL Editor → pegar `supabase/schema.sql` → Run, y después `supabase/v2-stock-catalogo.sql` → Run.
 - **Authentication → Sign In / Providers → Allow anonymous sign-ins: ON** (necesario para el ingreso con PIN).
 - **Authentication → URL Configuration → Site URL**: la dirección de GitHub Pages.
 
