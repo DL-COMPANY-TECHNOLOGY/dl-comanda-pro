@@ -412,7 +412,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.3 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v1.3.1 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -544,8 +544,37 @@ async function sysNotify(title,body,tag){
   try{const r=await navigator.serviceWorker.getRegistration();if(r){r.showNotification(title,{body,tag,renotify:true,icon:"icon-192.png",badge:"icon-192.png",vibrate:[200,100,200,100,300]});return;}}catch(e){}
   try{new Notification(title,{body,tag,icon:"icon-192.png"});}catch(e){}
 }
-function pedirPermiso(){if(!("Notification" in window)){toast(isIOS&&!isStandalone()?"En iPhone primero instala la app (Descargar app) y actívalos desde ahí":"Este navegador no permite avisos",4500);return;}
-  Notification.requestPermission().then(async p=>{if(p==="granted"){const ok=await ensurePush();toast(ok?"🔔 Avisos activados, también con la app cerrada":"Avisos activados ✓");}else toast("No se activaron los avisos");render();});}
+function pedirPermiso(){
+  if(!("Notification" in window)||!pushOK()){avisosAyuda(isIOS&&!isStandalone()?"ios":inAppBrowser?"inapp":"nosoporta");return;}
+  if(Notification.permission==="denied"){avisosAyuda("bloqueado");return;}
+  if(Notification.permission==="granted"){ensurePush().then(ok=>{toast(ok?"🔔 Avisos activos, también con la app cerrada":"No se pudo conectar los avisos. Revisa tu internet.");render();});return;}
+  let resuelto=false;
+  // Si Chrome no muestra la pregunta en unos segundos (modo silencioso o pestaña dentro de otra app), mostramos cómo hacerlo
+  const t=setTimeout(()=>{if(!resuelto)avisosAyuda("silencioso");},6000);
+  Notification.requestPermission().then(async p=>{resuelto=true;clearTimeout(t);
+    if(p==="granted"){closeSheet();const ok=await ensurePush();toast(ok?"🔔 Avisos activados, también con la app cerrada":"Avisos activados ✓");}
+    else avisosAyuda(p==="denied"?"bloqueado":"silencioso");
+    render();});
+}
+function avisosAyuda(caso){
+  const host=location.host;
+  const pasos={
+    bloqueado:`<li>Toca los <b>⋮</b> de Chrome (arriba a la derecha) → <b>Configuración</b>.</li><li><b>Configuración de sitios</b> → <b>Notificaciones</b>.</li><li>Busca <b>${host}</b> (puede estar en <b>Bloqueados</b>) y cámbialo a <b>Permitir</b>.</li><li>Vuelve aquí y recarga la página.</li>`,
+    silencioso:`<li>Mira si arriba, en la barra de la dirección, salió una <b>campanita tachada 🔕</b>: tócala y elige <b>Permitir</b>.</li><li>Si no aparece, toca los <b>⋮</b> de Chrome → <b>Configuración</b> → <b>Configuración de sitios</b> → <b>Notificaciones</b> → <b>${host}</b> → <b>Permitir</b>.</li><li>Si abriste el enlace desde WhatsApp u otra app, ábrelo mejor en <b>Chrome</b> o instala la app.</li>`,
+    inapp:`<li>Estás dentro de otra app (WhatsApp, Instagram…), y ahí no se pueden activar avisos.</li><li>Toca los <b>⋮</b> y elige <b>Abrir en Chrome</b>, o instala la app con <b>Descargar app</b>.</li>`,
+    ios:`<li>En iPhone los avisos solo funcionan con la app instalada.</li><li>Toca <b>Descargar app</b> y sigue los pasos (Compartir ⬆️ → Agregar a inicio).</li><li>Abre DL COMANDA PRO desde el ícono y toca <b>Activar avisos</b>.</li>`,
+    nosoporta:`<li>Este navegador no permite avisos. Abre la app en <b>Google Chrome</b> (Android) o instálala con <b>Descargar app</b>.</li>`
+  }[caso];
+  openSheet(`<h3>🔔 Activar los avisos</h3><p class="hint">${caso==="bloqueado"?"Los avisos están <b>bloqueados</b> para esta app en tu celular. Se desbloquean así:":caso==="silencioso"?"Tu celular no mostró la pregunta para permitir avisos. Actívalos así:":"Para recibir los pedidos y el aviso de \"listo\" con el celular bloqueado:"}</p>
+    <ol class="dlsteps">${pasos}</ol>
+    <p class="hint">Revisa también que <b>Chrome</b> tenga las notificaciones permitidas en los <b>Ajustes del celular → Apps → Chrome → Notificaciones</b>.</p>
+    ${isStandalone()?"":`<button class="dlbtn" data-install style="margin-bottom:8px">📲 Instalar la app (recomendado)</button>`}
+    <button class="btn wide" data-re style="margin-bottom:8px">Ya lo hice, comprobar</button>
+    <button class="btn ghost wide" data-x>Cerrar</button>`,sh=>{
+    sh.querySelector("[data-x]").onclick=closeSheet;
+    sh.querySelector("[data-re]").onclick=()=>{if(("Notification" in window)&&Notification.permission==="granted"){closeSheet();pedirPermiso();}else if(("Notification" in window)&&Notification.permission==="default"){closeSheet();pedirPermiso();}else toast("Siguen bloqueados. Revisa los pasos y recarga la página.",3500);};
+  });
+}
 /* avisos push: llegan aunque la app esté cerrada o la pantalla apagada */
 const VAPID=CFG.VAPID_PUBLIC||"";
 const pushOK=()=>("serviceWorker" in navigator)&&("PushManager" in window)&&!!VAPID;
@@ -556,7 +585,7 @@ async function ensurePush(){
     let sub=await reg.pushManager.getSubscription();
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID)});
     const j=sub.toJSON();await rpc("guardar_push",{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});
-    st.pushOn=true;LS.set("dc_push_ep",j.endpoint);return true;
+    st.pushOn=true;LS.set("dc_push_ep",j.endpoint);render();return true;
   }catch(e){console.warn("push",e);st.pushOn=false;return false;}
 }
 async function quitarPush(){try{const ep=LS.get("dc_push_ep",null);if(ep)await sb.rpc("borrar_push",{p_endpoint:ep});}catch(e){}st.pushOn=false;}
@@ -863,8 +892,12 @@ function renderBadges(){
   badge("cuentas",0);
 }
 function notifBanner(el){
-  const need=("Notification" in window)&&Notification.permission==="default";
-  el.innerHTML=need?`<div class="banner acc">🔔 Activa los avisos para enterarte aunque el celular esté bloqueado.<button class="btn sm" data-perm>Activar</button></div>`:"";
+  const hay="Notification" in window,perm=hay?Notification.permission:"no";
+  let html="";
+  if(perm==="default"||(!hay&&isIOS&&!isStandalone()))html=`<div class="banner acc">🔔 Activa los avisos para enterarte aunque el celular esté bloqueado.<button class="btn sm" data-perm>Activar</button></div>`;
+  else if(perm==="denied")html=`<div class="banner">🔕 Los avisos están bloqueados en este celular.<button class="btn sm" data-perm>Cómo activarlos</button></div>`;
+  else if(perm==="granted"&&!st.pushOn&&pushOK())html=`<div class="banner acc">🔔 Conectando avisos con la app cerrada…<button class="btn sm" data-perm>Reintentar</button></div>`;
+  el.innerHTML=html;
   const b=el.querySelector("[data-perm]");if(b)b.onclick=pedirPermiso;
 }
 
