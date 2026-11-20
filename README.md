@@ -36,6 +36,7 @@ supabase/v4-*.sql     Estaciones cocina / bar
 supabase/v5-*.sql     Pago dividido y mixto
 supabase/v6-*.sql     Pedir la cuenta con propina voluntaria preguntada
 supabase/v7-*.sql     Caja: apertura, movimientos y cierre
+supabase/v8-*.sql     Planes y límites
 supabase/functions/   Función que envía los avisos push
 supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo común (v1.2)
 ```
@@ -61,4 +62,4 @@ supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo c
 - [x] Pago dividido (partes iguales o por lo que pidió cada uno) y pago con varios medios
 - [x] Pedir la cuenta: el mesero pregunta al cliente por la propina voluntaria del 10% y caja recibe el aviso
 - [x] Caja: apertura con base, entradas y salidas, cierre con conteo de billetes, faltante/sobrante e historial
-- [ ] Planes de pago
+- [x] Planes Gratis / Pro / Premium con prueba Premium de 14 días (activar: `select activar_plan('NIT', 'pro', 1);` en el SQL Editor)

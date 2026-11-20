@@ -308,6 +308,16 @@ html[data-theme="light"] .lcard{background:#fff;box-shadow:0 20px 50px rgba(15,2
 body.standalone .dl-only{display:none!important}
 .dlsteps{margin:4px 0 16px;padding-left:22px;line-height:1.55;font-weight:600}.dlsteps li{margin-bottom:8px}
 .tkprev .r{display:flex;justify-content:space-between;gap:8px;padding:2px 0}.tkprev .b{font-weight:800}.tkprev .s{font-size:12px;color:var(--muted)}.tkprev .c{text-align:center}.tkprev .big{font-size:18px;font-weight:800;color:var(--gold)}.tkprev hr{border:0;border-top:1px dashed var(--line2);margin:8px 0}
+.planes{display:grid;gap:12px;margin:10px 0}
+@media(min-width:760px){.planes{grid-template-columns:repeat(3,1fr)}}
+.plan{border:1px solid var(--line2);border-radius:20px;padding:16px;background:var(--card);position:relative}
+.plan.top{border:2px solid var(--gold);box-shadow:var(--glow)}
+.plan .pn{font:700 20px "Space Grotesk",Manrope,sans-serif}.plan .pp{font:700 26px "Space Grotesk",Manrope,sans-serif;margin:4px 0}.plan .pp small{font-size:13px;color:var(--muted);font-weight:700}
+.plan ul{list-style:none;padding:0;margin:10px 0;font-size:13.5px;font-weight:600}.plan li{padding:4px 0;display:flex;gap:8px}.plan li.no{color:var(--muted);text-decoration:line-through;opacity:.7}
+.plan .tag{position:absolute;top:-11px;right:14px;background:var(--goldGrad);color:#1b1404;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
+.plan .cur{position:absolute;top:-11px;left:14px;background:var(--ok);color:#03140c;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
+.mesa.lock,.prod.lock{opacity:.45;filter:grayscale(.6)}
+.lockb{font-size:11px;font-weight:800;color:var(--gold)}
 /* footer */
 .dev-footer{text-align:center;padding:20px 16px 120px;margin-top:22px;border-top:1px solid var(--line)}
 .dev-mini{display:flex;align-items:center;justify-content:center;gap:10px;text-align:left;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:700}
@@ -404,6 +414,7 @@ body.standalone .dl-only{display:none!important}
   </section>
 
   <section class="view" id="v-admin">
+    <div class="sec"><h2>Tu plan</h2></div><div id="aPlan"></div>
     <div class="sec"><h2>Restaurante</h2><button class="btn sm" id="aEmpEdit">Editar</button></div>
     <div class="card" id="aEmp"></div>
     <div class="sec"><h2>Personal</h2><button class="btn sm gold" id="aPerNew">+ Usuario</button></div>
@@ -420,7 +431,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.7 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v1.8 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -519,10 +530,10 @@ document.querySelectorAll(".wa-link").forEach(a=>a.href=WA+"?text="+encodeURICom
 const sb=(window.supabase&&CFG.SUPABASE_URL)?window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"dc_auth"},realtime:{params:{eventsPerSecond:20}}}):null;
 
 const st={user:null,perfil:null,rol:null,empresa:null,usuario:"",mesas:[],productos:[],ped:new Map(),ready:false,view:null,
-  orden:null,kSeg:"nuevo",cobros:[],pushOn:false,caja:null,cajaRes:null,cajaMovs:[],mine:new Set(LS.get("dc_mine",[])),alerts:new Set(),live:false,vDate:today(),personal:[],sheetFn:null,booting:false};
+  orden:null,kSeg:"nuevo",cobros:[],pushOn:false,plan:null,caja:null,cajaRes:null,cajaMovs:[],mine:new Set(LS.get("dc_mine",[])),alerts:new Set(),live:false,vDate:today(),personal:[],sheetFn:null,booting:false};
 
 /* ---------- utilidades de interfaz ---------- */
-let toastT;function toast(m,ms){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),ms||2600);}
+let toastT;function toast(m,ms){if(typeof m==="string"&&/^PLAN: /.test(m)){planSheet(m.slice(6));return;}const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),ms||2600);}
 function openSheet(html,mount){const s=$("#sheet");s.innerHTML='<div class="grab"></div>'+html;$("#scrim").classList.add("on");st.sheetFn=null;if(mount)mount(s);}
 function closeSheet(){$("#scrim").classList.remove("on");$("#sheet").innerHTML="";st.sheetFn=null;}
 $("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeSheet();});
@@ -588,6 +599,7 @@ const VAPID=CFG.VAPID_PUBLIC||"";
 const pushOK=()=>("serviceWorker" in navigator)&&("PushManager" in window)&&!!VAPID;
 function b64u(x){const pad="=".repeat((4-x.length%4)%4);const b=atob((x+pad).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(b,c=>c.charCodeAt(0));}
 async function ensurePush(){
+  if(st.plan&&!feat("push"))return false;
   if(!pushOK()||!st.ready||!("Notification" in window)||Notification.permission!=="granted")return false;
   try{const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
@@ -744,7 +756,7 @@ async function boot(){
     if(em.error)throw em.error;
     st.perfil=pf.data;st.rol=rol;st.empresa=em.data;
     st.usuario=rol==="dueno"?"Dueño":(LS.get("dc_usr_"+st.user.id,null)||ROL_TXT[rol]);
-    await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros(),loadCaja()]);
+    await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros(),loadCaja(),loadPlan()]);
     st.ready=true;
     showLogin(false);buildTabs();
     const v=LS.get("dc_view_"+rol,null);go(TABS[rol].some(t=>t[0]===v)?v:TABS[rol][0][0]);
@@ -766,6 +778,47 @@ async function loadCobros(){
   if(st.rol==="mesero"){st.cobros=[];return;}
   const r=await sb.from("cobros").select("*,cobro_pagos(*)").eq("fecha",today()).order("creado",{ascending:false}).limit(500);
   if(!r.error)st.cobros=r.data||[];
+}
+/* ---------- PLANES ---------- */
+const PLAN_FULL={plan:"premium",limites:{mesas:null,productos:null,usuarios:null,pedidos_dia:null,historial:null,push:true,imprimir:true,dividir:true,caja:true,excel:true,mover:true,estaciones:true,stock:true,soporte:true},uso:{}};
+async function loadPlan(){try{const r=await sb.rpc("revisar_plan");st.plan=(!r.error&&r.data)?r.data:PLAN_FULL;}catch(e){st.plan=PLAN_FULL;}}
+const PL=()=>st.plan||PLAN_FULL;
+const feat=k=>PL().limites[k]===true;
+const lim=k=>PL().limites[k]==null?null:+PL().limites[k];
+const PLAN_TXT={gratis:"Gratis",pro:"Pro",premium:"Premium"};
+const PRECIOS=CFG.PRECIOS||{pro:39900,premium:69900};
+const FEAT_PLAN={push:"pro",imprimir:"pro",dividir:"pro",caja:"pro",excel:"pro",mover:"pro",estaciones:"premium",stock:"premium"};
+const FEAT_TXT={push:"Avisos con la app cerrada o el celular bloqueado",imprimir:"Imprimir comandas, cuentas y recibos",dividir:"Dividir la cuenta y pagar con varios medios",caja:"Caja con apertura, salidas y cierre con arqueo",excel:"Descargar las ventas en Excel",mover:"Cambiar y juntar mesas",estaciones:"Estaciones cocina y bar separadas",stock:"Control de stock y lector de código de barras",historial:"Ver ventas de días anteriores"};
+function quiere(k){if(feat(k))return true;planSheet(`${FEAT_TXT[k]||"Esta función"} es del plan ${PLAN_TXT[FEAT_PLAN[k]||"pro"]}.`,FEAT_PLAN[k]);return false;}
+function rango(lista,id,l){if(l==null)return true;const i=lista.findIndex(x=>x.id===id);return i>-1&&i<l;}
+const mesaOK=id=>rango(st.mesas.filter(m=>m.activa),id,lim("mesas"));
+const prodOK=id=>rango(st.productos.filter(p=>p.activo),id,lim("productos"));
+function waPlan(plan){return WA+"?text="+encodeURIComponent(`Hola DL Company 👋 Quiero activar el plan ${PLAN_TXT[plan]} de DL COMANDA PRO.\nRestaurante: ${st.empresa?st.empresa.nombre:""}\nNIT: ${st.empresa?st.empresa.nit:""}`);}
+function planSheet(motivo,recom){
+  const cur=PL().plan;
+  const L=(ok,t)=>`<li class="${ok?"":"no"}">${ok?"✅":"✖️"} ${t}</li>`;
+  const card=(k,precio,items,extra)=>`<div class="plan ${k==="premium"?"top":""}">${k==="premium"?'<span class="tag">⭐ TODO INCLUIDO</span>':""}${cur===k?'<span class="cur">Tu plan</span>':""}
+    <div class="pn">${PLAN_TXT[k]}</div><div class="pp">${precio?money(precio)+'<small> /mes</small>':"$0"}</div><ul>${items}</ul>
+    ${k!=="gratis"&&cur!==k&&st.rol==="dueno"?`<a class="btn ${k==="premium"?"gold":"pri"} wide" style="display:block;text-align:center;text-decoration:none" href="${waPlan(k)}" target="_blank" rel="noopener">Quiero el plan ${PLAN_TXT[k]}</a>`:""}${extra||""}</div>`;
+  openSheet(`<h3>${motivo?"🔒 "+esc(motivo):"Planes DL COMANDA PRO"}</h3>
+    <p class="hint">${st.rol==="dueno"?"Escoge el plan que mejor le sirva a tu restaurante. Lo activamos por WhatsApp en minutos.":"Pídele al dueño del restaurante que active un plan."}${PL().prueba&&PL().vence?` Estás en la <b>prueba Premium</b> hasta el ${new Date(PL().vence+"T12:00:00").toLocaleDateString("es-CO")}.`:""}</p>
+    <div class="planes">
+      ${card("gratis",0,L(1,"Mesero → cocina en vivo")+L(1,"5 mesas · 20 productos")+L(1,"2 usuarios (1 mesero + 1 cocina)")+L(1,"25 pedidos al día")+L(1,"Propina preguntada y cobro simple")+L(1,"Ventas solo de hoy")+L(0,"Avisos con la app cerrada")+L(0,"Imprimir comandas y cuentas")+L(0,"Dividir cuenta · Caja y cierre")+L(0,"Excel · cambiar mesas"))}
+      ${card("pro",PRECIOS.pro,L(1,"Todo lo del plan Gratis")+L(1,"20 mesas · 150 productos")+L(1,"8 usuarios")+L(1,"Pedidos ilimitados")+L(1,"🔔 Avisos con la app cerrada")+L(1,"🖨️ Imprimir comandas, cuentas y recibos")+L(1,"➗ Dividir cuenta y pago mixto")+L(1,"💰 Caja con cierre y arqueo")+L(1,"Excel · cambiar y juntar mesas · 90 días de historial")+L(0,"Estaciones cocina / bar")+L(0,"Stock y código de barras"))}
+      ${card("premium",PRECIOS.premium,L(1,"<b>Toda la app al 100%</b>")+L(1,"Mesas, productos y usuarios ilimitados")+L(1,"🍳🍹 Estaciones cocina y bar")+L(1,"📦 Stock y lector de código de barras")+L(1,"Historial ilimitado")+L(1,"Todo lo del plan Pro")+L(1,"⭐ Soporte prioritario por WhatsApp y sugerencias de mejora"))}
+    </div>
+    <p class="hint" style="text-align:center">Pago anual: <b>2 meses gratis</b>. Precios en pesos colombianos.</p>
+    <button class="btn ghost wide" data-x>Cerrar</button>`,s2=>{s2.querySelector("[data-x]").onclick=closeSheet;});
+}
+function planCard(){
+  const P=PL(),u=P.uso||{},L2=P.limites;
+  const bar=(t,n,l)=>`<div class="row"><div class="grow"><div class="t" style="font-size:14px">${t}</div><div class="meter"><i style="width:${l?Math.min(100,Math.round(n/l*100)):12}%;${l&&n>=l?"background:var(--bad)":""}"></i></div></div><span class="sub num">${n||0}${l?" / "+l:" · ilimitado"}</span></div>`;
+  const dias=P.vence?Math.ceil((new Date(P.vence+"T23:59:59-05:00")-Date.now())/864e5):null;
+  return `<div class="card" style="border-color:var(--gold);margin-bottom:4px">
+    <div class="row" style="background:var(--goldSoft)"><div class="grow"><div class="t">${P.plan==="premium"?"⭐":P.plan==="pro"?"🚀":"🆓"} Plan ${PLAN_TXT[P.plan]}${P.prueba&&P.plan==="premium"?" · prueba":""}</div>
+      <div class="sub">${P.plan==="gratis"?"Funciones limitadas":dias!=null?(P.prueba?`Te quedan ${dias} día(s) de prueba`:`Vence el ${new Date(P.vence+"T12:00:00").toLocaleDateString("es-CO")} (${dias} días)`):"Sin vencimiento"}</div></div>
+      <button class="btn sm ${P.plan==="premium"&&!P.prueba?"":"gold"}" id="aPlanes">${P.plan==="premium"&&!P.prueba?"Ver planes":"Mejorar plan"}</button></div>
+    ${bar("Mesas",u.mesas,L2.mesas)}${bar("Productos",u.productos,L2.productos)}${bar("Usuarios",u.usuarios,L2.usuarios)}${L2.pedidos_dia?bar("Pedidos hoy",u.pedidos_hoy,L2.pedidos_dia):""}</div>`;
 }
 async function loadCaja(){
   if(st.rol==="mesero"){st.caja=null;return;}
@@ -799,7 +852,7 @@ async function subscribe(){
     .on("postgres_changes",{event:"INSERT",schema:"public",table:"cobros",filter:f},()=>debounced("cobros",()=>Promise.all([loadCobros(),loadCaja()]).then(render),400))
     .on("postgres_changes",{event:"*",schema:"public",table:"cajas",filter:f},()=>debounced("caja",()=>loadCaja().then(render),300))
     .on("postgres_changes",{event:"INSERT",schema:"public",table:"caja_movs",filter:f},()=>debounced("caja",()=>loadCaja().then(render),300))
-    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"empresas",filter:"id=eq."+st.empresa.id},p=>{if(p.new){st.empresa={...st.empresa,...p.new};render();}})
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"empresas",filter:"id=eq."+st.empresa.id},p=>{if(p.new){st.empresa={...st.empresa,...p.new};loadPlan().then(render);}})
     .subscribe(status=>{
       if(status==="SUBSCRIBED"){setLive(true);if(wasDown){wasDown=false;sync();}}
       else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){setLive(false);wasDown=true;clearTimeout(resubT);resubT=setTimeout(()=>{if(st.ready)subscribe();},3000);}
@@ -890,7 +943,7 @@ function go(v){
   document.querySelectorAll("#tabs [data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v||(v==="orden"&&b.dataset.v==="mesas")));
   if(st.rol!=="mesero")wake(v==="cocina"&&wakeWanted());
   if(v==="ventas")loadVentas();
-  if(v==="admin")loadPersonal();
+  if(v==="admin"){loadPersonal();loadPlan().then(render);}
   render();window.scrollTo(0,0);
 }
 
@@ -933,6 +986,7 @@ function notifBanner(el){
 /* ---------- impresión (impresora térmica 58/80 mm o cualquier impresora) ---------- */
 const papel=()=>LS.get("dc_papel",80);
 function printHTML(html){
+  if(!quiere("imprimir"))return;
   const w=papel(),f=document.createElement("iframe");
   f.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";document.body.appendChild(f);
   const d=f.contentDocument;d.open();
@@ -982,14 +1036,19 @@ async function imprimirRecibo(c){
 /* MESAS */
 function renderMesas(){
   notifBanner($("#mBanner"));
+  if(st.rol==="dueno"){const P=PL();const dias=P.vence?Math.ceil((new Date(P.vence+"T23:59:59-05:00")-Date.now())/864e5):null;
+    const msg=P.plan==="gratis"?`🆓 Plan Gratis: ${P.uso&&P.uso.pedidos_hoy||0} de ${lim("pedidos_dia")} pedidos hoy.`:P.prueba&&dias!=null&&dias<=5?`⭐ Tu prueba Premium termina en ${dias} día(s).`:"";
+    if(msg)$("#mBanner").insertAdjacentHTML("beforeend",`<div class="banner" style="margin-top:8px">${msg}<button class="btn sm gold" data-plan>Ver planes</button></div>`);
+    const bp=$("#mBanner [data-plan]");if(bp)bp.onclick=()=>planSheet();}
   const ms=mesasAct();
   if(!ms.length){$("#mGrid").innerHTML=`<div class="empty" style="grid-column:1/-1">No hay mesas.${st.rol==="dueno"?" Créalas en Admin.":" Pide al dueño que las cree."}</div>`;return;}
   $("#mGrid").innerHTML=ms.map(m=>{const e=estadoMesa(m);
     let x="";if(e.k==="cocina")x="hace "+durTxt(mins(e.desde));else if(e.k==="cuenta")x=(m.cuenta_propina?"✅ Con propina":"Sin propina")+" · hace "+durTxt(mins(m.cuenta_en));else if(e.k!=="libre")x=e.ps.length+(e.ps.length>1?" pedidos":" pedido");
+    if(e.k==="libre"&&!mesaOK(m.id))return `<button class="mesa libre lock" data-m="${m.id}"><span class="mn">${esc(m.nombre)}</span><span class="ms">🔒 Fuera del plan</span><span class="mt" style="font-size:12.5px;color:var(--gold)">Mejorar plan ›</span></button>`;
     return `<button class="mesa ${e.k}" data-m="${m.id}"><span class="mn">${esc(m.nombre)}</span><span class="ms">${e.txt}</span>${x?`<span class="mx">${x}</span>`:""}<span class="mt num">${e.k==="libre"?'<span style="color:var(--muted);font-size:13px">+ Tomar pedido</span>':money(e.k==="cuenta"&&m.cuenta_propina?e.tot+propDe(e.tot):e.tot)}</span></button>`;}).join("");
 }
 $("#mGrid").onclick=e=>{const b=e.target.closest("[data-m]");if(!b)return;const m=st.mesas.find(x=>x.id===b.dataset.m);if(!m)return;
-  const e2=estadoMesa(m);if(e2.k==="libre")abrirOrden(m.id);else mesaSheet(m.id);};
+  const e2=estadoMesa(m);if(e2.k==="libre"&&!mesaOK(m.id)){planSheet(`Tu plan ${PLAN_TXT[PL().plan]} permite ${lim("mesas")} mesas.`,"pro");return;}if(e2.k==="libre")abrirOrden(m.id);else mesaSheet(m.id);};
 
 function pedCard(p,acts){
   const [t,c]=EST[p.estado]||["",""];
@@ -1057,6 +1116,7 @@ function cuentaListaSheet(mid){
   });
 }
 function moverSheet(mid){
+  if(!quiere("mover"))return;
   const m=st.mesas.find(x=>x.id===mid);
   const otras=mesasAct().filter(x=>x.id!==mid);
   openSheet(`<h3>Pasar ${esc(m.nombre)} a…</h3><p class="hint">Se mueven todos sus pedidos abiertos. Si la mesa de destino ya tiene cuenta, se juntan.</p>
@@ -1072,7 +1132,7 @@ function cuentaTxt(m){const e=estadoMesa(m);const it=agrupar(e.ps);const pr=m.cu
   return `🧾 ${st.empresa.nombre}\n${m.nombre} · ${new Date().toLocaleDateString("es-CO",{timeZone:"America/Bogota"})}\n\n`+it.map(i=>`${i.cant}× ${i.nombre}  ${money(i.precio*i.cant)}`).join("\n")+
     `\n\nSubtotal: ${money(e.tot)}\n`+(pr===true?`Propina voluntaria 10%: ${money(propDe(e.tot))}\nTOTAL: ${money(e.tot+propDe(e.tot))}`:pr===false?`TOTAL: ${money(e.tot)}\n(Propina voluntaria no incluida)`:`TOTAL: ${money(e.tot)}\n¿Desea incluir la propina voluntaria del 10% (${money(propDe(e.tot))})?`)+`\n\n${LEY_PROP}\n\nDL COMANDA PRO`;}
 function cobrarSheet(mid,sinCaja){
-  if(!st.caja&&!sinCaja){abrirCajaSheet(()=>cobrarSheet(mid),()=>cobrarSheet(mid,true));return;}
+  if(!st.caja&&!sinCaja&&feat("caja")){abrirCajaSheet(()=>cobrarSheet(mid),()=>cobrarSheet(mid,true));return;}
   const m=st.mesas.find(x=>x.id===mid);const e=estadoMesa(m);
   const it=agrupar(e.ps),sub=e.tot;let met="efectivo",prop=0,propMode=m.cuenta_en&&m.cuenta_propina?"10":"0",desc=0;
   const pend=e.ps.filter(p=>p.estado==="nuevo"||p.estado==="preparando").length;
@@ -1113,7 +1173,7 @@ function cobrarSheet(mid,sinCaja){
     $s("#cMet").onclick=ev=>{const b=ev.target.closest("[data-m]");if(!b)return;met=b.dataset.m;s.querySelectorAll("#cMet button").forEach(x=>x.classList.toggle("on",x===b));$s("#cEfW").hidden=met!=="efectivo";upd();};
     $s("#cQuick").onclick=ev=>{const b=ev.target.closest("[data-q]");if(!b)return;$s("#cEf").value=(+b.dataset.q).toLocaleString("es-CO");upd();};
     $s("[data-x]").onclick=()=>mesaSheet(mid);
-    $s("[data-div]").onclick=()=>{upd();dividirSheet(mid,{sub,desc,prop,tot:total()});};
+    $s("[data-div]").onclick=()=>{if(!quiere("dividir"))return;upd();dividirSheet(mid,{sub,desc,prop,tot:total()});};
     upd();
     const ok=$s("[data-ok]");ok.onclick=async()=>{
       const rec=met==="efectivo"?num($s("#cEf").value)||null:null;
@@ -1224,12 +1284,14 @@ function renderOrden(){
   const list=ps.filter(p=>(oCat==="Todo"||p.categoria===oCat)&&(!q||p.nombre.toLowerCase().includes(q)||(p.codigo&&p.codigo.includes(q))));
   $("#oGrid").innerHTML=list.length?list.map(p=>{const n=qtyOf(p.id),left=stockLeft(p),out=left!==null&&left<=0&&!n;
     const stk=p.stock==null?"":(p.stock<=0?'<span class="stk">Agotado</span>':(p.stock<=stockMin(p)?`<span class="stk">Quedan ${p.stock}</span>`:""));
+    if(!prodOK(p.id))return `<button class="prod lock" data-lock="1"><span class="n">${esc(p.nombre)}</span><span class="lockb">🔒 Fuera del plan</span><span class="p num">${money(p.precio)}</span></button>`;
     return `<button class="prod ${n?"sel":""} ${out?"out":""}" data-p="${p.id}">${n?`<span class="q">${n}</span>`:""}<span class="n">${esc(p.nombre)}</span>${stk}<span class="p num">${money(p.precio)}</span></button>`;}).join("")
     :`<div class="empty" style="grid-column:1/-1">${ps.length?"Nada coincide con la búsqueda":"El menú está vacío."+(st.rol==="dueno"?" Agrega productos en Admin.":"")}</div>`;
 }
 $("#oCats").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;oCat=b.dataset.c;renderOrden();};
 $("#oQ").oninput=()=>renderOrden();
 $("#oBack").onclick=()=>{saveDraft();go("mesas");};
+$("#oGrid").addEventListener("click",e=>{if(e.target.closest("[data-lock]"))planSheet(`Tu plan ${PLAN_TXT[PL().plan]} permite ${lim("productos")} productos en el menú.`,"pro");},true);
 $("#oGrid").onclick=e=>{const b=e.target.closest("[data-p]");if(!b||!st.orden)return;
   if(!puedeSumar(b.dataset.p))return;
   const l=st.orden.lines.find(x=>x.pid===b.dataset.p&&!x.nota);if(l)l.cant=Math.min(99,l.cant+1);else st.orden.lines.push({pid:b.dataset.p,cant:1,nota:""});
@@ -1354,6 +1416,8 @@ window.addEventListener("resize",()=>{if(st.view==="cocina")render();});
 const DENOM=[100000,50000,20000,10000,5000,2000,1000];
 function renderCaja(){
   const el=$("#cajaBox");if(!el)return;
+  if(!feat("caja")){el.innerHTML=st.rol==="dueno"||st.rol==="cocina"?`<div class="card" style="padding:14px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:30px">💰</div><div class="grow"><div class="t" style="font-weight:800">Caja y cierre con arqueo <span class="lockb">🔒 Pro</span></div><div class="hint">Base, salidas, conteo de billetes y faltantes.</div></div><button class="btn sm gold" data-cjp>Ver planes</button></div></div>`:"";
+    const b=el.querySelector("[data-cjp]");if(b)b.onclick=()=>quiere("caja");return;}
   if(!st.caja){el.innerHTML=`<div class="card" style="padding:16px;border-color:var(--line2)"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:34px">🔒</div><div class="grow"><div class="t" style="font-weight:800;font-size:16px">Caja cerrada</div><div class="hint">Ábrela con la base de efectivo para empezar a cobrar.</div></div><button class="btn gold" data-cj="abrir">Abrir caja</button></div></div>`;return;}
   const c=st.caja,r=st.cajaRes||{};
   el.innerHTML=`<div class="card" style="border-color:var(--gold);box-shadow:var(--glow)">
@@ -1489,6 +1553,10 @@ async function loadVentas(){
   vLoading=false;if(r.error){toast(errMsg(r.error));return;}vData=r.data||[];vCob=rc.data||[];render();
 }
 function renderVentas(){
+  const hl=lim("historial");
+  if(hl!=null){const dias=Math.round((new Date(today()+"T12:00:00")-new Date(st.vDate+"T12:00:00"))/864e5);
+    if(dias>=hl){$("#vKpis").innerHTML=`<div class="card" style="grid-column:1/-1;padding:18px;text-align:center"><div style="font-size:34px">🔒</div><div class="t" style="font-weight:800;margin:6px 0">Tu plan ${PLAN_TXT[PL().plan]} muestra ${hl===1?"solo las ventas de hoy":"los últimos "+hl+" días"}</div><button class="btn gold" data-vh>Ver planes</button></div>`;
+      ["#vPago","#vCajas","#vMes","#vTop"].forEach(x=>$(x).innerHTML='<div class="empty">🔒</div>');const b=$("#vKpis [data-vh]");if(b)b.onclick=()=>quiere("historial");return;}}
   if(vLoading||!vData){$("#vKpis").innerHTML='<div class="empty" style="grid-column:1/-1">Cargando…</div>';return;}
   const ok=vData.filter(p=>p.estado!=="cancelado"),pag=ok.filter(p=>p.pagado),can=vData.filter(p=>p.estado==="cancelado");
   const ab=ok.filter(p=>!p.pagado).reduce((x,p)=>x+p.total,0);
@@ -1522,6 +1590,7 @@ $("#vShare").onclick=()=>{if(!vData)return;const ok=vData.filter(p=>p.estado!=="
   const top=agrupar(ok).sort((a2,b2)=>b2.cant-a2.cant).slice(0,5);
   share(`📊 ${st.empresa.nombre} · ${st.vDate}\n\nVentas: ${money(vCob.reduce((x,c)=>x+c.subtotal-c.descuento,0))}\nPropinas: ${money(vCob.reduce((x,c)=>x+c.propina,0))}\nPedidos: ${ok.length}\n`+Object.keys(MET).map(k=>`${MET[k]}: ${money(met[k]||0)}`).join("\n")+`\n\nTop:\n`+top.map(i=>`• ${i.cant}× ${i.nombre}`).join("\n")+`\n\nDL COMANDA PRO`);};
 $("#vCsv").onclick=()=>{
+  if(!quiere("excel"))return;
   if(!vData)return;
   const q=v=>{v=String(v==null?"":v);return /[;"\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;};
   const L=[["DETALLE DE PEDIDOS",st.empresa.nombre,"NIT "+st.empresa.nit,st.vDate],["Hora","Pedido","Mesa","Mesero","Producto","Cantidad","Precio","Subtotal","Nota","Estado","Pagado","Medio de pago"]];
@@ -1539,14 +1608,15 @@ $("#vCsv").onclick=()=>{
 async function loadPersonal(){const r=await sb.from("personal").select("id,usuario,rol,activo,bloqueado_hasta,creado").order("creado");if(!r.error){st.personal=r.data||[];render();}}
 function renderAdmin(){
   const e=st.empresa;
-  $("#aEmp").innerHTML=`<div class="row"><div class="grow"><div class="t">${esc(e.nombre)}</div><div class="sub">NIT ${esc(e.nit)}</div></div><span class="pill gold">${esc(e.plan||"gratis")}</span></div>
-    <label class="row" style="cursor:pointer"><div class="grow"><div class="t">🍳🍹 Estaciones cocina y bar</div><div class="sub">${e.estaciones?"Activas: las bebidas van al bar y los platos a cocina, cada uno con su aviso":"Apagadas: todo llega a una sola cocina"}</div></div><input type="checkbox" id="aEst" ${e.estaciones?"checked":""} style="width:22px;height:22px;accent-color:#d4af37"></label>
+  $("#aPlan").innerHTML=planCard();$("#aPlanes").onclick=()=>planSheet();
+  $("#aEmp").innerHTML=`<div class="row"><div class="grow"><div class="t">${esc(e.nombre)}</div><div class="sub">NIT ${esc(e.nit)}</div></div><span class="pill gold">${PLAN_TXT[PL().plan]}</span></div>
+    <label class="row" style="cursor:pointer"><div class="grow"><div class="t">🍳🍹 Estaciones cocina y bar${feat("estaciones")?"":' <span class="lockb">🔒 Premium</span>'}</div><div class="sub">${e.estaciones?"Activas: las bebidas van al bar y los platos a cocina, cada uno con su aviso":"Apagadas: todo llega a una sola cocina"}</div></div><input type="checkbox" id="aEst" ${e.estaciones?"checked":""} style="width:22px;height:22px;accent-color:#d4af37"></label>
     <button class="row" id="aShareAcc"><div class="grow"><div class="t">📲 Enviar datos de acceso al personal</div><div class="sub">Nombre del restaurante, NIT y enlace de la app</div></div><span>›</span></button>`;
-  $("#aEst").onchange=async ev=>{const v=ev.target.checked;ev.target.disabled=true;
+  $("#aEst").onchange=async ev=>{const v=ev.target.checked;if(v&&!quiere("estaciones")){ev.target.checked=false;return;}ev.target.disabled=true;
     try{await rpc("config_estaciones",{p_activar:v});st.empresa.estaciones=v;toast(v?"🍹 Estaciones activas. Revisa en el Menú qué va al bar.":"Estaciones apagadas",3500);render();}
     catch(err){ev.target.checked=!v;toast(errMsg(err));}finally{ev.target.disabled=false;}};
   $("#aShareAcc").onclick=()=>share(`🍽️ Ingreso a DL COMANDA PRO\n\nAbre: ${location.origin+location.pathname}\nToca "🍽️ Personal" y escribe:\n• Restaurante: ${e.nombre}\n• NIT: ${e.nit}\n\nLuego tu usuario y tu PIN (te los da el dueño).`);
-  $("#aPer").innerHTML=st.personal.map(p=>`<button class="row" data-per="${p.id}"><div class="grow"><div class="t">${esc(p.usuario)}</div><div class="sub">${p.rol==="mesero"?"🧑‍🍳 Mesero":"🔥 Cocina / Caja"}${p.bloqueado_hasta&&new Date(p.bloqueado_hasta)>new Date()?" · 🔒 bloqueado":""}</div></div><span class="pill ${p.activo?"ok":""}">${p.activo?"Activo":"Inactivo"}</span></button>`).join("")||'<div class="empty">Crea a tus meseros y a cocina / caja para que entren con su PIN.</div>';
+  $("#aPer").innerHTML=st.personal.map(p=>`<button class="row" data-per="${p.id}"><div class="grow"><div class="t">${esc(p.usuario)}</div><div class="sub">${p.rol==="mesero"?"🧑‍🍳 Mesero":"🔥 Cocina / Caja"}${p.bloqueado_hasta&&new Date(p.bloqueado_hasta)>new Date()?" · 🔒 bloqueado":""}</div></div>${p.activo&&!rango(st.personal.filter(x=>x.activo),p.id,lim("usuarios"))?'<span class="lockb">🔒 fuera del plan</span>':""}<span class="pill ${p.activo?"ok":""}">${p.activo?"Activo":"Inactivo"}</span></button>`).join("")||'<div class="empty">Crea a tus meseros y a cocina / caja para que entren con su PIN.</div>';
   const cats={};st.productos.forEach(p=>(cats[p.categoria]=cats[p.categoria]||[]).push(p));
   $("#aProd").innerHTML=Object.keys(cats).map(c=>`<div class="row" style="background:var(--goldSoft);padding:8px 14px"><b style="font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)">${esc(c)}</b></div>`+cats[c].map(p=>`<button class="row" data-pr="${p.id}"><div class="grow"><div class="t" style="${p.activo?"":"opacity:.5;text-decoration:line-through"}">${esc(p.nombre)}</div><div class="sub">${estOn()?(p.estacion==="bar"?"🍹 Bar · ":"🍳 Cocina · "):""}${!p.activo?"Agotado / oculto":p.stock==null?"Disponible":p.stock<=0?"⚠️ Sin stock":p.stock<=stockMin(p)?`⚠️ Quedan ${p.stock}`:`Stock: ${p.stock}`}</div></div><b class="num">${money(p.precio)}</b></button>`).join("")).join("")||'<div class="empty">Agrega los platos y bebidas de tu menú</div>';
   $("#aMesas").innerHTML=st.mesas.map(m=>`<button class="row" data-ms="${m.id}"><div class="grow"><div class="t" style="${m.activa?"":"opacity:.5"}">${esc(m.nombre)}</div><div class="sub">${m.activa?"Activa":"Oculta"} · orden ${m.orden}</div></div><span>›</span></button>`).join("")||'<div class="empty">Crea tus mesas</div>';
@@ -1676,7 +1746,7 @@ function prodSheet(p){
     const esBebida=c=>/bebida|licor|trago|coctel|cocktail|cerveza|vino|jugo|gaseosa|caf/i.test(c.normalize("NFD").replace(/[\u0300-\u036f]/g,""));
     s.querySelector("#pc").addEventListener("input",ev=>{if(!estTocado)setEs(esBebida(ev.target.value)?"bar":"cocina");});
     if(!p&&esBebida(s.querySelector("#pc").value))setEs("bar");
-    const ps=s.querySelector("#ps");ps.onchange=()=>{s.querySelector("#psW").hidden=!ps.checked;s.querySelector("#psH").hidden=!ps.checked;if(ps.checked)setTimeout(()=>s.querySelector("#psq").focus(),30);};
+    const ps=s.querySelector("#ps");ps.addEventListener("change",()=>{if(ps.checked&&!feat("stock")){ps.checked=false;s.querySelector("#psW").hidden=true;s.querySelector("#psH").hidden=true;quiere("stock");}},true);ps.onchange=()=>{if(ps.checked&&!feat("stock"))return;s.querySelector("#psW").hidden=!ps.checked;s.querySelector("#psH").hidden=!ps.checked;if(ps.checked)setTimeout(()=>s.querySelector("#psq").focus(),30);};
     const pb=s.querySelector("#pb");
     if(!p){pb.onchange=()=>lookupFill(s,pb.value);}
     s.querySelector("#pbScan").onclick=()=>openScanner(code=>{pb.value=code;const o=st.productos.find(x=>x.codigo===code);
@@ -1721,7 +1791,7 @@ $("#meBtn").onclick=()=>{
   const perm=("Notification" in window)?Notification.permission:"no";
   openSheet(`<h3>${esc(st.rol==="dueno"?"Dueño":st.usuario)}</h3><p class="hint">${ROL_TXT[st.rol]} · ${esc(st.empresa.nombre)}</p>
     <div class="toggle"><span>🔔 Avisos del sistema<br><small class="hint">${perm==="granted"?"Activados":perm==="denied"?"Bloqueados en el navegador":"Te avisa aunque uses otra app"}</small></span>${perm==="default"?'<button class="btn sm gold" data-perm>Activar</button>':""}</div>
-    <div class="toggle"><span>📳 Avisos con la app cerrada<br><small class="hint">${st.pushOn?"Activos en este celular ✓":!pushOK()?(isIOS&&!isStandalone()?"En iPhone: primero instala la app":"Este navegador no los permite"):perm==="granted"?"Conectando…":"Activa los avisos primero"}</small></span>${perm==="granted"&&!st.pushOn&&pushOK()?'<button class="btn sm gold" data-push>Reintentar</button>':""}</div>
+    <div class="toggle"><span>📳 Avisos con la app cerrada<br><small class="hint">${st.plan&&!feat("push")?"🔒 Plan Pro o Premium":st.pushOn?"Activos en este celular ✓":!pushOK()?(isIOS&&!isStandalone()?"En iPhone: primero instala la app":"Este navegador no los permite"):perm==="granted"?"Conectando…":"Activa los avisos primero"}</small></span>${perm==="granted"&&!st.pushOn&&pushOK()?'<button class="btn sm gold" data-push>Reintentar</button>':""}</div>
     <div class="toggle"><span>🔊 Probar sonido de aviso</span><button class="btn sm" data-snd>Probar</button></div>
     ${st.rol!=="mesero"?`<div class="toggle"><span>🖨️ Ancho del papel de la impresora</span><div class="seg" id="papel" style="margin:0;min-width:150px"><button data-w="58" class="${papel()===58?"on":""}">58 mm</button><button data-w="80" class="${papel()===80?"on":""}">80 mm</button></div></div>`:""}
     ${st.rol!=="mesero"?`<label class="toggle"><span>💡 Pantalla siempre encendida en Cocina</span><input type="checkbox" id="wk" ${wakeWanted()?"checked":""}></label>`:""}
