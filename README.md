@@ -30,6 +30,9 @@ manifest.json, sw.js  Instalación como app (PWA) y avisos
 logo.svg + íconos     Marca DL COMANDA PRO
 dl-company.png        Logo de DL COMPANY -TECHNOLOGY-
 supabase/schema.sql   Tablas, seguridad (RLS), funciones y tiempo real
+supabase/v2-*.sql     Stock y código de barras
+supabase/v3-*.sql     Avisos push, cobros (propina/descuento) y cambio de mesa
+supabase/functions/   Función que envía los avisos push
 supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo común (v1.2)
 ```
 
@@ -44,6 +47,12 @@ supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo c
 - [x] Pedidos por mesa, cocina en vivo, aviso de listo, cuentas y cobro
 - [x] Roles dueño / mesero / cocina-caja con PIN
 - [x] Ventas del día, top de productos, tiempos de cocina
-- [ ] Notificaciones push con la app cerrada
+- [x] Avisos push con la app cerrada o el celular bloqueado (mesero: listo / cancelado · cocina: pedido nuevo)
+- [x] Impresión de comanda, cuenta y recibo (impresora térmica 58/80 mm)
+- [x] Cobro con propina voluntaria, descuento, efectivo recibido y vueltas
+- [x] Cambiar / juntar mesas
+- [x] Ventas con propinas y descuentos; exportar a Excel
+- [x] Stock opcional y código de barras
+- [ ] Estaciones (cocina / bar)
+- [ ] Pago dividido y cierre de caja
 - [ ] Planes de pago
-- [ ] Impresión de comandas

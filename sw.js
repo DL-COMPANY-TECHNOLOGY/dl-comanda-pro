@@ -1,5 +1,5 @@
 // DL COMANDA PRO · service worker (instalar la app, abrirla rápido y mostrar avisos)
-const CACHE = "comanda-pro-v1.2.2";
+const CACHE = "comanda-pro-v1.3";
 const SHELL = ["./", "index.html", "legal.html", "config.js", "manifest.json", "logo.svg", "dl-company.png",
   "icon-192.png", "icon-512.png", "icon-maskable-192.png", "icon-maskable-512.png", "apple-touch-icon.png"];
 
@@ -28,9 +28,15 @@ self.addEventListener("fetch", e => {
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { title: "DL COMANDA PRO", body: e.data ? e.data.text() : "" }; }
-  e.waitUntil(self.registration.showNotification(d.title || "DL COMANDA PRO", {
-    body: d.body || "", icon: "icon-192.png", badge: "icon-192.png", tag: d.tag || "comanda",
-    renotify: true, vibrate: [120, 60, 120], data: { url: d.url || "./" }
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(ws => {
+    // Si la app está abierta y a la vista, ella misma suena y muestra la alerta grande
+    const visible = ws.find(w => w.visibilityState === "visible" && w.focused);
+    if (visible) { visible.postMessage({ tipo: "push", d }); return; }
+    return self.registration.showNotification(d.title || "DL COMANDA PRO", {
+      body: d.body || "", icon: "icon-192.png", badge: "icon-192.png", tag: d.tag || "comanda",
+      renotify: true, requireInteraction: !!d.urgente,
+      vibrate: d.urgente ? [400, 150, 400, 150, 600] : [200, 100, 200], data: { url: d.url || "./" }
+    });
   }));
 });
 self.addEventListener("notificationclick", e => {
