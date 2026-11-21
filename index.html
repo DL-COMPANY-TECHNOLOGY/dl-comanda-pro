@@ -479,7 +479,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v2.0 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v2.1 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -1872,7 +1872,7 @@ $("#vCsv").onclick=async ev=>{
 async function loadPersonal(){const r=await sb.from("personal").select("id,usuario,rol,activo,bloqueado_hasta,creado").order("creado");if(!r.error){st.personal=r.data||[];render();}}
 function renderAdmin(){
   const e=st.empresa;
-  $("#aDL").innerHTML=st.superadmin?`<button class="card row" id="aDLBtn" style="width:100%;margin-top:12px;border-color:var(--gold);box-shadow:var(--glow);text-align:left"><div style="font-size:28px">🛠️</div><div class="grow"><div class="t">Panel DL COMPANY</div><div class="sub">Generar códigos de planes · restaurantes registrados</div></div><span>›</span></button>`:"";
+  $("#aDL").innerHTML=st.superadmin?`<button class="card row" id="aDLBtn" style="width:100%;margin-top:12px;border-color:var(--gold);box-shadow:var(--glow);text-align:left"><div style="font-size:28px">🛠️</div><div class="grow"><div class="t">Panel DL COMPANY</div><div class="sub">Códigos de planes · registro de clientes</div></div><span>›</span></button>`:"";
   {const b=$("#aDLBtn");if(b)b.onclick=()=>panelDL("gen");}
   $("#aPlan").innerHTML=planCard();$("#aPlanes").onclick=()=>planSheet();
   $("#aEmp").innerHTML=`<div class="row"><div class="grow"><div class="t">${esc(e.nombre)}</div><div class="sub">NIT ${esc(e.nit)}</div></div><span class="pill gold">${PLAN_TXT[PL().plan]}</span></div>
@@ -2089,7 +2089,7 @@ async function panelDL(tab){
   const draw=async()=>{
     const s=$("#sheet");
     const T=`<div class="grab"></div><h3>🛠️ Panel DL COMPANY</h3>
-      <div class="seg s3" id="dlT" style="margin:0 0 12px"><button type="button" data-t="gen" class="${tab==="gen"?"on":""}">🔑 Generar</button><button type="button" data-t="cod" class="${tab==="cod"?"on":""}">📋 Códigos</button><button type="button" data-t="emp" class="${tab==="emp"?"on":""}">🍽️ Restaurantes</button></div>`;
+      <div class="seg s3" id="dlT" style="margin:0 0 12px"><button type="button" data-t="gen" class="${tab==="gen"?"on":""}">🔑 Generar</button><button type="button" data-t="cod" class="${tab==="cod"?"on":""}">📋 Códigos</button><button type="button" data-t="emp" class="${tab==="emp"?"on":""}">👥 Clientes</button></div>`;
     let B="";
     if(tab==="gen"){
       B=`<div class="fld"><span>Plan</span></div><div class="seg" id="gP" style="margin:0 0 12px">${["pro","premium"].map(k=>`<button type="button" data-p="${k}" class="${gen.plan===k?"on":""}">${k==="pro"?"🚀":"⭐"} ${PLAN_TXT[k]}</button>`).join("")}</div>
@@ -2111,12 +2111,13 @@ async function panelDL(tab){
       if(!emps){try{emps=await rpc("empresas_admin")||[];}catch(e){emps=[];toast(errMsg(e));}}
       const ql=q.toLowerCase(),L=emps.filter(e=>!ql||(e.nombre||"").toLowerCase().includes(ql)||(e.correo||"").toLowerCase().includes(ql)||(e.nit||"").includes(ql));
       const cnt=k=>emps.filter(e=>e.activo===k).length;
-      B=`<p class="hint">${emps.length} restaurantes · Gratis ${cnt("gratis")} · Pro ${emps.filter(e=>e.plan==="pro").length} · Premium ${emps.filter(e=>e.plan==="premium"&&!e.prueba).length} · En prueba ${emps.filter(e=>e.prueba&&e.activo==="premium").length}</p>
-        <input class="search" id="cQ" placeholder="Buscar restaurante, correo o NIT…" value="${esc(q)}" autocomplete="off" style="margin:0 0 8px">
-        <div class="card">${L.map(e=>`<div class="row" style="flex-wrap:wrap"><div class="grow"><div class="t">🍽️ ${esc(e.nombre)}</div>
-          <div class="sub">${esc(e.correo||"")} · NIT ${esc(e.nit||"")}</div>
-          <div class="sub"><b>${e.bono?"Pro + bono Premium":PLAN_TXT[e.activo]+(e.prueba&&e.activo==="premium"?" (prueba)":"")}</b>${e.vence&&e.activo!=="gratis"?" hasta "+fechaC(e.vence):e.plan!==e.activo&&!e.bono?` (venció ${PLAN_TXT[e.plan]})`:""} · ${e.mesas} mesas · ${e.personal} usuarios · ${e.pedidos30} pedidos/30d · desde ${fechaC(e.creado)}</div></div>
-          <button class="btn sm" data-ep="${e.id}">Plan</button></div>`).join("")||'<div class="empty">Sin restaurantes</div>'}</div>`;
+      B=`<p class="hint">${emps.length} clientes · Gratis ${cnt("gratis")} · Pro ${emps.filter(e=>e.plan==="pro").length} · Premium ${emps.filter(e=>e.plan==="premium"&&!e.prueba).length} · En prueba ${emps.filter(e=>e.prueba&&e.activo==="premium").length}</p>
+        <div style="display:flex;gap:8px;margin:0 0 8px"><input class="search" id="cQ" placeholder="Buscar restaurante, correo o NIT…" value="${esc(q)}" autocomplete="off" style="margin:0;flex:1"><button class="btn sm" type="button" id="eXl">📊 Excel</button></div>
+        <div class="card">${L.map(e=>`<button class="row" type="button" data-ev="${e.id}" style="width:100%;text-align:left;flex-wrap:wrap;align-items:flex-start"><div class="grow">
+          <div class="t">${esc(e.correo||"(sin correo)")}</div>
+          <div class="sub">🍽️ ${esc(e.nombre)} · NIT ${esc(e.nit||"")}</div>
+          <div class="sub">📅 Cuenta creada: <b>${fechaC(e.cuenta_creada)}</b>${e.ultimo_ingreso?` · último ingreso ${fechaC(e.ultimo_ingreso)}`:""}</div>
+          <div class="sub">${planTag(e)}${e.plan_desde&&e.plan!=="gratis"?` · adquirido el <b>${fechaC(e.plan_desde)}</b>`:e.prueba&&e.activo==="premium"?" · prueba desde que creó la cuenta":""}${e.vence&&e.activo!=="gratis"?` · vence ${fechaC(e.vence)}`:""}</div></div><span style="align-self:center">›</span></button>`).join("")||'<div class="empty">Sin clientes</div>'}</div>`;
     }
     s.innerHTML=T+B+`<div class="acts"><button class="btn" data-x>Cerrar</button></div>`;
     s.querySelector("[data-x]").onclick=closeSheet;
@@ -2125,7 +2126,8 @@ async function panelDL(tab){
     s.querySelectorAll("[data-cp]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.cp);toast("Código copiado");}catch(e){toast(b.dataset.cp,5000);}});
     s.querySelectorAll("[data-wa]").forEach(b=>b.onclick=()=>window.open("https://wa.me/?text="+encodeURIComponent(msgCodigo(b.dataset.wa,b.dataset.pl,+b.dataset.m)),"_blank","noopener"));
     s.querySelectorAll("[data-an]").forEach(b=>b.onclick=()=>confirmSheet("Anular código",`El código ${b.dataset.an} dejará de servir.`,"Anular",async()=>{await rpc("anular_codigo",{p_codigo:b.dataset.an});toast("Código anulado");openSheet("",()=>{});cods=null;tab="cod";draw();},true));
-    s.querySelectorAll("[data-ep]").forEach(b=>b.onclick=()=>planEmpresaSheet(emps.find(x=>x.id===b.dataset.ep)));
+    s.querySelectorAll("[data-ev]").forEach(b=>b.onclick=()=>clienteSheet(emps.find(x=>x.id===b.dataset.ev)));
+    {const xb=s.querySelector("#eXl");if(xb)xb.onclick=()=>excelClientes(emps,xb);}
     if(tab==="gen"){
       s.querySelector("#gP").onclick=e=>{const b=e.target.closest("[data-p]");if(b){gen.plan=b.dataset.p;gen.res=null;draw();}};
       s.querySelector("#gD").onclick=e=>{const b=e.target.closest("[data-d]");if(b){gen.meses=+b.dataset.d;gen.res=null;draw();}};
@@ -2138,6 +2140,40 @@ async function panelDL(tab){
   };
   openSheet("",()=>{});await draw();
 }
+function planTag(e){const t=e.bono?"Pro + bono Premium":PLAN_TXT[e.activo]+(e.prueba&&e.activo==="premium"?" (prueba)":"");const c=e.activo==="premium"?"var(--gold)":e.activo==="pro"?"var(--acc)":"var(--muted)";
+  return `<b style="color:${c}">${e.activo==="premium"?"⭐":e.activo==="pro"?"🚀":"🆓"} ${t}</b>${e.plan!==e.activo&&!e.bono?` <span style="color:var(--bad)">(venció ${PLAN_TXT[e.plan]})</span>`:""}`;}
+const horaC=d=>d?new Date(d).toLocaleString("es-CO",{timeZone:"America/Bogota",day:"numeric",month:"short",year:"numeric",hour:"numeric",minute:"2-digit"}):"—";
+function clienteSheet(e){
+  if(!e)return;const H=e.historial||[];
+  openSheet(`<h3>${esc(e.correo||e.nombre)}</h3><p class="hint">🍽️ ${esc(e.nombre)} · NIT ${esc(e.nit||"")}</p>
+    <div class="card"><div class="row"><div class="grow">Cuenta creada</div><b>${horaC(e.cuenta_creada)}</b></div>
+      <div class="row"><div class="grow">Último ingreso</div><b>${horaC(e.ultimo_ingreso)}</b></div>
+      <div class="row"><div class="grow">Plan actual</div><span>${planTag(e)}</span></div>
+      <div class="row"><div class="grow">Plan adquirido el</div><b>${e.plan_desde&&e.plan!=="gratis"?horaC(e.plan_desde):e.prueba?"Prueba gratis":"—"}</b></div>
+      ${e.plan_origen&&e.plan!=="gratis"?`<div class="row"><div class="grow">Cómo lo activó</div><b style="font-size:12.5px">${esc(e.plan_origen)}</b></div>`:""}
+      <div class="row"><div class="grow">Vence</div><b>${e.vence&&e.activo!=="gratis"?fechaC(e.vence):e.activo==="gratis"?"—":"Sin vencimiento"}</b></div>
+      <div class="row"><div class="grow">Uso</div><span class="sub">${e.mesas} mesas · ${e.personal} usuarios · ${e.pedidos30} pedidos en 30 días</span></div></div>
+    <div class="sec"><h2>Historial de planes</h2><span class="badge">${H.length}</span></div>
+    <div class="card">${H.map(h=>`<div class="row"><div class="grow"><div class="t">${PLAN_TXT[h.plan]||h.plan}${h.meses?` · ${durMes(h.meses)}`:""}${h.bono?" · 🎁 bono":""}</div><div class="sub">${horaC(h.fecha)} · ${esc(h.origen)}${h.vence?" · hasta "+fechaC(h.vence):""}</div></div></div>`).join("")||'<div class="empty">Sin compras todavía</div>'}</div>
+    <div class="acts"><button class="btn" data-x>Volver</button><button class="btn gold" data-pl>Cambiar plan</button></div>`,s=>{
+    s.querySelector("[data-x]").onclick=()=>panelDL("emp");s.querySelector("[data-pl]").onclick=()=>planEmpresaSheet(e);});
+}
+async function excelClientes(emps,btn){
+  btn.disabled=true;
+  try{const XL=await cargarExcelJS(),wb=new XL.Workbook(),NAVY="FF0B1426",GOLD="FFD4AF37",LINE="FFE3D7A8";
+    const ws=wb.addWorksheet("Clientes",{pageSetup:{orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}}),fill=c=>({type:"pattern",pattern:"solid",fgColor:{argb:c}}),bd={top:{style:"thin",color:{argb:LINE}},bottom:{style:"thin",color:{argb:LINE}},left:{style:"thin",color:{argb:LINE}},right:{style:"thin",color:{argb:LINE}}};
+    const heads=["Correo","Restaurante","NIT","Cuenta creada","Último ingreso","Plan actual","Plan adquirido el","Cómo lo activó","Vence","Compras","Mesas","Usuarios","Pedidos 30 días"],W=[30,26,14,18,18,22,18,30,13,10,8,10,12];
+    ws.columns=W.map(w=>({width:w}));ws.mergeCells(1,1,1,heads.length);const t=ws.getCell(1,1);t.value="DL COMANDA PRO · REGISTRO DE CLIENTES";t.font={bold:true,size:15,color:{argb:GOLD}};t.fill=fill(NAVY);ws.getRow(1).height=28;
+    ws.mergeCells(2,1,2,heads.length);const t2=ws.getCell(2,1);t2.value=`${emps.length} clientes · generado el ${new Date().toLocaleString("es-CO",{timeZone:"America/Bogota"})}`;t2.font={size:10,color:{argb:"FFFFFFFF"}};t2.fill=fill(NAVY);
+    const hr=ws.getRow(4);heads.forEach((h,i)=>{const c=hr.getCell(i+1);c.value=h;c.font={bold:true,color:{argb:NAVY}};c.fill=fill(GOLD);c.border=bd;c.alignment={horizontal:"center",vertical:"middle",wrapText:true};});hr.height=30;
+    const d=x=>x?new Date(new Date(x).getTime()-5*3600e3):null; // hora de Colombia en Excel
+    emps.forEach((e,k)=>{const r=ws.getRow(5+k),v=[e.correo||"",e.nombre,e.nit||"",d(e.cuenta_creada),d(e.ultimo_ingreso),e.bono?"Pro + bono Premium":PLAN_TXT[e.activo]+(e.prueba&&e.activo==="premium"?" (prueba)":""),e.plan!=="gratis"&&e.plan_desde?d(e.plan_desde):null,e.plan!=="gratis"?(e.plan_origen||""):"",e.vence&&e.activo!=="gratis"?d(e.vence+"T12:00:00"):null,e.compras||0,e.mesas,e.personal,e.pedidos30];
+      v.forEach((x,i)=>{const c=r.getCell(i+1);c.value=x;c.border=bd;if(x instanceof Date)c.numFmt=i===8?"dd/mm/yyyy":"dd/mm/yyyy hh:mm";if(k%2)c.fill=fill("FFF7F8FB");});});
+    ws.autoFilter={from:{row:4,column:1},to:{row:4+emps.length,column:heads.length}};ws.views=[{state:"frozen",ySplit:4}];
+    const blob=new Blob([await wb.xlsx.writeBuffer()],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`Clientes DL COMANDA PRO ${today()}.xlsx`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);toast("📊 Registro de clientes descargado");
+  }catch(err){toast(err.message||"No se pudo crear el Excel");}finally{btn.disabled=false;}
+}
 function planEmpresaSheet(e){
   if(!e)return;let plan=e.plan==="gratis"?"pro":e.plan,meses=1;
   openSheet(`<h3>Plan de ${esc(e.nombre)}</h3><p class="hint">Actual: <b>${e.bono?"Pro + bono Premium":PLAN_TXT[e.activo]}</b>${e.vence&&e.activo!=="gratis"?" hasta "+fechaC(e.vence):""}. Úsalo para cortesías o correcciones; lo normal es enviar un código.</p>
@@ -2147,7 +2183,7 @@ function planEmpresaSheet(e){
     <div class="acts"><button class="btn" data-x>Volver</button><button class="btn gold" data-ok>Guardar</button></div>`,s=>{
     s.querySelector("#pp").onclick=ev=>{const b=ev.target.closest("[data-p]");if(!b)return;plan=b.dataset.p;s.querySelectorAll("#pp button").forEach(x=>x.classList.toggle("on",x===b));};
     s.querySelector("#pd").onclick=ev=>{const b=ev.target.closest("[data-d]");if(!b)return;meses=+b.dataset.d;s.querySelectorAll("#pd button").forEach(x=>x.classList.toggle("on",x===b));};
-    s.querySelector("[data-x]").onclick=()=>panelDL("emp");
+    s.querySelector("[data-x]").onclick=()=>clienteSheet(e);
     s.querySelector("[data-ok]").onclick=async ev=>{ev.currentTarget.disabled=true;try{await rpc("cambiar_plan_admin",{p_emp:e.id,p_plan:plan,p_meses:plan==="gratis"||!meses?null:meses});toast("Plan actualizado");if(st.empresa&&st.empresa.id===e.id){await loadPlan();render();}panelDL("emp");}catch(err){toast(errMsg(err));ev.currentTarget.disabled=false;}};
   });
 }

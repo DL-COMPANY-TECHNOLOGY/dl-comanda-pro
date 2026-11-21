@@ -70,5 +70,5 @@ supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo c
 - [x] Valores editables al dividir la cuenta
 - [x] Excel profesional (.xlsx) con resumen, cobros, pagos, productos y detalle
 - [x] Pago anual (14 meses por el precio de 12) y códigos de activación
-- [x] Panel DL COMPANY (solo d.l.company.2026@gmail.com): generar y anular códigos, ver restaurantes y cambiar su plan
+- [x] Panel DL COMPANY (solo d.l.company.2026@gmail.com): generar y anular códigos, registro de clientes (correo, fecha de creación de la cuenta, último ingreso, plan, fecha en que lo adquirió e historial) con descarga en Excel
 - [x] Guía interactiva con voz para dueño, mesero y cocina, con los planes al final
