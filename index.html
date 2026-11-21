@@ -322,6 +322,10 @@ body.standalone .dl-only{display:none!important}
 .plan .off{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:900;color:#fff;background:var(--bad);padding:2px 8px;border-radius:99px;vertical-align:middle}
 .lanz{margin:6px 0 12px;padding:12px 14px;border-radius:16px;text-align:center;background:var(--goldGrad);color:#1a1300;box-shadow:0 0 24px rgba(212,175,55,.4)}
 .lanz b{display:block;font-size:17px;font-weight:900;letter-spacing:.3px}.lanz span{font-size:13px;font-weight:700}
+.plan .panual{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:10px 0 4px;padding:10px 12px;border-radius:14px;background:var(--goldSoft);border:1px dashed var(--gold)}
+.plan .panual b{display:block;font-size:14.5px;font-weight:900;white-space:nowrap}.plan .panual span{display:block;font-size:11.5px;color:var(--muted);font-weight:700}.plan .panual s{font-size:12px;color:var(--muted);text-decoration-color:var(--bad);text-decoration-thickness:2px}
+.plan .pbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.plan .pbtns .btn{text-align:center;text-decoration:none;display:block;padding-left:6px;padding-right:6px}
+.cdbox{padding:12px;margin:0 0 12px;border-color:rgba(46,242,160,.45)}.cdbox input{flex:1;min-width:0;text-transform:uppercase;font:700 14px ui-monospace,monospace;letter-spacing:.5px;padding:11px 12px;border-radius:12px;border:1px solid var(--line2);background:var(--field);color:var(--ink)}
 .plan .tag{position:absolute;top:-11px;right:14px;background:var(--goldGrad);color:#1b1404;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
 .plan .cur{position:absolute;top:-11px;left:14px;background:var(--ok);color:#03140c;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
 .mesa.lock,.prod.lock{opacity:.45;filter:grayscale(.6)}
@@ -457,6 +461,7 @@ body.standalone .dl-only{display:none!important}
   </section>
 
   <section class="view" id="v-admin">
+    <div id="aDL"></div>
     <div class="sec"><h2>Tu plan</h2></div><div id="aPlan"></div>
     <div class="sec"><h2>Restaurante</h2><button class="btn sm" id="aEmpEdit">Editar</button></div>
     <div class="card" id="aEmp"></div>
@@ -474,7 +479,7 @@ body.standalone .dl-only{display:none!important}
   <div class="dev-mini"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><span>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b></span></div>
   <div class="dev-links"><a class="wa-link" target="_blank" rel="noopener">Soporte</a><a class="dl-only" data-install>Descargar app</a></div>
   <div class="dev-links ll"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dev-copy">DL COMANDA PRO v1.9 · © 2026</p>
+  <p class="dev-copy">DL COMANDA PRO v2.0 · © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -800,7 +805,8 @@ async function boot(){
     if(em.error)throw em.error;
     st.perfil=pf.data;st.rol=rol;st.empresa=em.data;
     st.usuario=rol==="dueno"?"Dueño":(LS.get("dc_usr_"+st.user.id,null)||ROL_TXT[rol]);
-    await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros(),loadCaja(),loadPlan()]);
+    st.superadmin=false;
+    await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros(),loadCaja(),loadPlan(),rol==="dueno"&&!st.user.is_anonymous?sb.rpc("es_superadmin").then(r=>{st.superadmin=r.data===true;}).catch(()=>{}):null]);
     st.ready=true;
     showLogin(false);buildTabs();
     const v=LS.get("dc_view_"+rol,null);go(TABS[rol].some(t=>t[0]===v)?v:TABS[rol][0][0]);
@@ -853,23 +859,36 @@ function quiere(k){if(feat(k)){if(enPrueba()&&FEAT_PLAN[k]&&NIVEL[FEAT_PLAN[k]]>
 function rango(lista,id,l){if(l==null)return true;const i=lista.findIndex(x=>x.id===id);return i>-1&&i<l;}
 const mesaOK=id=>rango(st.mesas.filter(m=>m.activa),id,lim("mesas"));
 const prodOK=id=>rango(st.productos.filter(p=>p.activo),id,lim("productos"));
-function waPlan(plan){return WA+"?text="+encodeURIComponent(`Hola DL Company 👋 Quiero activar el plan ${PLAN_TXT[plan]} de DL COMANDA PRO.\nRestaurante: ${st.empresa?st.empresa.nombre:""}\nNIT: ${st.empresa?st.empresa.nit:""}`);}
+const ANUAL_MESES=14; // pago anual: pagas 12 meses y recibes 14 (2 gratis)
+const precioAnual=k=>PRECIOS[k]*12;
+function waPlan(plan,anual){return WA+"?text="+encodeURIComponent(`Hola DL Company 👋 Quiero activar el plan ${PLAN_TXT[plan]} ${anual?`ANUAL (${ANUAL_MESES} meses) por ${money(precioAnual(plan))}`:`MENSUAL por ${money(PRECIOS[plan])}`} de DL COMANDA PRO.\nRestaurante: ${st.empresa?st.empresa.nombre:""}\nNIT: ${st.empresa?st.empresa.nit:""}`);}
 function planSheet(motivo,recom){
   const cur=PL().plan;
   const L=(ok,t)=>`<li class="${ok?"":"no"}">${ok?"✅":"✖️"} ${t}</li>`;
   const card=(k,precio,items,extra)=>`<div class="plan ${k==="premium"?"top":""}">${k==="premium"?'<span class="tag">⭐ TODO INCLUIDO</span>':""}${cur===k?'<span class="cur">Tu plan</span>':""}
     <div class="pn">${PLAN_TXT[k]}</div><div class="pp">${precio?(LANZ?`<s>${money(precio*2)}</s>`:"")+money(precio)+'<small> /mes</small>'+(LANZ?'<span class="off">-50%</span>':""):"$0"}</div><ul>${items}</ul>
-    ${k!=="gratis"&&cur!==k&&st.rol==="dueno"?`<a class="btn ${k==="premium"?"gold":"pri"} wide" style="display:block;text-align:center;text-decoration:none" href="${waPlan(k)}" target="_blank" rel="noopener">Quiero el plan ${PLAN_TXT[k]}</a>`:""}${extra||""}</div>`;
+    ${precio?`<div class="panual"><div><b>📅 Pago anual</b><span>${ANUAL_MESES} meses: pagas 12 y te regalamos 2</span></div><div class="num" style="text-align:right">${LANZ?`<s>${money(precioAnual(k)*2)}</s>`:""}<b>${money(precioAnual(k))}</b><span>${money(Math.round(precioAnual(k)/ANUAL_MESES/100)*100)} al mes</span></div></div>`:""}
+    ${k!=="gratis"&&st.rol==="dueno"?`<div class="pbtns"><a class="btn ${k==="premium"?"gold":"pri"}" href="${waPlan(k,false)}" target="_blank" rel="noopener">${cur===k&&!enPrueba()&&!PL().bono?"Renovar":"Quiero"} mensual</a><a class="btn ${k==="premium"?"gold":"pri"}" href="${waPlan(k,true)}" target="_blank" rel="noopener">${cur===k&&!enPrueba()&&!PL().bono?"Renovar":"Quiero"} anual</a></div>`:""}${extra||""}</div>`;
   openSheet(`<h3>${motivo?"🔒 "+esc(motivo):"Planes DL COMANDA PRO"}</h3>
     <p class="hint">${st.rol==="dueno"?"Escoge el plan que mejor le sirva a tu restaurante. Lo activamos por WhatsApp en minutos.":"Pídele al dueño del restaurante que active un plan."}${enPrueba()?` Estás en tu <b>${pruebaNom()}</b>: te ${diasPrueba()===1?"queda":"quedan"} ${diasTxt(diasPrueba())}.`:""}</p>
     ${LANZ?`<div class="lanz"><b>🚀 LANZAMIENTO · 50% OFF</b><span>Por el estreno de DL COMANDA PRO, todos los planes a mitad de precio.</span></div>`:""}
+    ${st.rol==="dueno"?`<div class="card cdbox"><div style="font-weight:800;margin:0 0 6px">🔑 ¿Ya pagaste? Activa tu código</div>
+      <div class="inrow"><input id="cdIn" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DLC-PRO-1M-XXXX-XXXX"><button class="btn gold" type="button" id="cdGo">Activar</button></div>
+      <p class="hint" style="margin:6px 0 0">El plan se activa al instante. Si renuevas el mismo plan, el tiempo se suma al que te queda.</p></div>`:""}
     <div class="planes">
       ${card("gratis",0,L(1,"🎁 <b>3 días de Premium gratis</b> al registrarte")+L(1,"Mesero → cocina en vivo")+L(1,"5 mesas · 20 productos")+L(1,"2 usuarios (1 mesero + 1 cocina)")+L(1,"15 pedidos al día")+L(1,"Propina preguntada y cobro simple")+L(1,"Ventas solo de hoy")+L(0,"Avisos con la app cerrada")+L(0,"Imprimir comandas y cuentas")+L(0,"Dividir cuenta · Caja y cierre")+L(0,"Excel · cambiar mesas"))}
       ${card("pro",PRECIOS.pro,L(1,"🎁 <b>7 días de Premium gratis</b> al activarlo")+L(1,"Todo lo del plan Gratis")+L(1,"8 mesas · 80 productos")+L(1,"4 usuarios")+L(1,"50 pedidos al día")+L(1,"🔔 Avisos con la app cerrada")+L(1,"🖨️ Imprimir comandas, cuentas y recibos")+L(1,"➗ Dividir cuenta y pago mixto")+L(1,"💰 Caja con conteo de billetes y cierre")+L(1,"Excel · cambiar y juntar mesas · 90 días de historial")+L(0,"Estaciones cocina / bar")+L(0,"Stock y código de barras"))}
       ${card("premium",PRECIOS.premium,L(1,"<b>Toda la app al 100%</b>")+L(1,"Mesas, productos y usuarios ilimitados")+L(1,"🍳🍹 Estaciones cocina y bar")+L(1,"📦 Stock y lector de código de barras")+L(1,"Historial ilimitado")+L(1,"Todo lo del plan Pro")+L(1,"⭐ Soporte prioritario por WhatsApp y sugerencias de mejora"))}
     </div>
-    <p class="hint" style="text-align:center">Pago anual: <b>2 meses gratis</b>. Precios en pesos colombianos.</p>
-    <button class="btn ghost wide" data-x>Cerrar</button>`,s2=>{s2.querySelector("[data-x]").onclick=closeSheet;});
+    <p class="hint" style="text-align:center"><b>¿Cómo pagar?</b> Toca el plan que quieres, escríbenos por WhatsApp, paga por Nequi o transferencia y te enviamos tu <b>código de activación</b>. Lo escribes aquí arriba y listo.<br>Pago anual: <b>14 meses por el precio de 12</b>. Precios en pesos colombianos.</p>
+    <button class="btn ghost wide" data-x>Cerrar</button>`,s2=>{s2.querySelector("[data-x]").onclick=closeSheet;
+      const go=s2.querySelector("#cdGo");if(go)go.onclick=async()=>{const inp=s2.querySelector("#cdIn"),cod=inp.value.trim().toUpperCase().replace(/\s+/g,"");
+        if(cod.length<12){toast("Escribe el código completo");inp.focus();return;}
+        go.disabled=true;go.textContent="…";
+        try{const r=await rpc("canjear_codigo",{p_codigo:cod});await loadPlan();render();closeSheet();
+          const f=d=>new Date(d+"T12:00:00").toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+          openSheet(`<div style="text-align:center"><div style="font-size:54px">🎉</div><h3>¡Plan ${PLAN_TXT[r.plan]} activado!</h3><p class="hint">${esc(r.nombre||"")} · ${r.meses} ${r.meses===1?"mes":"meses"}${r.vence?` · hasta el <b>${f(r.vence)}</b>`:""}</p>${r.bono?`<div class="banner" style="justify-content:center">🎁 Bono de bienvenida: Premium gratis hasta el ${f(r.bono_vence)}</div>`:""}</div><button class="btn gold wide" data-x style="margin-top:10px">Listo</button>`,s3=>{s3.querySelector("[data-x]").onclick=closeSheet;});}
+        catch(err){go.disabled=false;go.textContent="Activar";toast(errMsg(err),4500);}};});
 }
 function planCard(){
   const P=PL(),u=P.uso||{},L2=P.limites;
@@ -1853,6 +1872,8 @@ $("#vCsv").onclick=async ev=>{
 async function loadPersonal(){const r=await sb.from("personal").select("id,usuario,rol,activo,bloqueado_hasta,creado").order("creado");if(!r.error){st.personal=r.data||[];render();}}
 function renderAdmin(){
   const e=st.empresa;
+  $("#aDL").innerHTML=st.superadmin?`<button class="card row" id="aDLBtn" style="width:100%;margin-top:12px;border-color:var(--gold);box-shadow:var(--glow);text-align:left"><div style="font-size:28px">🛠️</div><div class="grow"><div class="t">Panel DL COMPANY</div><div class="sub">Generar códigos de planes · restaurantes registrados</div></div><span>›</span></button>`:"";
+  {const b=$("#aDLBtn");if(b)b.onclick=()=>panelDL("gen");}
   $("#aPlan").innerHTML=planCard();$("#aPlanes").onclick=()=>planSheet();
   $("#aEmp").innerHTML=`<div class="row"><div class="grow"><div class="t">${esc(e.nombre)}</div><div class="sub">NIT ${esc(e.nit)}</div></div><span class="pill gold">${PLAN_TXT[PL().plan]}</span></div>
     <label class="row" style="cursor:pointer"><div class="grow"><div class="t">🍳🍹 Estaciones cocina y bar${feat("estaciones")?"":' <span class="lockb">🔒 Premium</span>'}</div>${premTag("estaciones")?`<div style="margin:4px 0 2px">${premTag("estaciones")}</div>`:""}<div class="sub">${e.estaciones?"Activas: las bebidas van al bar y los platos a cocina, cada uno con su aviso":"Apagadas: todo llega a una sola cocina"}</div></div><input type="checkbox" id="aEst" ${e.estaciones?"checked":""} style="width:22px;height:22px;accent-color:#d4af37"></label>
@@ -2040,6 +2061,7 @@ $("#meBtn").onclick=()=>{
     <div class="toggle"><span>🔊 Probar sonido de aviso</span><button class="btn sm" data-snd>Probar</button></div>
     ${st.rol!=="mesero"?`<div class="toggle"><span>🖨️ Ancho del papel de la impresora</span><div class="seg" id="papel" style="margin:0;min-width:150px"><button data-w="58" class="${papel()===58?"on":""}">58 mm</button><button data-w="80" class="${papel()===80?"on":""}">80 mm</button></div></div>`:""}
     ${st.rol!=="mesero"?`<label class="toggle"><span>💡 Pantalla siempre encendida en Cocina</span><input type="checkbox" id="wk" ${wakeWanted()?"checked":""}></label>`:""}
+    ${st.superadmin?'<button class="btn gold wide" data-dl style="margin-bottom:8px">🛠️ Panel DL COMPANY</button>':""}
     <button class="btn wide" data-guia style="margin-bottom:8px">🧭 Ver guía de la app</button>
     <button class="dlbtn ol dl-only" data-install style="margin-bottom:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Descargar app en este celular</button>
     <div class="acts" style="flex-direction:column"><a class="btn" style="text-align:center;text-decoration:none" href="${WA}?text=${encodeURIComponent("Hola DL Company, necesito ayuda con DL COMANDA PRO")}" target="_blank" rel="noopener">💬 Soporte por WhatsApp</a>
@@ -2050,9 +2072,85 @@ $("#meBtn").onclick=()=>{
     s.querySelector("[data-snd]").onclick=()=>{unlockAudio();setTimeout(()=>{st.rol==="mesero"?sndListo():sndNuevo();vib([200,80,200]);},60);};
     const wk=s.querySelector("#wk");if(wk)wk.onchange=()=>{LS.set("dc_wake",wk.checked);wake(wk.checked&&st.view==="cocina");};
     const pw=s.querySelector("[data-pw]");if(pw)pw.onclick=newPasswordSheet;
+    const dl=s.querySelector("[data-dl]");if(dl)dl.onclick=()=>panelDL("gen");
     s.querySelector("[data-guia]").onclick=()=>{closeSheet();setTimeout(()=>startTour(true),250);};
     s.querySelector("[data-out]").onclick=()=>confirmSheet("¿Cerrar sesión?",st.rol==="dueno"?"Tendrás que ingresar con tu correo y contraseña.":"Para volver a entrar necesitas tu usuario y PIN.","Cerrar sesión",async()=>{const anon=st.rol!=="dueno";closeSheet();await quitarPush();teardown();await sb.auth.signOut();showLogin(true);loginPanel(anon?"empForm":"loginForm");},true);});
 };
+
+/* ---------- panel DL COMPANY (solo el administrador): códigos de activación y restaurantes ---------- */
+const DUR=[[1,"1 mes"],[3,"3 meses"],[6,"6 meses"],[ANUAL_MESES,"Anual · 14 meses"]];
+const durMes=m=>m===ANUAL_MESES?"1 año (14 meses)":m===1?"1 mes":m+" meses";
+const valorCod=(plan,m)=>m===ANUAL_MESES?precioAnual(plan):PRECIOS[plan]*m;
+const fechaC=d=>d?new Date(String(d).length<=10?d+"T12:00:00":d).toLocaleDateString("es-CO",{timeZone:"America/Bogota",day:"numeric",month:"short",year:"numeric"}):"";
+function msgCodigo(c,plan,m){return `¡Hola! 👋 Gracias por tu pago.\n\nTu código de activación de *DL COMANDA PRO* es:\n\n*${c}*\n\nPlan ${plan==="premium"?"⭐":"🚀"} *${PLAN_TXT[plan]}* por ${durMes(m)}.${plan==="pro"?"\n🎁 Si es tu primera vez en Pro, recibes 7 días de Premium gratis.":""}\n\nCómo activarlo:\n1. Abre la app y entra con tu cuenta de dueño.\n2. Ve a *Admin* → *Mejorar plan* (o toca tu plan).\n3. Pega el código en "Activa tu código" y toca *Activar*.\n\nCualquier duda, aquí estamos. — DL COMPANY -TECHNOLOGY-`;}
+async function panelDL(tab){
+  if(!st.superadmin)return;tab=tab||"gen";
+  let gen={plan:"pro",meses:1,cant:1,nota:"",res:null},cods=null,emps=null,q="";
+  const draw=async()=>{
+    const s=$("#sheet");
+    const T=`<div class="grab"></div><h3>🛠️ Panel DL COMPANY</h3>
+      <div class="seg s3" id="dlT" style="margin:0 0 12px"><button type="button" data-t="gen" class="${tab==="gen"?"on":""}">🔑 Generar</button><button type="button" data-t="cod" class="${tab==="cod"?"on":""}">📋 Códigos</button><button type="button" data-t="emp" class="${tab==="emp"?"on":""}">🍽️ Restaurantes</button></div>`;
+    let B="";
+    if(tab==="gen"){
+      B=`<div class="fld"><span>Plan</span></div><div class="seg" id="gP" style="margin:0 0 12px">${["pro","premium"].map(k=>`<button type="button" data-p="${k}" class="${gen.plan===k?"on":""}">${k==="pro"?"🚀":"⭐"} ${PLAN_TXT[k]}</button>`).join("")}</div>
+        <div class="fld"><span>Duración</span></div><div class="chips" id="gD" style="padding-top:0;flex-wrap:wrap;overflow:visible">${DUR.map(([m,l])=>`<button type="button" class="chip ${gen.meses===m?"on":""}" data-d="${m}">${l}</button>`).join("")}</div>
+        <div style="display:grid;grid-template-columns:96px 1fr;gap:8px"><label class="fld"><span>Cantidad</span><input id="gC" inputmode="numeric" value="${gen.cant}" maxlength="2"></label>
+        <label class="fld"><span>Cliente o nota</span><input id="gN" maxlength="120" value="${esc(gen.nota)}" placeholder="Ej: Asadero La 13 · Nequi"></label></div>
+        <p class="hint">Valor a cobrar: <b>${money(valorCod(gen.plan,gen.meses))}</b> por código (${PLAN_TXT[gen.plan]} · ${durMes(gen.meses)}${LANZ?", precio de lanzamiento":""}).</p>
+        <button class="btn gold wide" type="button" id="gGo">Generar ${gen.cant>1?gen.cant+" códigos":"código"}</button>
+        ${gen.res?`<div class="sec" style="margin-top:14px"><h2>✅ Listos para enviar</h2></div><div class="card">${gen.res.map(c=>`<div class="row"><div class="grow"><div class="t" style="font:800 13.5px ui-monospace,monospace">${c}</div><div class="sub">${PLAN_TXT[gen.plan]} · ${durMes(gen.meses)}</div></div><button class="btn sm" data-cp="${c}">Copiar</button><button class="btn sm gold" data-wa="${c}" data-pl="${gen.plan}" data-m="${gen.meses}">📲</button></div>`).join("")}</div>`:""}`;
+    }else if(tab==="cod"){
+      if(!cods){try{cods=await rpc("listar_codigos",{p_limite:300})||[];}catch(e){cods=[];toast(errMsg(e));}}
+      const ql=q.toLowerCase(),L=cods.filter(c=>!ql||c.codigo.toLowerCase().includes(ql)||(c.nota||"").toLowerCase().includes(ql)||(c.usado_nombre||"").toLowerCase().includes(ql));
+      const libres=cods.filter(c=>!c.usado_por&&!c.anulado).length;
+      B=`<p class="hint">${cods.length} códigos · <b>${libres} sin usar</b></p><input class="search" id="cQ" placeholder="Buscar código, cliente o restaurante…" value="${esc(q)}" autocomplete="off" style="margin:0 0 8px">
+        <div class="card">${L.map(c=>{const est=c.anulado?'<span style="color:var(--bad)">Anulado</span>':c.usado_en?`<span style="color:var(--ok)">Usado por ${esc(c.usado_nombre||"")} · ${fechaC(c.usado_en)}</span>`:'<span style="color:var(--gold)">Disponible</span>';
+          return `<div class="row" style="flex-wrap:wrap"><div class="grow"><div class="t" style="font:800 12.5px ui-monospace,monospace">${c.codigo}</div><div class="sub">${PLAN_TXT[c.plan]} · ${durMes(c.meses)} · ${fechaC(c.creado)}${c.nota?" · "+esc(c.nota):""}</div><div class="sub">${est}</div></div>
+          ${!c.usado_en&&!c.anulado?`<div style="display:flex;gap:6px;width:100%;margin-top:6px"><button class="btn sm" data-cp="${c.codigo}">Copiar</button><button class="btn sm gold" data-wa="${c.codigo}" data-pl="${c.plan}" data-m="${c.meses}">📲 WhatsApp</button><button class="btn sm ghost" data-an="${c.codigo}" style="color:var(--bad);margin-left:auto">Anular</button></div>`:""}</div>`;}).join("")||'<div class="empty">Sin códigos</div>'}</div>`;
+    }else{
+      if(!emps){try{emps=await rpc("empresas_admin")||[];}catch(e){emps=[];toast(errMsg(e));}}
+      const ql=q.toLowerCase(),L=emps.filter(e=>!ql||(e.nombre||"").toLowerCase().includes(ql)||(e.correo||"").toLowerCase().includes(ql)||(e.nit||"").includes(ql));
+      const cnt=k=>emps.filter(e=>e.activo===k).length;
+      B=`<p class="hint">${emps.length} restaurantes · Gratis ${cnt("gratis")} · Pro ${emps.filter(e=>e.plan==="pro").length} · Premium ${emps.filter(e=>e.plan==="premium"&&!e.prueba).length} · En prueba ${emps.filter(e=>e.prueba&&e.activo==="premium").length}</p>
+        <input class="search" id="cQ" placeholder="Buscar restaurante, correo o NIT…" value="${esc(q)}" autocomplete="off" style="margin:0 0 8px">
+        <div class="card">${L.map(e=>`<div class="row" style="flex-wrap:wrap"><div class="grow"><div class="t">🍽️ ${esc(e.nombre)}</div>
+          <div class="sub">${esc(e.correo||"")} · NIT ${esc(e.nit||"")}</div>
+          <div class="sub"><b>${e.bono?"Pro + bono Premium":PLAN_TXT[e.activo]+(e.prueba&&e.activo==="premium"?" (prueba)":"")}</b>${e.vence&&e.activo!=="gratis"?" hasta "+fechaC(e.vence):e.plan!==e.activo&&!e.bono?` (venció ${PLAN_TXT[e.plan]})`:""} · ${e.mesas} mesas · ${e.personal} usuarios · ${e.pedidos30} pedidos/30d · desde ${fechaC(e.creado)}</div></div>
+          <button class="btn sm" data-ep="${e.id}">Plan</button></div>`).join("")||'<div class="empty">Sin restaurantes</div>'}</div>`;
+    }
+    s.innerHTML=T+B+`<div class="acts"><button class="btn" data-x>Cerrar</button></div>`;
+    s.querySelector("[data-x]").onclick=closeSheet;
+    s.querySelector("#dlT").onclick=e=>{const b=e.target.closest("[data-t]");if(b){tab=b.dataset.t;q="";draw();}};
+    const cq=s.querySelector("#cQ");if(cq)cq.oninput=()=>{q=cq.value;const pos=cq.selectionStart;draw().then(()=>{const n=$("#sheet #cQ");if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}});};
+    s.querySelectorAll("[data-cp]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.cp);toast("Código copiado");}catch(e){toast(b.dataset.cp,5000);}});
+    s.querySelectorAll("[data-wa]").forEach(b=>b.onclick=()=>window.open("https://wa.me/?text="+encodeURIComponent(msgCodigo(b.dataset.wa,b.dataset.pl,+b.dataset.m)),"_blank","noopener"));
+    s.querySelectorAll("[data-an]").forEach(b=>b.onclick=()=>confirmSheet("Anular código",`El código ${b.dataset.an} dejará de servir.`,"Anular",async()=>{await rpc("anular_codigo",{p_codigo:b.dataset.an});toast("Código anulado");openSheet("",()=>{});cods=null;tab="cod";draw();},true));
+    s.querySelectorAll("[data-ep]").forEach(b=>b.onclick=()=>planEmpresaSheet(emps.find(x=>x.id===b.dataset.ep)));
+    if(tab==="gen"){
+      s.querySelector("#gP").onclick=e=>{const b=e.target.closest("[data-p]");if(b){gen.plan=b.dataset.p;gen.res=null;draw();}};
+      s.querySelector("#gD").onclick=e=>{const b=e.target.closest("[data-d]");if(b){gen.meses=+b.dataset.d;gen.res=null;draw();}};
+      s.querySelector("#gC").oninput=e=>{e.target.value=e.target.value.replace(/\D/g,"");gen.cant=Math.max(1,Math.min(50,+e.target.value||1));s.querySelector("#gGo").textContent="Generar "+(gen.cant>1?gen.cant+" códigos":"código");};
+      s.querySelector("#gN").oninput=e=>{gen.nota=e.target.value;};
+      s.querySelector("#gGo").onclick=async e=>{e.currentTarget.disabled=true;
+        try{gen.res=await rpc("generar_codigos",{p_plan:gen.plan,p_meses:gen.meses,p_cant:gen.cant,p_nota:gen.nota.trim()||null});cods=null;toast("✅ "+gen.res.length+(gen.res.length===1?" código generado":" códigos generados"));}
+        catch(err){toast(errMsg(err));}draw();};
+    }
+  };
+  openSheet("",()=>{});await draw();
+}
+function planEmpresaSheet(e){
+  if(!e)return;let plan=e.plan==="gratis"?"pro":e.plan,meses=1;
+  openSheet(`<h3>Plan de ${esc(e.nombre)}</h3><p class="hint">Actual: <b>${e.bono?"Pro + bono Premium":PLAN_TXT[e.activo]}</b>${e.vence&&e.activo!=="gratis"?" hasta "+fechaC(e.vence):""}. Úsalo para cortesías o correcciones; lo normal es enviar un código.</p>
+    <div class="seg s3" id="pp">${["gratis","pro","premium"].map(k=>`<button type="button" data-p="${k}" class="${k===plan?"on":""}">${PLAN_TXT[k]}</button>`).join("")}</div>
+    <div class="chips" id="pd" style="flex-wrap:wrap;overflow:visible">${DUR.map(([m,l])=>`<button type="button" class="chip ${m===meses?"on":""}" data-d="${m}">${l}</button>`).join("")}<button type="button" class="chip" data-d="0">Sin vencimiento</button></div>
+    <p class="hint">Si el plan es el mismo que tiene, el tiempo se suma al que le queda. El primer Pro trae 7 días de Premium.</p>
+    <div class="acts"><button class="btn" data-x>Volver</button><button class="btn gold" data-ok>Guardar</button></div>`,s=>{
+    s.querySelector("#pp").onclick=ev=>{const b=ev.target.closest("[data-p]");if(!b)return;plan=b.dataset.p;s.querySelectorAll("#pp button").forEach(x=>x.classList.toggle("on",x===b));};
+    s.querySelector("#pd").onclick=ev=>{const b=ev.target.closest("[data-d]");if(!b)return;meses=+b.dataset.d;s.querySelectorAll("#pd button").forEach(x=>x.classList.toggle("on",x===b));};
+    s.querySelector("[data-x]").onclick=()=>panelDL("emp");
+    s.querySelector("[data-ok]").onclick=async ev=>{ev.currentTarget.disabled=true;try{await rpc("cambiar_plan_admin",{p_emp:e.id,p_plan:plan,p_meses:plan==="gratis"||!meses?null:meses});toast("Plan actualizado");if(st.empresa&&st.empresa.id===e.id){await loadPlan();render();}panelDL("emp");}catch(err){toast(errMsg(err));ev.currentTarget.disabled=false;}};
+  });
+}
 
 /* ---------- guía interactiva: primer ingreso de cada rol y desde el menú ---------- */
 const VOZ={ok:"speechSynthesis" in window&&"SpeechSynthesisUtterance" in window,on:LS.get("dc_tour_voz",true),voz:null,tok:0,t:null,bar:null};
@@ -2087,7 +2185,7 @@ function planesSteps(){
     {t:"Plan Gratis",big:"🆓",price:"$0",p:"Para probar lo esencial:",lista:["🎁 <b>3 días de Premium gratis</b> al registrarte","✅ Mesero → cocina en vivo","✅ 5 mesas · 20 productos · 2 usuarios","✅ 15 pedidos al día","✅ Propina preguntada y cobro simple","✅ Ventas solo de hoy","🔒 Sin avisos con la app cerrada, imprimir, dividir cuenta, caja, Excel ni cambiar mesas"]},
     {t:"Plan Pro",big:"🚀",price:(LANZ?`<s style="font-size:15px;color:#8a94a6;margin-right:6px">${money(PRECIOS.pro*2)}</s>`:"")+money(PRECIOS.pro)+" /mes",p:"Lo que un restaurante usa todos los días:",lista:["🎁 <b>7 días de Premium gratis</b> al activarlo","✅ 8 mesas · 80 productos · 4 usuarios","✅ 50 pedidos al día","✅ 🔔 Avisos aunque el celular esté bloqueado","✅ 🖨️ Imprimir comandas, cuentas y recibos","✅ ➗ Dividir cuenta y pago mixto","✅ 💰 Caja con conteo de billetes y cierre","✅ 📊 Excel, cambiar mesas y 90 días de historial"]},
     {t:"Plan Premium",big:"⭐",price:(LANZ?`<s style="font-size:15px;color:#8a94a6;margin-right:6px">${money(PRECIOS.premium*2)}</s>`:"")+money(PRECIOS.premium)+" /mes",p:"<b>Toda la app al 100%</b>:",lista:["✅ Mesas, productos y usuarios ilimitados","✅ 🍳🍹 Estaciones cocina y bar separadas","✅ 📦 Stock y lector de código de barras","✅ Historial de ventas ilimitado","✅ Todo lo del plan Pro","✅ Soporte prioritario por WhatsApp"]},
-    {t:"¿Cómo funciona la prueba?",big:"🎁",p:`Toda cuenta nueva tiene <b>3 días de Premium gratis</b>. Lo que no es del plan Gratis sale con la etiqueta <span class="ptag">⭐ Premium</span>; al terminar la prueba pasas al plan Gratis y eso se bloquea, <b>sin cobros automáticos</b> y sin perder tu información.<br><br>${LANZ?"🚀 Por el <b>lanzamiento</b>, los planes están con <b>50% de descuento</b>. ":""}Para activar un plan toca <b>Ver planes</b> y escríbenos por WhatsApp. Pago anual: <b>2 meses gratis</b>.`,fin:"Ver planes",finAct:()=>planSheet()}
+    {t:"¿Cómo funciona la prueba?",big:"🎁",p:`Toda cuenta nueva tiene <b>3 días de Premium gratis</b>. Lo que no es del plan Gratis sale con la etiqueta <span class="ptag">⭐ Premium</span>; al terminar la prueba pasas al plan Gratis y eso se bloquea, <b>sin cobros automáticos</b> y sin perder tu información.<br><br>${LANZ?"🚀 Por el <b>lanzamiento</b>, los planes están con <b>50% de descuento</b>. ":""}Para activar un plan toca <b>Ver planes</b>, elige mensual o anual y escríbenos por WhatsApp: te enviamos un <b>código de activación</b> que escribes en esa misma pantalla. Pago anual: <b>14 meses por el precio de 12</b>.`,fin:"Ver planes",finAct:()=>planSheet()}
   ];
 }
 function duenoSteps(){

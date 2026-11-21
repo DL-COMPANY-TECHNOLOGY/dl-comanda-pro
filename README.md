@@ -69,4 +69,6 @@ supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo c
 - [x] Ticket como imagen por WhatsApp (cuenta, recibo y cierre de caja)
 - [x] Valores editables al dividir la cuenta
 - [x] Excel profesional (.xlsx) con resumen, cobros, pagos, productos y detalle
+- [x] Pago anual (14 meses por el precio de 12) y códigos de activación
+- [x] Panel DL COMPANY (solo d.l.company.2026@gmail.com): generar y anular códigos, ver restaurantes y cambiar su plan
 - [x] Guía interactiva con voz para dueño, mesero y cocina, con los planes al final
