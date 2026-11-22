@@ -327,6 +327,7 @@ body.standalone .dl-only{display:none!important}
 .plan .off{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:900;color:#fff;background:var(--bad);padding:2px 8px;border-radius:99px;vertical-align:middle}
 .lanz{margin:6px 0 12px;padding:12px 14px;border-radius:16px;text-align:center;background:var(--goldGrad);color:#1a1300;box-shadow:0 0 24px rgba(212,175,55,.4)}
 .lanz b{display:block;font-size:17px;font-weight:900;letter-spacing:.3px}.lanz span{font-size:13px;font-weight:700}
+.plan .pusd{font-size:12.5px;font-weight:700;color:var(--muted);margin:-2px 0 4px}.fxn{font-size:11px!important;text-align:center;margin:10px 0 0!important}
 .plan .panual{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:10px 0 4px;padding:10px 12px;border-radius:14px;background:var(--goldSoft);border:1px dashed var(--gold)}
 .plan .panual b{display:block;font-size:14.5px;font-weight:900;white-space:nowrap}.plan .panual span{display:block;font-size:11.5px;color:var(--muted);font-weight:700}.plan .panual s{font-size:12px;color:var(--muted);text-decoration-color:var(--bad);text-decoration-thickness:2px}
 .plan .pbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.plan .pbtns .btn{text-align:center;text-decoration:none;display:block;padding-left:6px;padding-right:6px}
@@ -873,16 +874,34 @@ const prodOK=id=>rango(st.productos.filter(p=>p.activo),id,lim("productos"));
 const ANUAL_MESES=14; // pago anual: pagas 12 meses y recibes 14 (2 gratis)
 const precioAnual=k=>PRECIOS[k]*12;
 function waPlan(plan,anual){return WA+"?text="+encodeURIComponent(`Hola DL Company 👋 Vengo de la app DL COMANDA PRO. Quiero activar el plan ${PLAN_TXT[plan]} ${anual?`ANUAL (${ANUAL_MESES} meses) por ${money(precioAnual(plan))}`:`MENSUAL por ${money(PRECIOS[plan])}`} de DL COMANDA PRO.\nRestaurante: ${st.empresa?st.empresa.nombre:""}\nNIT: ${st.empresa?st.empresa.nit:""}`);}
+/* ---------- precio en dólares: se calcula cada día con el dólar del día (el precio en pesos no cambia) ---------- */
+const FX={rate:3350,fecha:null};
+function fxLoad(onChange){
+  let c=null;try{c=JSON.parse(localStorage.getItem("dl_fx_cop")||"null")}catch(e){}
+  if(c&&c.rate){FX.rate=c.rate;FX.fecha=c.fecha;}
+  if(c&&Date.now()-c.ts<12*3600*1000)return;
+  fetch("https://open.er-api.com/v6/latest/USD",{cache:"no-store"}).then(r=>r.json()).then(d=>{
+    const v=d&&d.result==="success"&&d.rates&&Number(d.rates.COP);
+    if(!v||v<1000||v>10000)return;
+    FX.rate=v;FX.fecha=(d.time_last_update_utc||"").slice(5,16);
+    try{localStorage.setItem("dl_fx_cop",JSON.stringify({rate:v,fecha:FX.fecha,ts:Date.now()}))}catch(e){}
+    if(onChange)onChange();
+  }).catch(()=>{});
+}
+const usdOf=cop=>cop?Math.max(1,Math.round(cop/FX.rate)):0;
+const fxNote=()=>`<p class="hint fxn">💱 En dólares: precio con el dólar del día (1 USD = $${Math.round(FX.rate).toLocaleString("es-CO")} COP${FX.fecha?" · "+FX.fecha:""}). Tasa: <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">ExchangeRate-API</a></p>`;
+fxLoad();
 function planSheet(motivo,recom){
+  fxLoad(()=>{const sh=document.querySelector(".sheet");if(sh&&sh.querySelector(".planes"))planSheet(motivo,recom);});
   const cur=PL().plan;
   const L=(ok,t)=>`<li class="${ok?"":"no"}">${ok?"✅":"✖️"} ${t}</li>`;
   const card=(k,precio,items,extra)=>`<div class="plan ${k==="premium"?"top":""}">${k==="premium"?'<span class="tag">⭐ TODO INCLUIDO</span>':""}${cur===k?'<span class="cur">Tu plan</span>':""}
-    <div class="pn">${PLAN_TXT[k]}</div><div class="pp">${precio?(LANZ?`<s>${money(precio*2)}</s>`:"")+money(precio)+'<small> /mes</small>'+(LANZ?'<span class="off">-50%</span>':""):"$0"}</div><ul>${items}</ul>
-    ${precio?`<div class="panual"><div><b>📅 Pago anual</b><span>${ANUAL_MESES} meses: pagas 12 y te regalamos 2</span></div><div class="num" style="text-align:right">${LANZ?`<s>${money(precioAnual(k)*2)}</s>`:""}<b>${money(precioAnual(k))}</b><span>${money(Math.round(precioAnual(k)/ANUAL_MESES/100)*100)} al mes</span></div></div>`:""}
+    <div class="pn">${PLAN_TXT[k]}</div><div class="pp">${precio?(LANZ?`<s>${money(precio*2)}</s>`:"")+money(precio)+'<small> /mes</small>'+(LANZ?'<span class="off">-50%</span>':""):"$0"}</div>${precio?`<div class="pusd">US$ ${usdOf(precio)} /mes${LANZ?` · antes US$ ${usdOf(precio*2)}`:""}</div>`:""}<ul>${items}</ul>
+    ${precio?`<div class="panual"><div><b>📅 Pago anual</b><span>${ANUAL_MESES} meses: pagas 12 y te regalamos 2</span></div><div class="num" style="text-align:right">${LANZ?`<s>${money(precioAnual(k)*2)}</s>`:""}<b>${money(precioAnual(k))}</b><span>${money(Math.round(precioAnual(k)/ANUAL_MESES/100)*100)} al mes · anual US$ ${usdOf(precioAnual(k))}</span></div></div>`:""}
     ${k!=="gratis"&&st.rol==="dueno"?`<div class="pbtns"><a class="btn ${k==="premium"?"gold":"pri"}" href="${waPlan(k,false)}" target="_blank" rel="noopener">${cur===k&&!enPrueba()&&!PL().bono?"Renovar":"Quiero"} mensual</a><a class="btn ${k==="premium"?"gold":"pri"}" href="${waPlan(k,true)}" target="_blank" rel="noopener">${cur===k&&!enPrueba()&&!PL().bono?"Renovar":"Quiero"} anual</a></div>`:""}${extra||""}</div>`;
   openSheet(`<h3>${motivo?"🔒 "+esc(motivo):"Planes DL COMANDA PRO"}</h3>
     <p class="hint">${st.rol==="dueno"?"Escoge el plan que mejor le sirva a tu restaurante. Lo activamos por WhatsApp en minutos.":"Pídele al dueño del restaurante que active un plan."}${enPrueba()?` Estás en tu <b>${pruebaNom()}</b>: te ${diasPrueba()===1?"queda":"quedan"} ${diasTxt(diasPrueba())}.`:""}</p>
-    ${LANZ?`<div class="lanz"><b>🚀 LANZAMIENTO · 50% OFF</b><span>Por el estreno de DL COMANDA PRO, todos los planes a mitad de precio.</span></div>`:""}
+    ${LANZ?`<div class="lanz"><b>🚀 LANZAMIENTO · 50% OFF</b><span>Por el estreno de DL COMANDA PRO, todos los planes a mitad de precio.</span></div>`:""}${fxNote()}
     ${st.rol==="dueno"?`<div class="card cdbox"><div style="font-weight:800;margin:0 0 6px">🔑 ¿Ya pagaste? Activa tu código</div>
       <div class="inrow"><input id="cdIn" maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DLC-PRO-1M-XXXX-XXXX"><button class="btn gold" type="button" id="cdGo">Activar</button></div>
       <p class="hint" style="margin:6px 0 0">El plan se activa al instante. Si renuevas el mismo plan, el tiempo se suma al que te queda.</p></div>`:""}
