@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>DL COMANDA PRO · Pedidos en vivo para restaurantes y bares</title>
 <meta name="description" content="DL COMANDA PRO: del mesero a la cocina en un toque. Pedidos por mesa en tiempo real para restaurantes y bares. Desarrollado por DL COMPANY -TECHNOLOGY-.">
-<meta name="theme-color" content="#050913">
+<meta name="theme-color" content="#f6f7fb">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -14,7 +14,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Comanda Pro">
-<script>try{if(localStorage.getItem("dc_theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
+<script>try{if(localStorage.getItem("dc_theme")!=="dark")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -595,6 +595,7 @@ function share(text){if(navigator.share){navigator.share({text}).catch(()=>{});}
 function setTheme(l){if(l)document.documentElement.setAttribute("data-theme","light");else document.documentElement.removeAttribute("data-theme");try{localStorage.setItem("dc_theme",l?"light":"dark");}catch(e){}
   document.querySelector('meta[name="theme-color"]').content=l?"#f6f7fb":"#050913";}
 document.querySelectorAll(".themebtn").forEach(b=>b.onclick=()=>setTheme(document.documentElement.getAttribute("data-theme")!=="light"));
+try{document.querySelector('meta[name="theme-color"]').content=document.documentElement.getAttribute("data-theme")==="light"?"#f6f7fb":"#050913";}catch(e){}
 document.querySelectorAll(".eye").forEach(b=>b.onclick=()=>{const i=b.parentElement.querySelector("input");i.type=i.type==="password"?"text":"password";});
 
 /* ---------- sonido, vibración y avisos ---------- */
