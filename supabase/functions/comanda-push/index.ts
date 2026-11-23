@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
   let msg: { title: string; body: string; tag: string; urgente?: boolean };
 
   if (tipo === "nuevo") {
-    q = q.eq("rol", "cocina").or(`estacion.is.null,estacion.eq.${p.estacion === "bar" ? "bar" : "cocina"}`);
+    q = q.eq("rol", "cocina").eq("cocina", true).or(`estacion.is.null,estacion.eq.${p.estacion === "bar" ? "bar" : "cocina"}`);
     const est = p.estacion === "bar" ? "🍹 BAR · " : "";
     msg = { title: `🔔 ${est}Nuevo pedido #${p.numero} · ${p.mesa}`, body: `${p.mesero}: ${items}`.slice(0, 180), tag: `nuevo-${p.id}` };
   } else if (tipo === "listo") {
@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
   return await enviar(subs, p.empresa_id, msg, tipo === "listo" ? 900 : 1800);
 });
 
-// Mesa pide la cuenta → avisa a caja (rol cocina/caja)
+// Mesa pide la cuenta → avisa a quien tiene la función de caja
 async function avisarCuenta(mesa_id: string) {
   const { data: m } = await sb.from("mesas").select("id,empresa_id,nombre,cuenta_en,cuenta_propina,cuenta_por").eq("id", mesa_id).maybeSingle();
   if (!m || !m.cuenta_en) return json({ ok: true, enviados: 0 });
@@ -64,7 +64,7 @@ async function avisarCuenta(mesa_id: string) {
   const sub = (ps || []).reduce((a: number, p: { total: number }) => a + p.total, 0);
   const prop = m.cuenta_propina ? Math.round(sub * 0.1) : 0;
   const fmt = (n: number) => "$" + n.toLocaleString("es-CO");
-  const { data: subs } = await sb.from("push_subs").select("id,user_id,personal_id,rol,endpoint,p256dh,auth").eq("empresa_id", m.empresa_id).eq("rol", "cocina");
+  const { data: subs } = await sb.from("push_subs").select("id,user_id,personal_id,rol,endpoint,p256dh,auth").eq("empresa_id", m.empresa_id).eq("rol", "cocina").eq("caja", true);
   if (!subs?.length) return json({ ok: true, enviados: 0 });
   return await enviar(subs, m.empresa_id, {
     title: `🧾 ${m.nombre} pide la cuenta · ${fmt(sub + prop)}`,

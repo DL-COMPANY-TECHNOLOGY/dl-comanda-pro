@@ -336,6 +336,10 @@ body.standalone .dl-only{display:none!important}
 .plan .cur{position:absolute;top:-11px;left:14px;background:var(--ok);color:#03140c;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px}
 .mesa.lock,.prod.lock{opacity:.45;filter:grayscale(.6)}
 .lockb{font-size:11px;font-weight:800;color:var(--gold)}
+.permgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.perm{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px;border-radius:14px;border:1.5px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer;text-align:center;font:inherit}
+.perm span{font-size:24px;line-height:1}.perm b{font-size:14px;font-weight:800}.perm small{font-size:10.5px;color:var(--muted);font-weight:600;line-height:1.25}
+.perm.on{border-color:var(--gold);background:var(--goldSoft);box-shadow:0 0 0 2px rgba(212,175,55,.25)}.perm.on b::before{content:"✓ ";color:var(--gold)}
 .ptag{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;letter-spacing:.2px;padding:2px 7px;border-radius:999px;color:#1a1300;background:var(--goldGrad);white-space:nowrap;vertical-align:middle;box-shadow:0 0 10px rgba(212,175,55,.35)}
 .mesa .ptag,.prod .ptag{position:absolute;top:7px;right:7px;font-size:9.5px;padding:1px 6px}
 /* footer */
@@ -497,7 +501,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
     <div class="card" id="aEmp"></div>
     <div class="sec"><h2>Personal</h2><button class="btn sm gold" id="aPerNew">+ Usuario</button></div>
     <div class="card" id="aPer"></div>
-    <p class="hint" style="margin:8px 2px 0">Tu personal entra en <b>🍽️ Personal</b> con el nombre del restaurante + NIT, y luego su usuario + PIN. Los <b>meseros</b> toman pedidos; <b>cocina / caja</b> recibe los pedidos, los marca listos y cobra las cuentas.</p>
+    <p class="hint" style="margin:8px 2px 0">Tu personal entra en <b>🍽️ Personal</b> con el nombre del restaurante + NIT, y luego su usuario + PIN. Los <b>meseros</b> toman pedidos. A tu demás personal le das una o varias funciones: <b>🍳 Cocina</b>, <b>🍹 Bar</b> y <b>💵 Caja</b> (por ejemplo Bar + Caja).</p>
     <div class="sec"><h2>Menú</h2><button class="btn sm gold" id="aProdNew">+ Producto</button></div>
     <div class="card" id="aProd"></div>
     <div class="sec"><h2>Mesas</h2><button class="btn sm gold" id="aMesaNew">+ Mesa</button></div>
@@ -514,7 +518,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
   <div class="dlf-btns"><a class="wa-link" target="_blank" rel="noopener">💬 Soporte</a><a class="dl-only" data-install>📲 Descargar app</a><a class="dlf-site" href="https://dl-company-technology.github.io/" target="_blank" rel="noopener">🌐 Conoce DL COMPANY</a></div>
   <div class="dlf-apps"><p>Más apps de DL COMPANY</p><div><a href="https://dl-company-technology.github.io/dl-finanzas/" target="_blank" rel="noopener">DL FINANZAS</a><a href="https://dl-company-technology.github.io/dl-stock-pro/" target="_blank" rel="noopener">DL STOCK PRO</a><a href="https://dl-company-technology.github.io/dl-cuadra-pro/" target="_blank" rel="noopener">DL CUADRA PRO</a></div></div>
   <div class="dlf-legal"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dlf-copy">DL COMANDA PRO v2.1 · Plataforma oficial de pedidos para restaurantes © 2026</p>
+  <p class="dlf-copy">DL COMANDA PRO v2.2 · Plataforma oficial de pedidos para restaurantes © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -722,7 +726,7 @@ $("#aOk").onclick=()=>{st.alerts.clear();$("#alert").classList.remove("on");clea
 /* mantener pantalla encendida (cocina) */
 let wakeLock=null;
 async function wake(on){try{if(on&&"wakeLock" in navigator&&!wakeLock&&!document.hidden){wakeLock=await navigator.wakeLock.request("screen");wakeLock.addEventListener("release",()=>{wakeLock=null;});}else if(!on&&wakeLock){await wakeLock.release();wakeLock=null;}}catch(e){}}
-const wakeWanted=()=>LS.get("dc_wake",st.rol==="cocina");
+const wakeWanted=()=>LS.get("dc_wake",st.rol==="cocina"&&enCocina());
 
 /* ---------- login ---------- */
 function showLogin(on){$("#login").classList.toggle("on",on);document.body.classList.toggle("locked",on);}
@@ -824,7 +828,7 @@ $("#pinForm").addEventListener("submit",async e=>{
 });
 
 /* ---------- sesión y datos ---------- */
-const ROL_TXT={dueno:"👑 Dueño",mesero:"🧑‍🍳 Mesero",cocina:"🔥 Cocina / Caja"};
+const ROL_TXT={dueno:"👑 Dueño",mesero:"🧑‍🍳 Mesero",cocina:"🏷️ Cocina, Bar o Caja"};
 async function boot(){
   if(!sb){showLogin(true);loginMsg("La app no está conectada a la nube.");return;}
   if(st.booting)return;st.booting=true;
@@ -843,12 +847,13 @@ async function boot(){
     const em=await sb.from("empresas").select("id,nombre,nit,plan,estaciones").maybeSingle();
     if(em.error)throw em.error;
     st.perfil=pf.data;st.rol=rol;st.empresa=em.data;
+    {const pm=await sb.rpc("mis_permisos");st.perm=new Set(!pm.error&&Array.isArray(pm.data)?pm.data:rol==="dueno"?["mesero","cocina","bar","caja"]:rol==="mesero"?["mesero"]:["cocina","bar","caja"]);}
     st.usuario=rol==="dueno"?"Dueño":(LS.get("dc_usr_"+st.user.id,null)||ROL_TXT[rol]);
     st.superadmin=false;
     await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros(),loadCaja(),loadPlan(),rol==="dueno"&&!st.user.is_anonymous?sb.rpc("es_superadmin").then(r=>{st.superadmin=r.data===true;}).catch(()=>{}):null]);
     st.ready=true;
     showLogin(false);buildTabs();
-    const v=LS.get("dc_view_"+rol,null);go(TABS[rol].some(t=>t[0]===v)?v:TABS[rol][0][0]);
+    const v=LS.get("dc_view_"+rol,null);go(misTabs().some(t=>t[0]===v)?v:misTabs()[0][0]);
     subscribe();startPoll();ensurePush();
     if(st.rol!=="mesero")wake(wakeWanted()&&st.view==="cocina");
     clearTimeout(tourT);tourT=setTimeout(maybeTour,1200);
@@ -859,13 +864,13 @@ function teardown(){st.ready=false;st.perfil=null;st.rol=null;st.empresa=null;st
 
 async function loadMesas(){const r=await sb.from("mesas").select("*").order("orden").order("creado");if(r.error)throw r.error;
   const prev=new Map(st.mesas.map(m=>[m.id,m.cuenta_en]));st.mesas=r.data||[];
-  if(st.ready&&st.rol!=="mesero")st.mesas.forEach(m=>{if(m.cuenta_en&&prev.has(m.id)&&prev.get(m.id)!==m.cuenta_en&&m.cuenta_por!==(st.rol==="dueno"?"Dueño":st.usuario)){
+  if(st.ready&&puede("caja"))st.mesas.forEach(m=>{if(m.cuenta_en&&prev.has(m.id)&&prev.get(m.id)!==m.cuenta_en&&m.cuenta_por!==(st.rol==="dueno"?"Dueño":st.usuario)){
     sndNuevo();vib([200,80,200]);toast(`🧾 ${m.nombre} pide la cuenta · ${m.cuenta_propina?"con propina":"sin propina"}`,5000);
     sysNotify(`🧾 ${m.nombre} pide la cuenta`,m.cuenta_propina?"El cliente acepta la propina voluntaria":"El cliente no desea propina","cuenta-"+m.id);}});}
 async function loadProductos(){const r=await sb.from("productos").select("*").order("categoria").order("orden").order("nombre");if(r.error)throw r.error;st.productos=r.data||[];}
 const SEL_PED="*,pedido_items(id,producto_id,nombre,precio,cant,nota)";
 async function loadCobros(){
-  if(st.rol==="mesero"){st.cobros=[];return;}
+  if(!puede("caja")){st.cobros=[];return;}
   const r=await sb.from("cobros").select("*,cobro_pagos(*)").eq("fecha",today()).order("creado",{ascending:false}).limit(500);
   if(!r.error)st.cobros=r.data||[];
 }
@@ -958,7 +963,7 @@ function planCard(){
     ${bar("Mesas",u.mesas,L2.mesas)}${bar("Productos",u.productos,L2.productos)}${bar("Usuarios",u.usuarios,L2.usuarios)}${L2.pedidos_dia?bar("Pedidos hoy",u.pedidos_hoy,L2.pedidos_dia):""}</div>`;
 }
 async function loadCaja(){
-  if(st.rol==="mesero"){st.caja=null;return;}
+  if(!puede("caja")){st.caja=null;return;}
   const r=await sb.from("cajas").select("*").eq("estado","abierta").maybeSingle();
   if(r.error)return;st.caja=r.data||null;
   if(st.caja){const [rs,mv]=await Promise.all([sb.rpc("resumen_caja",{p_caja:st.caja.id}),sb.from("caja_movs").select("*").eq("caja_id",st.caja.id).order("creado",{ascending:false})]);
@@ -1017,14 +1022,14 @@ setInterval(()=>{if(!st.ready||document.hidden)return;avisoCobro();if(st.view===
 function esMio(p){if(st.rol==="mesero")return p.mesero_id&&p.mesero_id===st.perfil.personal_id;return st.mine.has(p.id);}
 function notifyDiff(old,nw){
   if(!st.ready)return;
-  if(!old&&nw.estado==="nuevo"&&(st.rol==="cocina"||st.rol==="dueno")&&!st.mine.has(nw.id)&&enMiEst(nw)){
+  if(!old&&nw.estado==="nuevo"&&enCocina()&&!st.mine.has(nw.id)&&enMiEst(nw)&&puedeEst(nw)){
     sndNuevo();vib([200,80,200]);toast(`🔔 Nuevo pedido #${nw.numero} · ${nw.mesa}`,4000);
     sysNotify(`🔔 Nuevo pedido #${nw.numero} · ${nw.mesa}`,itemsTxt(nw),"nuevo-"+nw.id);
   }
   if(nw.estado==="listo"&&(!old||old.estado!=="listo")&&esMio(nw))alertListo(nw);
   if(old&&old.estado!=="cancelado"&&nw.estado==="cancelado"&&!cancelByMe.has(nw.id)){
     if(esMio(nw)){toast(`❌ Cocina canceló el pedido #${nw.numero} · ${nw.mesa}`,4500);vib([400]);}
-    else if(st.rol==="cocina"||st.rol==="dueno")toast(`❌ Se canceló el pedido #${nw.numero} · ${nw.mesa}`,4000);
+    else if(enCocina())toast(`❌ Se canceló el pedido #${nw.numero} · ${nw.mesa}`,4000);
   }
   if(old&&old.estado==="listo"&&nw.estado!=="listo"&&st.alerts.has(nw.id))showAlert();
 }
@@ -1038,8 +1043,10 @@ async function setEstado(id,estado){
 
 /* ---------- estaciones (cocina / bar) ---------- */
 const estOn=()=>!!(st.empresa&&st.empresa.estaciones);
-const miEst=()=>estOn()?LS.get("dc_est",null):null;            // null = todas
+const estFija=()=>st.rol==="cocina"&&puede("cocina")!==puede("bar")?(puede("bar")?"bar":"cocina"):null; // solo cocina o solo bar
+const miEst=()=>estOn()?(estFija()||LS.get("dc_est",null)):null;            // null = todas
 const enMiEst=p=>!miEst()||(p.estacion||"cocina")===miEst();
+const puedeEst=p=>!estOn()?enCocina():puede((p.estacion||"cocina")==="bar"?"bar":"cocina");
 const EST_TXT={cocina:"🍳 Cocina",bar:"🍹 Bar"};
 const estPill=p=>estOn()?`<span class="pill ${p.estacion==="bar"?"acc":"warn"}">${EST_TXT[p.estacion||"cocina"]}</span>`:"";
 /* ---------- helpers de pedidos ---------- */
@@ -1080,7 +1087,12 @@ const TABS={
   cocina:[["cocina","Cocina"],["cuentas","Cuentas"],["mesas","Mesas"]],
   dueno:[["mesas","Mesas"],["cocina","Cocina"],["cuentas","Cuentas"],["ventas","Ventas"],["admin","Admin"]]
 };
-function buildTabs(){$("#tabs").innerHTML=TABS[st.rol].map(([k,t])=>`<button data-v="${k}">${IC[k]}${t}<b class="bd" id="bd-${k}" hidden></b></button>`).join("");}
+/* permisos del personal: cocina, bar y/o caja (el dueño tiene todos) */
+const puede=k=>st.rol==="dueno"||!!(st.perm&&st.perm.has(k));
+const enCocina=()=>puede("cocina")||puede("bar");
+function misTabs(){const t=TABS[st.rol]||[];if(st.rol!=="cocina")return t;
+  const r=t.filter(([k])=>(k!=="cocina"||enCocina())&&(k!=="cuentas"||puede("caja")));return r.length?r:[["mesas","Mesas"]];}
+function buildTabs(){$("#tabs").innerHTML=misTabs().map(([k,t])=>`<button data-v="${k}">${IC[k]}${t}<b class="bd" id="bd-${k}" hidden></b></button>`).join("");}
 $("#tabs").onclick=e=>{const b=e.target.closest("[data-v]");if(b)go(b.dataset.v);};
 function go(v){
   if(v!=="orden")st.orden=null;
@@ -1249,7 +1261,7 @@ function mesaSheet(mid){
   const draw=()=>{
     const m=st.mesas.find(x=>x.id===mid);if(!m){closeSheet();return;}
     const e=estadoMesa(m);const s=$("#sheet");
-    const puedeCobrar=st.rol!=="mesero";
+    const puedeCobrar=puede("caja");
     s.innerHTML=`<div class="grab"></div><h3>${esc(m.nombre)}</h3><p class="hint">${e.k==="libre"?"Mesa libre":e.txt+" · "+e.ps.length+(e.ps.length>1?" pedidos":" pedido")}</p>
       ${e.ps.map(p=>{let a="";
         if(p.estado==="listo")a+=`<button class="btn ok sm" data-ent="${p.id}">Recogido ✓</button>`;
@@ -1296,7 +1308,7 @@ function cuentaListaSheet(mid){
   openSheet(`<div style="text-align:center"><div style="font-size:48px">🧾</div><h3>Cuenta pedida · ${money(tot)}</h3>
     <p class="hint">${m.cuenta_propina?"Con propina voluntaria del 10% ("+money(propDe(e.tot))+")":"Sin propina"} · Caja ya fue avisada.</p></div>
     <div class="acts"><button class="btn" data-pr>🖨️ Imprimir cuenta</button><button class="btn" data-sh>📲 Enviar por WhatsApp</button></div>
-    ${st.rol!=="mesero"?`<button class="btn pri wide" data-cob style="margin-top:8px">Cobrar ahora</button>`:""}
+    ${puede("caja")?`<button class="btn pri wide" data-cob style="margin-top:8px">Cobrar ahora</button>`:""}
     <button class="btn gold wide" data-x style="margin-top:8px">Listo</button>`,s=>{
     s.querySelector("[data-x]").onclick=closeSheet;
     s.querySelector("[data-pr]").onclick=()=>printHTML(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_propina}));
@@ -1537,7 +1549,7 @@ async function enviar(btn){
     const m=st.mesas.find(x=>x.id===o.mid);
     const ps2=r.pedidos||[];
     toast(ps2.length>1?`🚀 Enviado · ${ps2.map(x=>`#${x.numero} ${x.estacion==="bar"?"al bar":"a cocina"}`).join(" y ")} · ${m?m.nombre:""}`:`🚀 Pedido #${r.numero} enviado ${ps2[0]&&ps2[0].estacion==="bar"?"al bar":"a cocina"} · ${m?m.nombre:""}`,3500);vib([60,40,60]);
-    st.orden=null;go(st.rol==="cocina"?"cocina":"mesas");sync();
+    st.orden=null;go(st.rol==="cocina"?misTabs()[0][0]:"mesas");sync();
   }catch(e){toast(errMsg(e),4000);btn.disabled=false;btn.textContent="🚀 Enviar a cocina";if(/disponible/.test(errMsg(e))){await loadProductos();render();}}
   finally{enviando=false;}
 }
@@ -1561,7 +1573,7 @@ $("#v-listos").onclick=async e=>{const en=e.target.closest("[data-ent]"),ca=e.ta
 const kChecks=LS.get("dc_checks",{});
 function renderCocina(){
   notifBanner($("#kBanner"));
-  const ke=$("#kEst");ke.hidden=!estOn();
+  const ke=$("#kEst");ke.hidden=!estOn()||!!estFija();
   if(estOn()){const all=abiertos().filter(p=>p.estado==="nuevo"),cnt=e2=>all.filter(p=>!e2||(p.estacion||"cocina")===e2).length;
     ke.innerHTML=[[null,"Todo"],["cocina","🍳 Cocina"],["bar","🍹 Bar"]].map(([k,t])=>`<button class="chip ${miEst()===k?"on":""}" data-e="${k||""}">${t}${cnt(k)?` · ${cnt(k)} nuevo${cnt(k)>1?"s":""}`:""}</button>`).join("");}
   const ab=abiertos().filter(enMiEst);
@@ -1646,7 +1658,7 @@ function noCajaHTML(r){const t=r.tarjeta||0,tr=r.transferencia||0,ef=r.efectivo|
     ${r.propinas?`<div class="row"><div class="grow sub">Incluye propinas por ${money(r.propinas)}</div></div>`:""}`;}
 function renderCaja(){
   const el=$("#cajaBox");if(!el)return;
-  if(!feat("caja")){el.innerHTML=st.rol==="dueno"||st.rol==="cocina"?`<div class="card" style="padding:14px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:30px">💰</div><div class="grow"><div class="t" style="font-weight:800">Caja y cierre con arqueo <span class="lockb">🔒 Pro</span></div><div class="hint">Base, salidas, conteo de billetes y faltantes.</div></div><button class="btn sm gold" data-cjp>Ver planes</button></div></div>`:"";
+  if(!feat("caja")){el.innerHTML=puede("caja")?`<div class="card" style="padding:14px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:30px">💰</div><div class="grow"><div class="t" style="font-weight:800">Caja y cierre con arqueo <span class="lockb">🔒 Pro</span></div><div class="hint">Base, salidas, conteo de billetes y faltantes.</div></div><button class="btn sm gold" data-cjp>Ver planes</button></div></div>`:"";
     const b=el.querySelector("[data-cjp]");if(b)b.onclick=()=>quiere("caja");return;}
   if(!st.caja){el.innerHTML=`<div class="card" style="padding:16px;border-color:var(--line2)"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:34px">🔒</div><div class="grow"><div class="t" style="font-weight:800;font-size:16px">Caja cerrada</div><div class="hint">Ábrela con la base de efectivo para empezar a cobrar.</div></div><button class="btn gold" data-cj="abrir">Abrir caja</button></div></div>`;return;}
   const c=st.caja,r=st.cajaRes||{};
@@ -1926,7 +1938,21 @@ $("#vCsv").onclick=async ev=>{
 };
 
 /* ADMIN (dueño) */
-async function loadPersonal(){const r=await sb.from("personal").select("id,usuario,rol,activo,bloqueado_hasta,creado").order("creado");if(!r.error){st.personal=r.data||[];render();}}
+const PERM_TXT={cocina:"🍳 Cocina",bar:"🍹 Bar",caja:"💵 Caja"};
+const rolTxt=(rol,per)=>rol==="mesero"?"🧑‍🍳 Mesero":(per&&per.length?["cocina","bar","caja"].filter(k=>per.includes(k)).map(k=>PERM_TXT[k]).join(" + "):"🍳 Cocina + 🍹 Bar + 💵 Caja");
+function rolPickHTML(rol,per){
+  return `<div class="rolepick" id="rp"><button type="button" class="${rol==="mesero"?"on":""}" data-r="mesero"><span>🧑‍🍳</span><div>Mesero<small>Toma pedidos por mesa y recibe el aviso cuando están listos</small></div></button><button type="button" class="${rol==="cocina"?"on":""}" data-r="cocina"><span>🏷️</span><div>Cocina, Bar o Caja<small>Elige una o varias funciones</small></div></button></div>
+    <div id="pPerm" ${rol==="cocina"?"":"hidden"} style="margin-top:10px"><div class="fld"><span>Funciones de este usuario</span></div>
+      <div class="permgrid">${[["cocina","🍳","Cocina","Recibe y prepara los platos"],["bar","🍹","Bar","Recibe y prepara las bebidas"],["caja","💵","Caja","Abre la caja, cobra y ve las cuentas"]].map(([k,i,t,d])=>`<button type="button" class="perm ${per.has(k)?"on":""}" data-pm="${k}"><span>${i}</span><b>${t}</b><small>${d}</small></button>`).join("")}</div>
+      <p class="hint" id="pPermTxt" style="margin:6px 0 0"></p></div>`;}
+function bindRolPick(s,get,set){
+  const upd=()=>{const {rol,per}=get();s.querySelectorAll("#rp [data-r]").forEach(x=>x.classList.toggle("on",x.dataset.r===rol));s.querySelector("#pPerm").hidden=rol!=="cocina";
+    s.querySelectorAll("[data-pm]").forEach(x=>x.classList.toggle("on",per.has(x.dataset.pm)));
+    s.querySelector("#pPermTxt").innerHTML=!per.size?'<b style="color:var(--bad)">Elige al menos una función.</b>':`Quedará como <b>${rolTxt("cocina",[...per])}</b>.${per.has("bar")&&!estOn()?" El bar separado funciona cuando activas las estaciones cocina y bar.":""}`;};
+  s.querySelector("#rp").onclick=e=>{const b=e.target.closest("[data-r]");if(!b)return;set({rol:b.dataset.r});upd();};
+  s.querySelector("#pPerm").onclick=e=>{const b=e.target.closest("[data-pm]");if(!b)return;const {per}=get();per.has(b.dataset.pm)?per.delete(b.dataset.pm):per.add(b.dataset.pm);upd();};
+  upd();}
+async function loadPersonal(){const r=await sb.from("personal").select("id,usuario,rol,permisos,activo,bloqueado_hasta,creado").order("creado");if(!r.error){st.personal=r.data||[];render();}}
 function renderAdmin(){
   const e=st.empresa;
   $("#aDL").innerHTML=st.superadmin?`<button class="card row" id="aDLBtn" style="width:100%;margin-top:12px;border-color:var(--gold);box-shadow:var(--glow);text-align:left"><div style="font-size:28px">🛠️</div><div class="grow"><div class="t">Panel DL COMPANY</div><div class="sub">Códigos de planes · registro de clientes</div></div><span>›</span></button>`:"";
@@ -1939,7 +1965,7 @@ function renderAdmin(){
     try{await rpc("config_estaciones",{p_activar:v});st.empresa.estaciones=v;toast(v?"🍹 Estaciones activas. Revisa en el Menú qué va al bar.":"Estaciones apagadas",3500);render();}
     catch(err){ev.target.checked=!v;toast(errMsg(err));}finally{ev.target.disabled=false;}};
   $("#aShareAcc").onclick=()=>share(`🍽️ Ingreso a DL COMANDA PRO\n\nAbre: ${location.origin+location.pathname}\nToca "🍽️ Personal" y escribe:\n• Restaurante: ${e.nombre}\n• NIT: ${e.nit}\n\nLuego tu usuario y tu PIN (te los da el dueño).`);
-  $("#aPer").innerHTML=st.personal.map(p=>`<button class="row" data-per="${p.id}"><div class="grow"><div class="t">${esc(p.usuario)}${fueraGratis(st.personal.filter(x=>x.activo),p.id,"usuarios")?" "+premTag():""}</div><div class="sub">${p.rol==="mesero"?"🧑‍🍳 Mesero":"🔥 Cocina / Caja"}${p.bloqueado_hasta&&new Date(p.bloqueado_hasta)>new Date()?" · 🔒 bloqueado":""}</div></div>${p.activo&&!rango(st.personal.filter(x=>x.activo),p.id,lim("usuarios"))?'<span class="lockb">🔒 fuera del plan</span>':""}<span class="pill ${p.activo?"ok":""}">${p.activo?"Activo":"Inactivo"}</span></button>`).join("")||'<div class="empty">Crea a tus meseros y a cocina / caja para que entren con su PIN.</div>';
+  $("#aPer").innerHTML=st.personal.map(p=>`<button class="row" data-per="${p.id}"><div class="grow"><div class="t">${esc(p.usuario)}${fueraGratis(st.personal.filter(x=>x.activo),p.id,"usuarios")?" "+premTag():""}</div><div class="sub">${rolTxt(p.rol,p.permisos)}${p.bloqueado_hasta&&new Date(p.bloqueado_hasta)>new Date()?" · 🔒 bloqueado":""}</div></div>${p.activo&&!rango(st.personal.filter(x=>x.activo),p.id,lim("usuarios"))?'<span class="lockb">🔒 fuera del plan</span>':""}<span class="pill ${p.activo?"ok":""}">${p.activo?"Activo":"Inactivo"}</span></button>`).join("")||'<div class="empty">Crea a tus meseros y a cocina / caja para que entren con su PIN.</div>';
   const cats={};st.productos.forEach(p=>(cats[p.categoria]=cats[p.categoria]||[]).push(p));
   $("#aProd").innerHTML=Object.keys(cats).map(c=>`<div class="row" style="background:var(--goldSoft);padding:8px 14px"><b style="font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold)">${esc(c)}</b></div>`+cats[c].map(p=>`<button class="row" data-pr="${p.id}"><div class="grow"><div class="t" style="${p.activo?"":"opacity:.5;text-decoration:line-through"}">${esc(p.nombre)}</div><div class="sub">${estOn()?(p.estacion==="bar"?"🍹 Bar · ":"🍳 Cocina · "):""}${!p.activo?"Agotado / oculto":p.stock==null?"Disponible":p.stock<=0?"⚠️ Sin stock":p.stock<=stockMin(p)?`⚠️ Quedan ${p.stock}`:`Stock: ${p.stock}`}</div></div><b class="num">${money(p.precio)}</b></button>`).join("")).join("")||'<div class="empty">Agrega los platos y bebidas de tu menú</div>';
   $("#aMesas").innerHTML=st.mesas.map(m=>`<button class="row" data-ms="${m.id}"><div class="grow"><div class="t" style="${m.activa?"":"opacity:.5"}">${esc(m.nombre)}</div><div class="sub">${m.activa?"Activa":"Oculta"} · orden ${m.orden}</div></div><span>›</span></button>`).join("")||'<div class="empty">Crea tus mesas</div>';
@@ -1947,31 +1973,32 @@ function renderAdmin(){
 $("#aEmpEdit").onclick=()=>openSheet(`<h3>Datos del restaurante</h3><p class="hint">Si cambias el nombre, tu personal debe escribir el nombre nuevo al ingresar. El NIT solo lo cambia DL COMPANY.</p>
   <label class="fld"><span>Nombre</span><input id="en" maxlength="60" value="${esc(st.empresa.nombre)}"></label><div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Guardar</button></div>`,s=>{
   s.querySelector("[data-x]").onclick=closeSheet;s.querySelector("[data-ok]").onclick=async()=>{try{await rpc("editar_empresa",{p_nombre:s.querySelector("#en").value});st.empresa.nombre=s.querySelector("#en").value.trim();closeSheet();render();toast("Guardado ✓");}catch(e){toast(errMsg(e));}};});
-function pinSheet(usr,rol,pin){
+function pinSheet(usr,rol,pin,per){
   openSheet(`<h3>PIN de ${esc(usr)}</h3><p class="hint">Entrégaselo ahora: por seguridad <b>no se vuelve a mostrar</b>. Si lo olvida, genera uno nuevo.</p><div class="pinbox num">${esc(pin)}</div>
     <div class="acts"><button class="btn" data-sh>📲 Enviar por WhatsApp</button><button class="btn gold" data-x>Listo</button></div>`,s=>{
     s.querySelector("[data-x]").onclick=closeSheet;
-    s.querySelector("[data-sh]").onclick=()=>share(`🍽️ Tu acceso a DL COMANDA PRO (${rol==="mesero"?"Mesero":"Cocina / Caja"})\n\nAbre: ${location.origin+location.pathname}\nToca "🍽️ Personal":\n• Restaurante: ${st.empresa.nombre}\n• NIT: ${st.empresa.nit}\n• Usuario: ${usr}\n• PIN: ${pin}\n\nNo compartas tu PIN.`);});
+    s.querySelector("[data-sh]").onclick=()=>share(`🍽️ Tu acceso a DL COMANDA PRO (${rolTxt(rol,per).replace(/[^\p{L}\s+]/gu,"").replace(/\s+/g," ").trim()})\n\nAbre: ${location.origin+location.pathname}\nToca "🍽️ Personal":\n• Restaurante: ${st.empresa.nombre}\n• NIT: ${st.empresa.nit}\n• Usuario: ${usr}\n• PIN: ${pin}\n\nNo compartas tu PIN.`);});
 }
-$("#aPerNew").onclick=()=>{let rol="mesero";
+$("#aPerNew").onclick=()=>{let rol="mesero";const per=new Set(["cocina","caja"]);
   openSheet(`<h3>Nuevo usuario</h3><p class="hint">La app genera un PIN de 4 números.</p>
-    <div class="rolepick" id="rp"><button class="on" data-r="mesero"><span>🧑‍🍳</span><div>Mesero<small>Toma pedidos por mesa y recibe el aviso cuando están listos</small></div></button><button data-r="cocina"><span>🔥</span><div>Cocina / Caja<small>Recibe los pedidos en vivo, los marca listos y cobra las cuentas</small></div></button></div>
-    <label class="fld" style="margin-top:12px"><span>Usuario</span><input id="pu" maxlength="30" placeholder="Ej: Juan, Cocina 1, Caja"></label>
+    ${rolPickHTML(rol,per)}
+    <label class="fld" style="margin-top:12px"><span>Usuario</span><input id="pu" maxlength="30" placeholder="Ej: Juan, Cocina 1, Bar, Caja"></label>
     <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Crear y ver PIN</button></div>`,s=>{
-    s.querySelector("#rp").onclick=e=>{const b=e.target.closest("[data-r]");if(!b)return;rol=b.dataset.r;s.querySelectorAll("#rp button").forEach(x=>x.classList.toggle("on",x===b));};
+    bindRolPick(s,()=>({rol,per}),o=>{rol=o.rol;});
     s.querySelector("[data-x]").onclick=closeSheet;const ok=s.querySelector("[data-ok]");
-    ok.onclick=async()=>{ok.disabled=true;try{const r=await rpc("crear_personal",{p_usuario:s.querySelector("#pu").value,p_rol:rol});await loadPersonal();pinSheet(r.usuario,r.rol,r.pin);}catch(e){toast(errMsg(e));ok.disabled=false;}};});};
-$("#aPer").onclick=e=>{const b=e.target.closest("[data-per]");if(!b)return;const p=st.personal.find(x=>x.id===b.dataset.per);if(!p)return;let rol=p.rol;
+    ok.onclick=async()=>{if(rol==="cocina"&&!per.size){toast("Elige al menos una función: Cocina, Bar o Caja");return;}ok.disabled=true;
+      try{const r=await rpc("crear_personal",{p_usuario:s.querySelector("#pu").value,p_rol:rol,p_permisos:rol==="cocina"?[...per]:null});await loadPersonal();pinSheet(r.usuario,r.rol,r.pin,r.permisos);}catch(e){toast(errMsg(e));ok.disabled=false;}};});};
+$("#aPer").onclick=e=>{const b=e.target.closest("[data-per]");if(!b)return;const p=st.personal.find(x=>x.id===b.dataset.per);if(!p)return;let rol=p.rol;const per=new Set(p.permisos&&p.permisos.length?p.permisos:["cocina","bar","caja"]);
   openSheet(`<h3>${esc(p.usuario)}</h3><p class="hint">Creado el ${new Date(p.creado).toLocaleDateString("es-CO")}</p>
     <label class="fld"><span>Usuario</span><input id="pu" maxlength="30" value="${esc(p.usuario)}"></label>
-    <div class="seg" id="rp"><button data-r="mesero" class="${rol==="mesero"?"on":""}">🧑‍🍳 Mesero</button><button data-r="cocina" class="${rol==="cocina"?"on":""}">🔥 Cocina / Caja</button></div>
+    ${rolPickHTML(rol,per)}
     <label class="toggle"><span>Activo (puede ingresar)</span><input type="checkbox" id="pa" ${p.activo?"checked":""}></label>
     <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Guardar</button></div>
     <div class="acts"><button class="btn" data-pin>🔑 Generar PIN nuevo</button><button class="btn bad" data-del>Eliminar</button></div>`,s=>{
-    s.querySelector("#rp").onclick=ev=>{const x=ev.target.closest("[data-r]");if(!x)return;rol=x.dataset.r;s.querySelectorAll("#rp button").forEach(y=>y.classList.toggle("on",y===x));};
+    bindRolPick(s,()=>({rol,per}),o=>{rol=o.rol;});
     s.querySelector("[data-x]").onclick=closeSheet;
-    s.querySelector("[data-ok]").onclick=async()=>{try{await rpc("editar_personal",{p_id:p.id,p_usuario:s.querySelector("#pu").value,p_rol:rol,p_activo:s.querySelector("#pa").checked});await loadPersonal();closeSheet();toast("Guardado ✓");}catch(err){toast(errMsg(err));}};
-    s.querySelector("[data-pin]").onclick=()=>confirmSheet("¿PIN nuevo para "+p.usuario+"?","El PIN anterior deja de servir y se cierra su sesión.","Generar PIN",async()=>{const pin=await rpc("regenerar_pin",{p_id:p.id});await loadPersonal();pinSheet(p.usuario,p.rol,pin);});
+    s.querySelector("[data-ok]").onclick=async()=>{if(rol==="cocina"&&!per.size){toast("Elige al menos una función: Cocina, Bar o Caja");return;}try{await rpc("editar_personal",{p_id:p.id,p_usuario:s.querySelector("#pu").value,p_rol:rol,p_activo:s.querySelector("#pa").checked,p_permisos:rol==="cocina"?[...per]:null});await loadPersonal();closeSheet();toast("Guardado ✓");}catch(err){toast(errMsg(err));}};
+    s.querySelector("[data-pin]").onclick=()=>confirmSheet("¿PIN nuevo para "+p.usuario+"?","El PIN anterior deja de servir y se cierra su sesión.","Generar PIN",async()=>{const pin=await rpc("regenerar_pin",{p_id:p.id});await loadPersonal();pinSheet(p.usuario,p.rol,pin,p.permisos);});
     s.querySelector("[data-del]").onclick=()=>confirmSheet("¿Eliminar a "+p.usuario+"?","Ya no podrá ingresar. Sus pedidos anteriores se conservan.","Eliminar",async()=>{await rpc("eliminar_personal",{p_id:p.id});await loadPersonal();closeSheet();toast("Eliminado");},true);});};
 
 /* ---------- escáner de código de barras ---------- */
@@ -2112,7 +2139,7 @@ $("#aMesas").onclick=e=>{const b=e.target.closest("[data-ms]");if(b)mesaEdit(st.
 /* MI CUENTA */
 $("#meBtn").onclick=()=>{
   const perm=("Notification" in window)?Notification.permission:"no";
-  openSheet(`<h3>${esc(st.rol==="dueno"?"Dueño":st.usuario)}</h3><p class="hint">${ROL_TXT[st.rol]} · ${esc(st.empresa.nombre)}</p>
+  openSheet(`<h3>${esc(st.rol==="dueno"?"Dueño":st.usuario)}</h3><p class="hint">${st.rol==="cocina"?rolTxt("cocina",[...(st.perm||[])]):ROL_TXT[st.rol]} · ${esc(st.empresa.nombre)}</p>
     <div class="toggle"><span>🔔 Avisos del sistema<br><small class="hint">${perm==="granted"?"Activados":perm==="denied"?"Bloqueados en el navegador":"Te avisa aunque uses otra app"}</small></span>${perm==="default"?'<button class="btn sm gold" data-perm>Activar</button>':""}</div>
     <div class="toggle"><span>📳 Avisos con la app cerrada<br><small class="hint">${st.plan&&!feat("push")?"🔒 Plan Pro o Premium":st.pushOn?"Activos en este celular ✓":!pushOK()?(isIOS&&!isStandalone()?"En iPhone: primero instala la app":"Este navegador no los permite"):perm==="granted"?"Conectando…":"Activa los avisos primero"}</small></span>${perm==="granted"&&!st.pushOn&&pushOK()?'<button class="btn sm gold" data-push>Reintentar</button>':""}</div>
     <div class="toggle"><span>🔊 Probar sonido de aviso</span><button class="btn sm" data-snd>Probar</button></div>
@@ -2301,7 +2328,7 @@ function duenoSteps(){
     {view:"ventas",el:"#vMes",t:"Por mesero y lo más pedido",p:"Cuánto vendió cada mesero y cuáles son los productos estrella."},
     {view:"ventas",el:"#vCsv",t:"📊 Excel y WhatsApp",p:"Descarga las ventas en un <b>Excel ordenado</b> o envía el resumen del día por WhatsApp a tu socio o contador."+lockTxt("excel")},
     {view:"admin",el:"#aEmp",t:"5. Administración",p:"Edita el nombre de tu restaurante y activa las estaciones cocina y bar. Desde aquí también envías los datos de acceso a tu personal."},
-    {view:"admin",el:"#aPerNew",t:"Tu personal",p:"Crea a tus <b>meseros</b> y a <b>cocina / caja</b>. La app les da un <b>PIN</b>: entran en <b>🍽️ Personal</b> con el nombre del restaurante, el NIT, su usuario y su PIN."},
+    {view:"admin",el:"#aPerNew",t:"Tu personal",p:"Crea a tus <b>meseros</b> y a tu personal de <b>cocina, bar y caja</b>: a cada uno le puedes dar una o varias funciones, por ejemplo Bar + Caja. La app les da un <b>PIN</b>: entran en <b>🍽️ Personal</b> con el nombre del restaurante, el NIT, su usuario y su PIN."},
     {view:"admin",el:"#aProdNew",t:"Tus productos",p:"Agrega tus productos con precio y categoría. Puedes ocultar los que se agotan para que el mesero no los pida."},
     {view:"admin",el:"#aMesaNew",t:"Tus mesas",p:"Crea, renombra u ordena tus mesas (ej: Mesa 1, Barra, Terraza 2)."},
     {el:"#meBtn",t:"Tu cuenta y ajustes",p:"Activa los <b>avisos</b> para que te lleguen con el celular bloqueado, prueba el sonido, elige el papel de la impresora, <b>descarga la app</b>, escribe a soporte o <b>vuelve a ver esta guía</b>."},
@@ -2343,13 +2370,13 @@ function startTour(force){
 function endTour(skip){
   callar();if(!TOUR)return;const s=TOUR.steps[TOUR.i],t=TOUR;TOUR=null;
   $("#tour").classList.remove("on");$("#orderbar").style.visibility="";
-  if(!skip&&s&&s.finAct)s.finAct();else go(TABS[st.rol].some(x=>x[0]===t.prev)?t.prev:TABS[st.rol][0][0]);
+  if(!skip&&s&&s.finAct)s.finAct();else go(misTabs().some(x=>x[0]===t.prev)?t.prev:misTabs()[0][0]);
 }
 async function showStep(i,dir){
   if(!TOUR)return;const steps=TOUR.steps;
   if(i<0)i=0;if(i>=steps.length){endTour(false);return;}
   const s=steps[i];TOUR.i=i;
-  if(s.view&&s.view!==st.view&&TABS[st.rol].some(x=>x[0]===s.view))go(s.view);
+  if(s.view&&s.view!==st.view&&misTabs().some(x=>x[0]===s.view))go(s.view);
   await new Promise(r=>setTimeout(r,s.view?180:20));
   const el=s.el?document.querySelector(s.el):null;
   if(s.el&&!visible(el))return showStep(i+(dir||1),dir||1);
