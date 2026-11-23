@@ -72,4 +72,5 @@ supabase/v2-stock-catalogo.sql   Código de barras, stock opcional y catálogo c
 - [x] Pago anual (14 meses por el precio de 12) y códigos de activación
 - [x] Panel DL COMPANY (solo d.l.company.2026@gmail.com): generar y anular códigos, registro de clientes (correo, fecha de creación de la cuenta, último ingreso, plan, fecha en que lo adquirió e historial) con descarga en Excel
 - [x] Roles combinables del personal: Mesero, o una o varias funciones de 🍳 Cocina, 🍹 Bar y 💵 Caja (ej. Bar + Caja)
+- [x] QR de pago del negocio (hasta 4: Nequi, Bancolombia, Daviplata, Bre-B…) que el mesero o la caja muestran al cliente con el valor a pagar
 - [x] Guía interactiva con voz para dueño, mesero y cocina, con los planes al final

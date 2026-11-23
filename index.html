@@ -343,6 +343,17 @@ body.standalone .dl-only{display:none!important}
 .perm{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px;border-radius:14px;border:1.5px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer;text-align:center;font:inherit}
 .perm span{font-size:24px;line-height:1}.perm b{font-size:14px;font-weight:800}.perm small{font-size:10.5px;color:var(--muted);font-weight:600;line-height:1.25}
 .perm.on{border-color:var(--gold);background:var(--goldSoft);box-shadow:0 0 0 2px rgba(212,175,55,.25)}.perm.on b::before{content:"✓ ";color:var(--gold)}
+.qrview{position:fixed;inset:0;z-index:70;background:rgba(2,4,10,.86);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
+.qrcard{width:min(420px,100%);max-height:100%;overflow:auto;background:#fff;color:#111;border-radius:24px;padding:18px 18px 14px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 3px #d4af37}
+.qrcard h3{margin:0;font-size:20px;color:#111}.qrcard .qrsub{color:#555;font-size:13.5px;font-weight:600;margin:2px 0 10px}
+.qrcard .qrtot{font-size:34px;font-weight:900;color:#111;margin:4px 0 6px;font-variant-numeric:tabular-nums}
+.qrcard img{width:100%;max-width:340px;aspect-ratio:1;object-fit:contain;background:#fff;border-radius:14px;border:1px solid #eee;image-rendering:pixelated}
+.qrcard .qrtabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 0 10px}
+.qrcard .qrtabs button{border:1.5px solid #ddd;background:#f6f6f6;color:#222;border-radius:999px;padding:6px 12px;font-weight:800;font-size:13px}
+.qrcard .qrtabs button.on{background:#111;color:#fff;border-color:#111}
+.qrcard .qrdet{font-size:14px;font-weight:700;color:#333;margin:8px 0 2px;word-break:break-all}
+.qrcard .qrclose{margin-top:12px;width:100%;padding:13px;border-radius:14px;border:0;background:linear-gradient(135deg,#f0d77a,#d4af37,#9a7a12);color:#1a1300;font-weight:900;font-size:16px}
+.qrthumb{width:52px;height:52px;border-radius:10px;object-fit:contain;background:#fff;border:1px solid var(--line2);flex:none}
 .ptag{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;letter-spacing:.2px;padding:2px 7px;border-radius:999px;color:#1a1300;background:var(--goldGrad);white-space:nowrap;vertical-align:middle;box-shadow:0 0 10px rgba(212,175,55,.35)}
 .mesa .ptag,.prod .ptag{position:absolute;top:7px;right:7px;font-size:9.5px;padding:1px 6px}
 /* footer */
@@ -502,6 +513,8 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
     <div class="sec"><h2>Tu plan</h2></div><div id="aPlan"></div>
     <div class="sec"><h2>Restaurante</h2><button class="btn sm" id="aEmpEdit">Editar</button></div>
     <div class="card" id="aEmp"></div>
+    <div class="sec"><h2>📱 QR de pago</h2></div>
+    <div class="card" id="aQr"></div>
     <div class="sec"><h2>Personal</h2><button class="btn sm gold" id="aPerNew">+ Usuario</button></div>
     <div class="card" id="aPer"></div>
     <p class="hint" style="margin:8px 2px 0">Tu personal entra en <b>🍽️ Personal</b> con el nombre del restaurante + NIT, y luego su usuario + PIN. Los <b>meseros</b> toman pedidos. A tu demás personal le das una o varias funciones: <b>🍳 Cocina</b>, <b>🍹 Bar</b> y <b>💵 Caja</b> (por ejemplo Bar + Caja).</p>
@@ -521,7 +534,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
   <div class="dlf-btns"><a class="wa-link" target="_blank" rel="noopener">💬 Soporte</a><a class="dl-only" data-install>📲 Descargar app</a><a class="dlf-site" href="https://dl-company-technology.github.io/" target="_blank" rel="noopener">🌐 Conoce DL COMPANY</a></div>
   <div class="dlf-apps"><p>Más apps de DL COMPANY</p><div><a href="https://dl-company-technology.github.io/dl-finanzas/" target="_blank" rel="noopener">DL FINANZAS</a><a href="https://dl-company-technology.github.io/dl-stock-pro/" target="_blank" rel="noopener">DL STOCK PRO</a><a href="https://dl-company-technology.github.io/dl-cuadra-pro/" target="_blank" rel="noopener">DL CUADRA PRO</a></div></div>
   <div class="dlf-legal"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dlf-copy">DL COMANDA PRO v2.3 · Plataforma oficial de pedidos para restaurantes © 2026</p>
+  <p class="dlf-copy">DL COMANDA PRO v2.4 · Plataforma oficial de pedidos para restaurantes © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -531,6 +544,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
 </div>
 
 <nav class="tabs" id="tabs"></nav>
+<div class="qrview" id="qrView" hidden></div>
 <div class="tour" id="tour"><div class="tblock"></div><div class="tspot"></div><div class="ttip" role="dialog" aria-live="polite"></div></div>
 
 <div class="login on" id="login">
@@ -853,7 +867,7 @@ async function boot(){
     {const pm=await sb.rpc("mis_permisos");st.perm=new Set(!pm.error&&Array.isArray(pm.data)?pm.data:rol==="dueno"?["mesero","cocina","bar","caja"]:rol==="mesero"?["mesero"]:["cocina","bar","caja"]);}
     st.usuario=rol==="dueno"?"Dueño":(LS.get("dc_usr_"+st.user.id,null)||ROL_TXT[rol]);
     st.superadmin=false;
-    await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros(),loadCaja(),loadPlan(),rol==="dueno"&&!st.user.is_anonymous?sb.rpc("es_superadmin").then(r=>{st.superadmin=r.data===true;}).catch(()=>{}):null]);
+    await Promise.all([loadMesas(),loadProductos(),loadPedidos(true),loadCobros(),loadCaja(),loadPlan(),loadQrs(),rol==="dueno"&&!st.user.is_anonymous?sb.rpc("es_superadmin").then(r=>{st.superadmin=r.data===true;}).catch(()=>{}):null]);
     st.ready=true;
     showLogin(false);buildTabs();
     const v=LS.get("dc_view_"+rol,null);go(misTabs().some(t=>t[0]===v)?v:misTabs()[0][0]);
@@ -879,6 +893,7 @@ async function loadCobros(){
 }
 /* ---------- PLANES ---------- */
 const PLAN_FULL={plan:"premium",limites:{mesas:null,productos:null,usuarios:null,pedidos_dia:null,historial:null,push:true,imprimir:true,dividir:true,caja:true,excel:true,mover:true,estaciones:true,stock:true,soporte:true},uso:{}};
+async function loadQrs(){try{const r=await sb.from("qr_pagos").select("id,nombre,detalle,img,orden").order("orden");if(!r.error){st.qrs=r.data||[];st.qrsT=Date.now();}else if(!st.qrs)st.qrs=[];}catch(e){if(!st.qrs)st.qrs=[];}}
 async function loadPlan(){try{const r=await sb.rpc("revisar_plan");st.plan=(!r.error&&r.data)?r.data:PLAN_FULL;}catch(e){st.plan=PLAN_FULL;}}
 const PL=()=>st.plan||PLAN_FULL;
 const feat=k=>PL().limites[k]===true;
@@ -1274,10 +1289,11 @@ function mesaSheet(mid){
       ${m.cuenta_en&&e.tot?`<div class="banner" style="background:rgba(168,85,247,.12);color:var(--acc2);border-color:rgba(168,85,247,.4)">🧾 ${esc(m.cuenta_por||"")} pidió la cuenta · ${m.cuenta_propina?`el cliente <b>&nbsp;acepta&nbsp;</b> la propina (${money(propDe(e.tot))}) → ${money(e.tot+propDe(e.tot))}`:"el cliente <b>&nbsp;no desea&nbsp;</b> propina"}<button class="btn sm" data-pc>Cambiar</button></div>`:""}
       <div class="acts"><button class="btn gold" data-new>+ Nuevo pedido</button>${e.tot&&!m.cuenta_en?`<button class="btn pri" data-pc>🧾 Pedir la cuenta</button>`:""}${puedeCobrar&&e.tot&&m.cuenta_en?`<button class="btn pri" data-cob>Cobrar</button>`:""}</div>
       ${puedeCobrar&&e.tot&&!m.cuenta_en?`<div class="acts"><button class="btn sm" data-cob>Cobrar directo</button></div>`:""}
-      ${e.tot?`<div class="acts"><button class="btn sm" data-pr>🖨️ Imprimir cuenta ${premTag("imprimir")}</button><button class="btn sm" data-sh>📲 Enviar por WhatsApp</button><button class="btn sm" data-mv>↔️ Cambiar mesa ${premTag("mover")}</button></div>`:""}`;
+      ${e.tot?`<div class="acts"><button class="btn sm" data-pr>🖨️ Imprimir cuenta ${premTag("imprimir")}</button><button class="btn sm" data-qr>📱 Pagar con QR</button><button class="btn sm" data-sh>📲 Enviar por WhatsApp</button><button class="btn sm" data-mv>↔️ Cambiar mesa ${premTag("mover")}</button></div>`:""}`;
     s.querySelector("[data-new]").onclick=()=>{closeSheet();abrirOrden(mid);};
     const sh=s.querySelector("[data-sh]");if(sh)sh.onclick=()=>enviarTicket(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_en?m.cuenta_propina:null}),cuentaTxt(m),"Cuenta "+m.nombre);
     const pr=s.querySelector("[data-pr]");if(pr)pr.onclick=()=>printHTML(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_en?m.cuenta_propina:null}));
+    const qb=s.querySelector("[data-qr]");if(qb)qb.onclick=()=>mostrarQR(e.tot+(m.cuenta_en&&m.cuenta_propina?propDe(e.tot):0),m.nombre);
     s.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>pedirCuentaSheet(mid));
     s.querySelectorAll("[data-cob]").forEach(b=>b.onclick=()=>cobrarSheet(mid));
     const mv=s.querySelector("[data-mv]");if(mv)mv.onclick=()=>moverSheet(mid);
@@ -1311,12 +1327,14 @@ function cuentaListaSheet(mid){
   openSheet(`<div style="text-align:center"><div style="font-size:48px">🧾</div><h3>Cuenta pedida · ${money(tot)}</h3>
     <p class="hint">${m.cuenta_propina?"Con propina voluntaria del 10% ("+money(propDe(e.tot))+")":"Sin propina"} · Caja ya fue avisada.</p></div>
     <div class="acts"><button class="btn" data-pr>🖨️ Imprimir cuenta</button><button class="btn" data-sh>📲 Enviar por WhatsApp</button></div>
+    <button class="btn wide" data-qr style="margin-top:8px">📱 Mostrar QR para pagar</button>
     ${puede("caja")?`<button class="btn pri wide" data-cob style="margin-top:8px">Cobrar ahora</button>`:""}
     <button class="btn gold wide" data-x style="margin-top:8px">Listo</button>`,s=>{
     s.querySelector("[data-x]").onclick=closeSheet;
     s.querySelector("[data-pr]").onclick=()=>printHTML(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_propina}));
     s.querySelector("[data-sh]").onclick=()=>enviarTicket(cuentaHTML("CUENTA",m.nombre,e.ps,null,{propina:m.cuenta_propina}),cuentaTxt(m),"Cuenta "+m.nombre);
     const cb=s.querySelector("[data-cob]");if(cb)cb.onclick=()=>cobrarSheet(mid);
+    s.querySelector("[data-qr]").onclick=()=>mostrarQR(tot,m.nombre);
   });
 }
 function moverSheet(mid){
@@ -1355,6 +1373,7 @@ function cobrarSheet(mid,sinCaja){
     <div id="cDet" class="hint" style="margin:-4px 0 10px"></div>
     <button class="btn wide" data-div style="margin:2px 0 12px">➗ Dividir la cuenta o pagar con varios medios ${premTag("dividir")}</button>
     <div class="seg s3" id="cMet"><button class="on" data-m="efectivo">💵 Efectivo</button><button data-m="tarjeta">💳 Tarjeta</button><button data-m="transferencia">📱 Transf.</button></div>
+    <button class="btn wide" id="cQrB" type="button" hidden style="margin:0 0 10px">📱 Mostrar QR al cliente</button>
     <div id="cEfW"><label class="fld"><span>Recibido en efectivo</span><input id="cEf" inputmode="numeric" placeholder="Exacto"></label>
       <div class="chips" id="cQuick" style="padding-top:0"></div><div id="cCambio" class="hint" style="font-size:15px"></div></div>
     <div class="acts"><button class="btn" data-x>Volver</button><button class="btn gold" data-ok>Confirmar cobro</button></div>`,s=>{
@@ -1374,7 +1393,8 @@ function cobrarSheet(mid,sinCaja){
     const fmt=ev=>{const v=num(ev.target.value);ev.target.value=v?v.toLocaleString("es-CO"):"";upd();};
     $s("#cPropV").oninput=fmt;$s("#cDesc").oninput=fmt;$s("#cEf").oninput=fmt;
     $s("#cProp").onclick=ev=>{const b=ev.target.closest("[data-p]");if(!b)return;propMode=b.dataset.p;s.querySelectorAll("#cProp button").forEach(x=>x.classList.toggle("on",x===b));$s("#cPropW").hidden=propMode!=="otra";if(propMode==="otra")setTimeout(()=>$s("#cPropV").focus(),30);upd();};
-    $s("#cMet").onclick=ev=>{const b=ev.target.closest("[data-m]");if(!b)return;met=b.dataset.m;s.querySelectorAll("#cMet button").forEach(x=>x.classList.toggle("on",x===b));$s("#cEfW").hidden=met!=="efectivo";upd();};
+    $s("#cMet").onclick=ev=>{const b=ev.target.closest("[data-m]");if(!b)return;met=b.dataset.m;s.querySelectorAll("#cMet button").forEach(x=>x.classList.toggle("on",x===b));$s("#cEfW").hidden=met!=="efectivo";$s("#cQrB").hidden=met!=="transferencia";upd();};
+    $s("#cQrB").onclick=()=>mostrarQR(total(),m.nombre);
     $s("#cQuick").onclick=ev=>{const b=ev.target.closest("[data-q]");if(!b)return;$s("#cEf").value=(+b.dataset.q).toLocaleString("es-CO");upd();};
     $s("[data-x]").onclick=()=>mesaSheet(mid);
     $s("[data-div]").onclick=()=>{if(!quiere("dividir"))return;upd();dividirSheet(mid,{sub,desc,prop,tot:total()});};
@@ -1963,6 +1983,7 @@ function renderAdmin(){
   $("#aDL").innerHTML=st.superadmin?`<button class="card row" id="aDLBtn" style="width:100%;margin-top:12px;border-color:var(--gold);box-shadow:var(--glow);text-align:left"><div style="font-size:28px">🛠️</div><div class="grow"><div class="t">Panel DL COMPANY</div><div class="sub">Códigos de planes · registro de clientes</div></div><span>›</span></button>`:"";
   {const b=$("#aDLBtn");if(b)b.onclick=()=>panelDL("gen");}
   $("#aPlan").innerHTML=planCard();$("#aPlanes").onclick=()=>planSheet();
+  renderQrsAdmin();
   $("#aEmp").innerHTML=`<div class="row"><div class="grow"><div class="t">${esc(e.nombre)}</div><div class="sub">NIT ${esc(e.nit)}</div></div><span class="pill gold">${PLAN_TXT[PL().plan]}</span></div>
     <label class="row" style="cursor:pointer"><div class="grow"><div class="t">🍳🍹 Estaciones cocina y bar${feat("estaciones")?"":' <span class="lockb">🔒 Premium</span>'}</div>${premTag("estaciones")?`<div style="margin:4px 0 2px">${premTag("estaciones")}</div>`:""}<div class="sub">${e.estaciones?"Activas: las bebidas van al bar y los platos a cocina, cada uno con su aviso":"Apagadas: todo llega a una sola cocina"}</div></div><input type="checkbox" id="aEst" ${e.estaciones?"checked":""} style="width:22px;height:22px;accent-color:#d4af37"></label>
     <button class="row" id="aShareAcc"><div class="grow"><div class="t">📲 Enviar datos de acceso al personal</div><div class="sub">Nombre del restaurante, NIT y enlace de la app</div></div><span>›</span></button>`;
@@ -2151,6 +2172,7 @@ $("#meBtn").onclick=()=>{
     ${st.rol!=="mesero"?`<div class="toggle"><span>🖨️ Ancho del papel de la impresora</span><div class="seg" id="papel" style="margin:0;min-width:150px"><button data-w="58" class="${papel()===58?"on":""}">58 mm</button><button data-w="80" class="${papel()===80?"on":""}">80 mm</button></div></div>`:""}
     ${st.rol!=="mesero"?`<label class="toggle"><span>💡 Pantalla siempre encendida en Cocina</span><input type="checkbox" id="wk" ${wakeWanted()?"checked":""}></label>`:""}
     ${st.superadmin?'<button class="btn gold wide" data-dl style="margin-bottom:8px">🛠️ Panel DL COMPANY</button>':""}
+    <button class="btn wide" data-qrm style="margin-bottom:8px">📱 Mostrar QR de pago</button>
     <button class="btn wide" data-guia style="margin-bottom:8px">🧭 Ver guía de la app</button>
     <button class="dlbtn ol dl-only" data-install style="margin-bottom:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Descargar app en este celular</button>
     <div class="acts" style="flex-direction:column"><a class="btn" style="text-align:center;text-decoration:none" href="${WA}?text=${encodeURIComponent("Hola DL Company 👋 Vengo de la app DL COMANDA PRO. Necesito ayuda con DL COMANDA PRO")}" target="_blank" rel="noopener">💬 Soporte por WhatsApp</a>
@@ -2162,9 +2184,60 @@ $("#meBtn").onclick=()=>{
     const wk=s.querySelector("#wk");if(wk)wk.onchange=()=>{LS.set("dc_wake",wk.checked);wake(wk.checked&&st.view==="cocina");};
     const pw=s.querySelector("[data-pw]");if(pw)pw.onclick=newPasswordSheet;
     const dl=s.querySelector("[data-dl]");if(dl)dl.onclick=()=>panelDL("gen");
+    s.querySelector("[data-qrm]").onclick=()=>{closeSheet();mostrarQR(0,"");};
     s.querySelector("[data-guia]").onclick=()=>{closeSheet();setTimeout(()=>startTour(true),250);};
     s.querySelector("[data-out]").onclick=()=>confirmSheet("¿Cerrar sesión?",st.rol==="dueno"?"Tendrás que ingresar con tu correo y contraseña.":"Para volver a entrar necesitas tu usuario y PIN.","Cerrar sesión",async()=>{const anon=st.rol!=="dueno";closeSheet();await quitarPush();teardown();await sb.auth.signOut();showLogin(true);loginPanel(anon?"empForm":"loginForm");},true);});
 };
+
+/* ---------- QR de pago: el dueño lo sube y el mesero o la caja lo muestran al cliente ---------- */
+async function mostrarQR(total,mesa){
+  if(!st.qrsT||Date.now()-st.qrsT>60000){await Promise.race([loadQrs(),new Promise(r=>setTimeout(r,2500))]);}
+  const L=st.qrs||[];
+  if(!L.length){if(st.rol==="dueno"){toast("Primero sube el QR de pago de tu negocio");qrEditSheet();}else toast("El dueño todavía no ha subido el QR de pago",4000);return;}
+  let i=Math.min(LS.get("dc_qr_i",0),L.length-1);const v=$("#qrView");
+  const draw=()=>{const q=L[i];v.innerHTML=`<div class="qrcard" role="dialog" aria-label="QR de pago">
+      <h3>${esc(st.empresa.nombre)}</h3><div class="qrsub">${mesa?esc(mesa)+" · ":""}Escanea para pagar</div>
+      ${total?`<div class="qrtot">${money(total)}</div>`:""}
+      ${L.length>1?`<div class="qrtabs">${L.map((x,k)=>`<button type="button" data-qi="${k}" class="${k===i?"on":""}">${esc(x.nombre)}</button>`).join("")}</div>`:""}
+      <img src="${q.img}" alt="QR ${esc(q.nombre)}">
+      <div class="qrdet">${esc(q.nombre)}${q.detalle?" · "+esc(q.detalle):""}</div>
+      <button type="button" class="qrclose" data-qx>Listo</button></div>`;
+    v.querySelectorAll("[data-qi]").forEach(b=>b.onclick=()=>{i=+b.dataset.qi;LS.set("dc_qr_i",i);draw();});
+    v.querySelector("[data-qx]").onclick=cerrarQR;};
+  draw();v.hidden=false;v.onclick=e=>{if(e.target===v)cerrarQR();};
+}
+function cerrarQR(){const v=$("#qrView");v.hidden=true;v.innerHTML="";}
+function comprimirQR(file){return new Promise((ok,no)=>{if(!file||!/^image\//.test(file.type))return no(new Error("Elige una imagen (foto o captura del QR)"));
+  const fr=new FileReader();fr.onerror=()=>no(new Error("No se pudo leer la imagen"));fr.onload=()=>{const im=new Image();im.onerror=()=>no(new Error("No se pudo abrir la imagen"));
+    im.onload=()=>{const M=900,k=Math.min(1,M/Math.max(im.width,im.height)),cv=document.createElement("canvas");cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);
+      const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.imageSmoothingEnabled=k<1;x.drawImage(im,0,0,cv.width,cv.height);
+      let d=cv.toDataURL("image/png");if(d.length>650000)d=cv.toDataURL("image/jpeg",.9);if(d.length>650000)d=cv.toDataURL("image/jpeg",.75);
+      d.length>690000?no(new Error("La imagen es muy pesada. Recórtala al QR e inténtalo de nuevo")):ok(d);};im.src=fr.result;};fr.readAsDataURL(file);});}
+function renderQrsAdmin(){const el=$("#aQr");if(!el)return;const L=st.qrs||[];
+  el.innerHTML=(L.map(q=>`<button class="row" data-qe="${q.id}" style="width:100%;text-align:left"><img class="qrthumb" src="${q.img}" alt=""><div class="grow"><div class="t">${esc(q.nombre)}</div><div class="sub">${esc(q.detalle||"Toca para editar")}</div></div><span>›</span></button>`).join("")||`<div class="empty">Sube el QR de Nequi, Bancolombia, Daviplata o tu llave Bre-B. Tu personal se lo muestra al cliente desde la cuenta de la mesa.</div>`)+
+    `<div class="acts" style="padding:10px 12px">${L.length<4?`<button class="btn gold" data-qn>+ Subir QR</button>`:""}${L.length?`<button class="btn" data-qv>👁️ Ver como el cliente</button>`:""}</div>`;
+  el.querySelectorAll("[data-qe]").forEach(b=>b.onclick=()=>qrEditSheet(L.find(x=>x.id===b.dataset.qe)));
+  const n=el.querySelector("[data-qn]");if(n)n.onclick=()=>qrEditSheet();
+  const vv=el.querySelector("[data-qv]");if(vv)vv.onclick=()=>mostrarQR(0,"");}
+function qrEditSheet(q){
+  let img=q?q.img:null;
+  openSheet(`<h3>${q?"Editar QR de pago":"Subir QR de pago"}</h3><p class="hint">Sube una foto o captura del QR de tu cuenta. Se ve mejor si la recortas para que quede solo el código.</p>
+    <div class="chips" id="qChips" style="padding-top:0">${["Nequi","Bancolombia","Daviplata","Llave Bre-B","Nu","Davivienda"].map(n=>`<button type="button" class="chip" data-qn="${n}">${n}</button>`).join("")}</div>
+    <label class="fld"><span>Nombre</span><input id="qNom" maxlength="40" value="${esc(q?q.nombre:"")}" placeholder="Ej: Nequi"></label>
+    <label class="fld"><span>Número, cuenta o llave (opcional)</span><input id="qDet" maxlength="80" value="${esc(q&&q.detalle||"")}" placeholder="Ej: 321 864 1539 · a nombre de …"></label>
+    <div style="text-align:center;margin:6px 0 10px"><img id="qPrev" class="qrthumb" style="width:180px;height:180px;${img?"":"display:none"}" src="${img||""}" alt="Vista previa"></div>
+    <label class="btn wide" style="text-align:center;display:block;cursor:pointer">📷 ${q?"Cambiar imagen":"Elegir imagen del QR"}<input id="qFile" type="file" accept="image/*" hidden></label>
+    <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Guardar</button></div>
+    ${q?`<button class="btn ghost wide" data-del style="color:var(--bad);margin-top:6px">Eliminar este QR</button>`:""}`,s=>{
+    s.querySelector("#qChips").onclick=e=>{const b=e.target.closest("[data-qn]");if(b)s.querySelector("#qNom").value=b.dataset.qn;};
+    s.querySelector("#qFile").onchange=async e=>{try{img=await comprimirQR(e.target.files[0]);const pv=s.querySelector("#qPrev");pv.src=img;pv.style.display="";}catch(err){toast(err.message);}};
+    s.querySelector("[data-x]").onclick=closeSheet;
+    s.querySelector("[data-ok]").onclick=async ev=>{const b=ev.currentTarget;if(!img){toast("Elige la imagen del QR");return;}b.disabled=true;
+      try{await rpc("guardar_qr",{p_id:q?q.id:null,p_nombre:s.querySelector("#qNom").value,p_detalle:s.querySelector("#qDet").value,p_img:q&&img===q.img?null:img});await loadQrs();renderQrsAdmin();closeSheet();toast("✅ QR de pago guardado");}
+      catch(err){toast(errMsg(err));b.disabled=false;}};
+    const del=s.querySelector("[data-del]");if(del)del.onclick=()=>confirmSheet("Eliminar QR",`Se quitará el QR de ${esc(q.nombre)}.`,"Eliminar",async()=>{await rpc("borrar_qr",{p_id:q.id});await loadQrs();renderQrsAdmin();toast("QR eliminado");},true);
+  });
+}
 
 /* ---------- panel DL COMPANY (solo el administrador): códigos de activación y restaurantes ---------- */
 const DUR=[[1,"1 mes"],[3,"3 meses"],[6,"6 meses"],[ANUAL_MESES,"Anual · 14 meses"]];
@@ -2333,6 +2406,7 @@ function duenoSteps(){
     {view:"ventas",el:"#vMes",t:"Por mesero y lo más pedido",p:"Cuánto vendió cada mesero y cuáles son los productos estrella."},
     {view:"ventas",el:"#vCsv",t:"📊 Excel y WhatsApp",p:"Descarga las ventas en un <b>Excel ordenado</b> o envía el resumen del día por WhatsApp a tu socio o contador."+lockTxt("excel")},
     {view:"admin",el:"#aEmp",t:"5. Administración",p:"Edita el nombre de tu restaurante y activa las estaciones cocina y bar. Desde aquí también envías los datos de acceso a tu personal."},
+    {view:"admin",el:"#aQr",t:"📱 QR de pago",p:"Sube el QR de Nequi, Bancolombia, Daviplata o tu llave Bre-B. El mesero lo muestra en pantalla completa desde la cuenta de la mesa, con el valor a pagar."},
     {view:"admin",el:"#aPerNew",t:"Tu personal",p:"Crea a tus <b>meseros</b> y a tu personal de <b>cocina, bar y caja</b>: a cada uno le puedes dar una o varias funciones, por ejemplo Bar + Caja. La app les da un <b>PIN</b>: entran en <b>🍽️ Personal</b> con el nombre del restaurante, el NIT, su usuario y su PIN."},
     {view:"admin",el:"#aProdNew",t:"Tus productos",p:"Agrega tus productos con precio y categoría. Puedes ocultar los que se agotan para que el mesero no los pida."},
     {view:"admin",el:"#aMesaNew",t:"Tus mesas",p:"Crea, renombra u ordena tus mesas (ej: Mesa 1, Barra, Terraza 2)."},
@@ -2348,6 +2422,7 @@ function meseroSteps(){
     {view:"mesas",el:"#mGrid",t:"Toma el pedido",p:"Toca una mesa <b>libre</b>, elige los productos (cada toque suma 1), agrega notas como <b>sin cebolla</b> y toca <b>Revisar y enviar</b>. La cocina lo recibe al instante."},
     {view:"mesas",el:".legend",t:"Los colores",p:"<b>Naranja</b> en cocina, <b>dorado</b> listo para recoger, <b>azul</b> cuenta abierta, <b>morado</b> pidió la cuenta y <b>rojo</b> lleva más de 15 minutos sin cobrar."},
     {view:"mesas",el:"#mGrid",t:"🔔 Cuando esté listo",p:"Cuando la cocina marque el pedido listo te suena una alerta con vibración. Recógelo y márcalo como <b>entregado</b>."},
+    {view:"mesas",el:"#mGrid",t:"📱 Pago con QR",p:"Si el cliente paga por QR, toca la mesa y <b>📱 Pagar con QR</b>: se muestra el código del negocio en grande con el valor a pagar."},
     {view:"mesas",el:"#mGrid",t:"🧾 Pedir la cuenta",p:"Toca la mesa y <b>Pedir la cuenta</b>. Pregúntale al cliente: <b>¿desea incluir la propina voluntaria del 10%?</b> La caja recibe la respuesta."},
     {view:"listos",el:'#tabs [data-v="listos"]',t:"Mis pedidos",p:"Aquí ves lo que está listo para recoger, lo que sigue en cocina y lo que ya entregaste hoy."},
     {el:"#meBtn",t:"Activa los avisos",p:"Toca aquí y activa los <b>avisos</b> para que la alerta te llegue aunque el celular esté bloqueado. También puedes volver a ver esta guía."},

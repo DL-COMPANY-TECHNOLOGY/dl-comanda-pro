@@ -1,0 +1,3 @@
+-- v13: QR de pago del negocio (Nequi, Bancolombia, Daviplata…). El dueño los sube (hasta 4)
+-- y el mesero o la caja se los muestran al cliente desde la app.
+-- (Aplicada en Supabase como migración v13_qr_pagos: tabla qr_pagos + RPC guardar_qr y borrar_qr)
