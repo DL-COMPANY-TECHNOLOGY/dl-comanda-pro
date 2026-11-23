@@ -17,6 +17,7 @@
 <script>try{if(localStorage.getItem("dc_theme")!=="dark")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
+<script>if(/[?&]demo(=|&|$)/.test(location.search))document.write('<script src="demo.js?v=1"><\/script>');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -354,6 +355,9 @@ body.standalone .dl-only{display:none!important}
 .qrcard .qrdet{font-size:14px;font-weight:700;color:#333;margin:8px 0 2px;word-break:break-all}
 .qrcard .qrclose{margin-top:12px;width:100%;padding:13px;border-radius:14px;border:0;background:linear-gradient(135deg,#f0d77a,#d4af37,#9a7a12);color:#1a1300;font-weight:900;font-size:16px}
 .qrthumb{width:52px;height:52px;border-radius:10px;object-fit:contain;background:#fff;border:1px solid var(--line2);flex:none}
+.demobar{position:fixed;left:50%;transform:translateX(-50%);top:calc(6px + env(safe-area-inset-top));z-index:65;display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;border-radius:999px;background:#0b1426;color:#fff;font-size:12px;border:1.5px solid #d4af37;box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap}
+.demobar b{color:#e8c766}.demobar button{border:0;border-radius:999px;padding:6px 10px;font-weight:800;font-size:12px;background:rgba(255,255,255,.12);color:#fff}.demobar button[data-dc]{background:linear-gradient(135deg,#f0d77a,#d4af37);color:#1a1300}
+html.demo body{padding-top:46px}html.demo header{top:46px}html.demo .demobar{top:calc(5px + env(safe-area-inset-top))}
 .lguia{display:flex;align-items:center;gap:14px;width:100%;max-width:440px;margin:14px auto 0;padding:14px 16px;border-radius:20px;border:2px solid var(--gold);background:var(--goldSoft);color:var(--ink);text-align:left;font:inherit;cursor:pointer;box-shadow:var(--glow)}
 .lguia>span:first-child{font-size:30px;line-height:1}.lguia>span:nth-child(2){flex:1;font-size:13.5px;color:var(--muted);font-weight:600}.lguia b{display:block;color:var(--ink);font-size:15.5px;font-weight:800;margin-bottom:2px}.lguia i{font-style:normal;font-size:22px;color:var(--gold);font-weight:900}
 .ptag{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;letter-spacing:.2px;padding:2px 7px;border-radius:999px;color:#1a1300;background:var(--goldGrad);white-space:nowrap;vertical-align:middle;box-shadow:0 0 10px rgba(212,175,55,.35)}
@@ -536,7 +540,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
   <div class="dlf-btns"><a class="wa-link" target="_blank" rel="noopener">💬 Soporte</a><a class="dl-only" data-install>📲 Descargar app</a><a class="dlf-site" href="https://dl-company-technology.github.io/" target="_blank" rel="noopener">🌐 Conoce DL COMPANY</a></div>
   <div class="dlf-apps"><p>Más apps de DL COMPANY</p><div><a href="https://dl-company-technology.github.io/dl-finanzas/" target="_blank" rel="noopener">DL FINANZAS</a><a href="https://dl-company-technology.github.io/dl-stock-pro/" target="_blank" rel="noopener">DL STOCK PRO</a><a href="https://dl-company-technology.github.io/dl-cuadra-pro/" target="_blank" rel="noopener">DL CUADRA PRO</a></div></div>
   <div class="dlf-legal"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dlf-copy">DL COMANDA PRO v2.5 · Plataforma oficial de pedidos para restaurantes © 2026</p>
+  <p class="dlf-copy">DL COMANDA PRO v2.6 · Plataforma oficial de pedidos para restaurantes © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -607,7 +611,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
       <span class="bh-ic"><svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3Zm0 23.7c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.7 10.7 0 1 1 16 26.7Zm5.9-8c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.3-3.8c-.3-.6.3-.5.9-1.6.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.5c.2.2 2.4 3.6 5.8 5 2.1.9 3 1 4 .8.7-.1 1.9-.8 2.2-1.6.3-.8.3-1.4.2-1.6-.1-.1-.3-.2-.6-.3Z"/></svg></span>
       <span><b>¿No puedes acceder a un plan o tienes problemas para comprar?</b>Escribe directamente a soporte por WhatsApp</span>
     </a>
-  <button type="button" class="lguia" id="btnGuiaLogin"><span>🧭</span><span><b>¿Cómo funciona la app? Ver la guía</b>Te mostramos paso a paso qué hace cada rol y los planes</span><i>›</i></button>
+  <button type="button" class="lguia" id="btnGuiaLogin"><span>🧭</span><span><b>¿Cómo funciona la app? Ver la guía</b>Recorre la app con un restaurante de ejemplo, sin crear cuenta</span><i>›</i></button>
   <div class="lcredit"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><div>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b>© 2026</div></div>
 </div>
 
@@ -2382,7 +2386,7 @@ const lockTxt=k=>feat(k)?(enPrueba()&&NIVEL[FEAT_PLAN[k]]>NIVEL[planBase()]?`<sp
 function planesSteps(){
   const P=PL(),txt=P.bono?"Pro + bono Premium":PLAN_TXT[P.plan]+(P.prueba?" (prueba)":"");
   return [
-    {view:"admin",el:"#aPlan",t:"⭐ Tu plan y los planes",p:`Lo último y muy importante: tu plan actual es <b>${txt}</b>${enPrueba()?` y te ${diasPrueba()===1?"queda":"quedan"} <b>${diasTxt(diasPrueba())}</b>`:""}. Aquí ves cuántas mesas, productos y usuarios usas y cuántos te permite tu plan.`},
+    {view:"admin",el:"#aPlan",t:"⭐ Tu plan y los planes",p:DEMO?"Lo último y muy importante: aquí verás el plan de tu restaurante, cuántas mesas, productos y usuarios usas y cuántos te permite. Mira las opciones:":`Lo último y muy importante: tu plan actual es <b>${txt}</b>${enPrueba()?` y te ${diasPrueba()===1?"queda":"quedan"} <b>${diasTxt(diasPrueba())}</b>`:""}. Aquí ves cuántas mesas, productos y usuarios usas y cuántos te permite tu plan.`},
     {t:"Plan Gratis",big:"🆓",price:"$0",p:"Para probar lo esencial:",lista:["🎁 <b>3 días de Premium gratis</b> al registrarte","✅ Mesero → cocina en vivo","✅ 5 mesas · 20 productos · 2 usuarios","✅ 15 pedidos al día","✅ Propina preguntada y cobro simple","✅ Ventas solo de hoy","🔒 Sin avisos con la app cerrada, imprimir, dividir cuenta, caja, Excel ni cambiar mesas"]},
     {t:"Plan Pro",big:"🚀",price:(LANZ?`<s style="font-size:15px;color:#8a94a6;margin-right:6px">${money(PRECIOS.pro*2)}</s>`:"")+money(PRECIOS.pro)+" /mes",p:"Lo que un restaurante usa todos los días:",lista:["🎁 <b>7 días de Premium gratis</b> al activarlo","✅ 8 mesas · 80 productos · 4 usuarios","✅ 50 pedidos al día","✅ 🔔 Avisos aunque el celular esté bloqueado","✅ 🖨️ Imprimir comandas, cuentas y recibos","✅ ➗ Dividir cuenta y pago mixto","✅ 💰 Caja con conteo de billetes y cierre","✅ 📊 Excel, cambiar mesas y 90 días de historial"]},
     {t:"Plan Premium",big:"⭐",price:(LANZ?`<s style="font-size:15px;color:#8a94a6;margin-right:6px">${money(PRECIOS.premium*2)}</s>`:"")+money(PRECIOS.premium)+" /mes",p:"<b>Toda la app al 100%</b>:",lista:["✅ Mesas, productos y usuarios ilimitados","✅ 🍳🍹 Estaciones cocina y bar separadas","✅ 📦 Stock y lector de código de barras","✅ Historial de ventas ilimitado","✅ Todo lo del plan Pro","✅ Soporte prioritario por WhatsApp"]},
@@ -2444,27 +2448,17 @@ function cocinaSteps(){
     {t:"¡Listo! 💪",big:"✅",p:"Ya puedes recibir pedidos.",fin:"Ir a la cocina",finAct:()=>go("cocina")}
   ];
 }
-function presentacionSteps(){
-  const pz=k=>(LANZ?`<s style="font-size:15px;color:#8a94a6;margin-right:6px">${money(PRECIOS[k]*2)}</s>`:"")+money(PRECIOS[k])+" /mes";
-  return [
-    {t:"👋 Bienvenido a DL COMANDA PRO",big:"🍽️",p:"La app para restaurantes, asaderos y bares: el mesero toma el pedido en el celular, la cocina o el bar lo reciben <b>al instante</b> y avisan cuando está listo. La guía habla y avanza sola; toca 🔊 para silenciarla."},
-    {t:"1. Crea la cuenta del negocio",big:"✨",p:"El dueño toca <b>✨ Crear cuenta</b> y escribe el nombre del restaurante, el <b>NIT</b>, su correo y una contraseña. La app crea las mesas y un menú de ejemplo para empezar."},
-    {t:"2. Agrega tu menú y tus mesas",big:"📋",p:"En <b>Admin</b> pones tus productos con precio y categoría, tus mesas (Mesa 1, Barra, Terraza…) y el <b>QR de pago</b> de tu negocio (Nequi, Bancolombia, Daviplata…)."},
-    {t:"3. Crea a tu personal",big:"👥",p:"Cada persona recibe un <b>PIN de 4 números</b>. Puedes darle uno o varios roles:",lista:["🧑‍🍳 <b>Mesero</b>: toma pedidos por mesa","💵 <b>Cajero</b>: abre la caja y cobra","🍳 <b>Cocina</b>: prepara los platos","🍹 <b>Bar</b>: prepara las bebidas","Ej.: Bar + Cajero, Cocina + Cajero"]},
-    {t:"4. Tu personal entra así",big:"🍽️",p:"En la pestaña <b>🍽️ Personal</b> escriben el nombre del restaurante y el NIT, y luego su usuario y su PIN. No necesitan correo."},
-    {t:"5. El mesero toma el pedido",big:"🧑‍🍳",p:"Toca una mesa libre, elige los productos, agrega notas (ej: sin cebolla) y envía. La cocina y el bar lo reciben con <b>sonido</b>, aunque el celular esté bloqueado."},
-    {t:"6. Cocina y bar avisan",big:"🔥",p:"Marcan el pedido <b>🔥 Preparando</b> y luego <b>✅ Listo</b>: al mesero le suena una alerta con vibración para que lo recoja. Las mesas sin cobrar se ponen en <b>rojo</b> cada 15 minutos."},
-    {t:"7. La cuenta y el cobro",big:"🧾",p:"El mesero pide la cuenta y pregunta si el cliente quiere la <b>propina voluntaria del 10%</b>. La caja cobra en efectivo, tarjeta, transferencia o <b>QR</b>, puede dividir la cuenta entre varias personas y envía el recibo por WhatsApp."},
-    {t:"8. Caja y ventas",big:"💰",p:"Abre la caja contando billetes y monedas, registra entradas y salidas y ciérrala con arqueo. En <b>Ventas</b> ves lo del día, por mesero y lo más vendido, y descargas todo en <b>Excel</b>."},
-    {t:"Plan Gratis",big:"🆓",price:"$0",p:"Para probar lo esencial:",lista:["🎁 <b>3 días de Premium gratis</b> al registrarte","✅ Mesero → cocina en vivo","✅ 5 mesas · 20 productos · 2 usuarios","✅ 15 pedidos al día","🔒 Sin avisos con la app cerrada, imprimir, dividir cuenta, caja ni Excel"]},
-    {t:"Plan Pro",big:"🚀",price:pz("pro"),p:"Lo que un restaurante usa todos los días:",lista:["🎁 <b>7 días de Premium gratis</b> al activarlo","✅ 8 mesas · 80 productos · 4 usuarios","✅ 50 pedidos al día","✅ Avisos con el celular bloqueado","✅ Imprimir, dividir cuenta, caja, Excel y cambiar mesas"]},
-    {t:"Plan Premium",big:"⭐",price:pz("premium"),p:"<b>Toda la app al 100%</b>:",lista:["✅ Mesas, productos, usuarios y pedidos ilimitados","✅ Estaciones cocina y bar separadas","✅ Stock y lector de código de barras","✅ Historial ilimitado y soporte prioritario"]},
-    {t:"¡Listo para empezar! 🚀",big:"✅",p:`${LANZ?"Por el <b>lanzamiento</b> los planes están con <b>50% de descuento</b>. ":""}Pago anual: <b>14 meses por el precio de 12</b>. Al pagar te enviamos un código de activación por WhatsApp.<br><br>Toca <b>Crear cuenta</b> y prueba Premium gratis 3 días.`,fin:"✨ Crear mi cuenta",finAct:()=>{const t=document.querySelector('#lTabs [data-lt="new"]');if(t){t.click();t.scrollIntoView({block:"center",behavior:"smooth"});}}}
-  ];
-}
-function startGuiaPublica(){
-  if(tourOn())return;TOUR={steps:presentacionSteps(),i:0,prev:null,publica:true};
-  $("#tour").classList.add("on");showStep(0,1);
+/* ---------- demostración: recorre la app con datos de ejemplo, sin cuenta ---------- */
+const DEMO=!!window.__dcDemo;
+function salirDemo(crear){location.replace(location.pathname+(crear?"#crear":""));}
+function finDemoSheet(){
+  openSheet(`<div style="text-align:center"><div style="font-size:52px">🚀</div><h3>¿Listo para usarla en tu restaurante?</h3>
+    <p class="hint">Esto fue una demostración con datos de ejemplo. Crea tu cuenta y prueba <b>Premium gratis 3 días</b>.</p></div>
+    <button class="btn gold wide" data-c>✨ Crear mi cuenta</button>
+    <div class="acts"><button class="btn" data-g>🧭 Repetir la guía</button><button class="btn" data-x>Seguir explorando</button></div>
+    <button class="btn ghost wide" data-s style="margin-top:6px">Salir de la demostración</button>`,s=>{
+    s.querySelector("[data-c]").onclick=()=>salirDemo(true);s.querySelector("[data-s]").onclick=()=>salirDemo(false);
+    s.querySelector("[data-g]").onclick=()=>{closeSheet();setTimeout(()=>startTour(true),250);};s.querySelector("[data-x]").onclick=closeSheet;});
 }
 function startTour(force){
   if(tourOn()||!st.ready)return;
@@ -2475,7 +2469,8 @@ function startTour(force){
 function endTour(skip){
   callar();if(!TOUR)return;const s=TOUR.steps[TOUR.i],t=TOUR;TOUR=null;
   $("#tour").classList.remove("on");$("#orderbar").style.visibility="";
-  if(!skip&&s&&s.finAct)s.finAct();else if(!t.publica)go(misTabs().some(x=>x[0]===t.prev)?t.prev:misTabs()[0][0]);
+  if(DEMO){go("mesas");setTimeout(finDemoSheet,300);return;}
+  if(!skip&&s&&s.finAct)s.finAct();else go(misTabs().some(x=>x[0]===t.prev)?t.prev:misTabs()[0][0]);
 }
 async function showStep(i,dir){
   if(!TOUR)return;const steps=TOUR.steps;
@@ -2510,11 +2505,14 @@ function place(el){
   let tl=r.left+r.width/2-tw/2;tl=Math.max(12,Math.min(vw-tw-12,tl));
   tip.style.left=tl+"px";tip.style.top=tt+"px";
 }
-{const g=document.getElementById("btnGuiaLogin");if(g)g.onclick=startGuiaPublica;}
+{const g=document.getElementById("btnGuiaLogin");if(g)g.onclick=()=>{location.href=location.pathname+"?demo=1";};}
+if(DEMO){document.documentElement.classList.add("demo");const bn=document.createElement("div");bn.className="demobar";bn.innerHTML=`<span>🧭 <b>Demostración</b> · datos de ejemplo</span><button type="button" data-dc>✨ Crear cuenta</button><button type="button" data-ds>Salir</button>`;
+  document.body.appendChild(bn);bn.querySelector("[data-dc]").onclick=()=>salirDemo(true);bn.querySelector("[data-ds]").onclick=()=>salirDemo(false);}
+else if(location.hash==="#crear"){history.replaceState(null,"",location.pathname);setTimeout(()=>{const t=document.querySelector('#lTabs [data-lt="new"]');if(t)t.click();},400);}
 addEventListener("resize",()=>{if(TOUR){const s=TOUR.steps[TOUR.i];place(s&&s.el?document.querySelector(s.el):null);}});
 addEventListener("scroll",()=>{if(TOUR){const s=TOUR.steps[TOUR.i];if(s&&s.el)place(document.querySelector(s.el));}},{passive:true});
 function maybeTour(){
-  if(!st.ready||tourOn()||LS.get(tkey(st.rol),0))return;
+  if(!st.ready||tourOn()||(!DEMO&&LS.get(tkey(st.rol),0)))return;
   if($("#scrim").classList.contains("on")||$(".alert.on")){clearTimeout(tourT);tourT=setTimeout(maybeTour,4000);return;}
   startTour();
 }
