@@ -267,6 +267,8 @@ html[data-theme="light"] .prod{background:linear-gradient(160deg,#fff,#fbf8ee)}
 html[data-theme="light"] .login{background:radial-gradient(80% 50% at 50% 0%,rgba(8,145,178,.12),transparent 70%),radial-gradient(60% 40% at 100% 100%,rgba(201,162,39,.18),transparent 70%),#f6f7fb}
 .login.on{display:block}
 .ltheme{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px}
+.lhelpb{position:absolute;top:calc(14px + env(safe-area-inset-top));left:14px}
+.qbtn{font-size:18px;font-weight:900;line-height:1;font-family:inherit}
 .lcard{max-width:430px;margin:46px auto 0;background:rgba(13,21,40,.84);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--gold);border-radius:28px;padding:24px 20px 20px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.45),0 0 40px rgba(212,175,55,.12)}
 html[data-theme="light"] .lcard{background:#fff;box-shadow:0 20px 50px rgba(15,23,42,.1),0 0 0 4px rgba(201,162,39,.08)}
 .llogo{width:96px;height:96px;border-radius:26px;box-shadow:0 0 0 2px var(--gold),0 0 40px rgba(212,175,55,.35)}
@@ -357,9 +359,8 @@ body.standalone .dl-only{display:none!important}
 .qrthumb{width:52px;height:52px;border-radius:10px;object-fit:contain;background:#fff;border:1px solid var(--line2);flex:none}
 .demobar{position:fixed;left:50%;transform:translateX(-50%);top:calc(6px + env(safe-area-inset-top));z-index:65;display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;border-radius:999px;background:#0b1426;color:#fff;font-size:12px;border:1.5px solid #d4af37;box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap}
 .demobar b{color:#e8c766}.demobar button{border:0;border-radius:999px;padding:6px 10px;font-weight:800;font-size:12px;background:rgba(255,255,255,.12);color:#fff}.demobar button[data-dc]{background:linear-gradient(135deg,#f0d77a,#d4af37);color:#1a1300}
+@media(max-width:400px){header{gap:6px;padding:10px 10px}header .hbtn{width:34px;height:34px}.live{padding:5px 7px}.bt{overflow:hidden;text-overflow:ellipsis}.demobar .dtx{display:none}}
 html.demo body{padding-top:46px}html.demo header{top:46px}html.demo .demobar{top:calc(5px + env(safe-area-inset-top))}
-.lguia{display:flex;align-items:center;gap:14px;width:100%;max-width:440px;margin:14px auto 0;padding:14px 16px;border-radius:20px;border:2px solid var(--gold);background:var(--goldSoft);color:var(--ink);text-align:left;font:inherit;cursor:pointer;box-shadow:var(--glow)}
-.lguia>span:first-child{font-size:30px;line-height:1}.lguia>span:nth-child(2){flex:1;font-size:13.5px;color:var(--muted);font-weight:600}.lguia b{display:block;color:var(--ink);font-size:15.5px;font-weight:800;margin-bottom:2px}.lguia i{font-style:normal;font-size:22px;color:var(--gold);font-weight:900}
 .ptag{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;letter-spacing:.2px;padding:2px 7px;border-radius:999px;color:#1a1300;background:var(--goldGrad);white-space:nowrap;vertical-align:middle;box-shadow:0 0 10px rgba(212,175,55,.35)}
 .mesa .ptag,.prod .ptag{position:absolute;top:7px;right:7px;font-size:9.5px;padding:1px 6px}
 /* footer */
@@ -450,6 +451,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
     <div><div class="bt">DL <em>COMANDA PRO</em></div><div class="bsub" id="hSub">—</div></div>
   </div>
   <span class="live off" id="live"><i></i><span id="liveT">Conectando…</span></span>
+  <button class="hbtn qbtn" id="guiaBtn" type="button" aria-label="Ver la guía de la app" title="Guía de la app">?</button>
   <button class="hbtn themebtn" id="themeBtn" type="button" aria-label="Modo día / noche">
     <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
     <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
@@ -540,7 +542,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
   <div class="dlf-btns"><a class="wa-link" target="_blank" rel="noopener">💬 Soporte</a><a class="dl-only" data-install>📲 Descargar app</a><a class="dlf-site" href="https://dl-company-technology.github.io/" target="_blank" rel="noopener">🌐 Conoce DL COMPANY</a></div>
   <div class="dlf-apps"><p>Más apps de DL COMPANY</p><div><a href="https://dl-company-technology.github.io/dl-finanzas/" target="_blank" rel="noopener">DL FINANZAS</a><a href="https://dl-company-technology.github.io/dl-stock-pro/" target="_blank" rel="noopener">DL STOCK PRO</a><a href="https://dl-company-technology.github.io/dl-cuadra-pro/" target="_blank" rel="noopener">DL CUADRA PRO</a></div></div>
   <div class="dlf-legal"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dlf-copy">DL COMANDA PRO v2.6 · Plataforma oficial de pedidos para restaurantes © 2026</p>
+  <p class="dlf-copy">DL COMANDA PRO v2.7 · Plataforma oficial de pedidos para restaurantes © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -554,6 +556,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
 <div class="tour" id="tour"><div class="tblock"></div><div class="tspot"></div><div class="ttip" role="dialog" aria-live="polite"></div></div>
 
 <div class="login on" id="login">
+  <button class="hbtn qbtn lhelpb" id="lHelp" type="button" aria-label="Ver la guía de la app" title="Guía de la app">?</button>
   <button class="hbtn themebtn ltheme" type="button" aria-label="Modo día / noche">
     <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
     <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
@@ -611,7 +614,6 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
       <span class="bh-ic"><svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3Zm0 23.7c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.7 10.7 0 1 1 16 26.7Zm5.9-8c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.8 8.8 0 0 1-4.3-3.8c-.3-.6.3-.5.9-1.6.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.5c.2.2 2.4 3.6 5.8 5 2.1.9 3 1 4 .8.7-.1 1.9-.8 2.2-1.6.3-.8.3-1.4.2-1.6-.1-.1-.3-.2-.6-.3Z"/></svg></span>
       <span><b>¿No puedes acceder a un plan o tienes problemas para comprar?</b>Escribe directamente a soporte por WhatsApp</span>
     </a>
-  <button type="button" class="lguia" id="btnGuiaLogin"><span>🧭</span><span><b>¿Cómo funciona la app? Ver la guía</b>Recorre la app con un restaurante de ejemplo, sin crear cuenta</span><i>›</i></button>
   <div class="lcredit"><img src="dl-company.png" alt="DL COMPANY -TECHNOLOGY-"><div>Desarrollado por<b>DL COMPANY -TECHNOLOGY-</b>© 2026</div></div>
 </div>
 
@@ -2395,7 +2397,7 @@ function planesSteps(){
 }
 function duenoSteps(){
   return [
-    {t:"👋 ¡Bienvenido a DL COMANDA PRO!",big:"🍽️",p:"Te muestro en 2 minutos cómo funciona: el mesero toma el pedido en el celular, la cocina lo recibe al instante y avisa cuando está listo. La guía habla y avanza sola; toca el parlante 🔊 para silenciarla."},
+    DEMO?{t:"📱 Ya estás dentro de la app",big:"🍽️",p:"Este es un <b>restaurante de ejemplo</b> para que veas cómo funciona: el mesero toma el pedido en el celular, la cocina lo recibe al instante y avisa cuando está listo. Te muestro cada botón."}:{t:"👋 ¡Bienvenido a DL COMANDA PRO!",big:"🍽️",p:"Te muestro en 2 minutos cómo funciona: el mesero toma el pedido en el celular, la cocina lo recibe al instante y avisa cuando está listo. La guía habla y avanza sola; toca el parlante 🔊 para silenciarla."},
     {el:".brand",t:"Tu restaurante",p:"Aquí ves el nombre del restaurante y con qué usuario entraste."},
     {el:"#live",t:"🟢 En vivo",p:"Indica que la app está conectada: todo lo que haga el mesero, la cocina o la caja se ve al instante en todos los celulares."},
     {view:"mesas",el:"#mGrid",t:"1. Las mesas",p:"Cada tarjeta es una mesa. Toca una mesa <b>libre</b> para tomar el pedido: eliges los productos, agregas notas (ej: sin cebolla) y tocas <b>Revisar y enviar</b>. La cocina lo recibe con sonido."},
@@ -2417,6 +2419,7 @@ function duenoSteps(){
     {view:"admin",el:"#aPerNew",t:"Tu personal",p:"Crea a tus <b>meseros</b> y a tu personal de <b>cocina, bar y caja</b>: a cada uno le puedes dar una o varias funciones, por ejemplo Bar + Caja. La app les da un <b>PIN</b>: entran en <b>🍽️ Personal</b> con el nombre del restaurante, el NIT, su usuario y su PIN."},
     {view:"admin",el:"#aProdNew",t:"Tus productos",p:"Agrega tus productos con precio y categoría. Puedes ocultar los que se agotan para que el mesero no los pida."},
     {view:"admin",el:"#aMesaNew",t:"Tus mesas",p:"Crea, renombra u ordena tus mesas (ej: Mesa 1, Barra, Terraza 2)."},
+    {el:"#guiaBtn",t:"? Vuelve a ver la guía",p:"Toca el botón <b>?</b> cuando quieras repasar cómo funciona la app."},
     {el:"#meBtn",t:"Tu cuenta y ajustes",p:"Activa los <b>avisos</b> para que te lleguen con el celular bloqueado, prueba el sonido, elige el papel de la impresora, <b>descarga la app</b>, escribe a soporte o <b>vuelve a ver esta guía</b>."},
     {el:"#themeBtn",t:"Modo día y noche",p:"Cambia entre el modo oscuro y el modo día con bordes dorados."},
     ...planesSteps()
@@ -2432,6 +2435,7 @@ function meseroSteps(){
     {view:"mesas",el:"#mGrid",t:"📱 Pago con QR",p:"Si el cliente paga por QR, toca la mesa y <b>📱 Pagar con QR</b>: se muestra el código del negocio en grande con el valor a pagar."},
     {view:"mesas",el:"#mGrid",t:"🧾 Pedir la cuenta",p:"Toca la mesa y <b>Pedir la cuenta</b>. Pregúntale al cliente: <b>¿desea incluir la propina voluntaria del 10%?</b> La caja recibe la respuesta."},
     {view:"listos",el:'#tabs [data-v="listos"]',t:"Mis pedidos",p:"Aquí ves lo que está listo para recoger, lo que sigue en cocina y lo que ya entregaste hoy."},
+    {el:"#guiaBtn",t:"? Vuelve a ver la guía",p:"Toca el botón <b>?</b> cuando quieras repasar cómo funciona la app."},
     {el:"#meBtn",t:"Activa los avisos",p:"Toca aquí y activa los <b>avisos</b> para que la alerta te llegue aunque el celular esté bloqueado. También puedes volver a ver esta guía."},
     {t:"¡Listo! 💪",big:"✅",p:"Ya puedes tomar pedidos. Si tienes dudas, pregúntale al dueño del restaurante.",fin:"Empezar",finAct:()=>go("mesas")}
   ];
@@ -2444,6 +2448,7 @@ function cocinaSteps(){
     {view:"cuentas",el:"#cajaBox",t:"La caja",p:"Abre la caja contando los billetes y monedas de la base y ciérrala al final del turno: la app te dice si cuadra."+lockTxt("caja")},
     {view:"cuentas",el:"#cList",t:"Cobrar",p:"Cuando una mesa <b>pide la cuenta</b> te llega un aviso con la respuesta de la propina. Toca la cuenta, elige el medio de pago y listo."},
     {view:"mesas",el:"#mGrid",t:"Las mesas",p:"También ves todas las mesas y su estado. La mesa en <b>rojo</b> lleva más de 15 minutos sin cobrar."},
+    {el:"#guiaBtn",t:"? Vuelve a ver la guía",p:"Toca el botón <b>?</b> cuando quieras repasar cómo funciona la app."},
     {el:"#meBtn",t:"Tu cuenta y ajustes",p:"Activa los avisos, elige el <b>papel de la impresora</b> (58 u 80 mm) y deja la <b>pantalla siempre encendida</b> en la cocina. También puedes volver a ver esta guía."},
     {t:"¡Listo! 💪",big:"✅",p:"Ya puedes recibir pedidos.",fin:"Ir a la cocina",finAct:()=>go("cocina")}
   ];
@@ -2460,15 +2465,31 @@ function finDemoSheet(){
     s.querySelector("[data-c]").onclick=()=>salirDemo(true);s.querySelector("[data-s]").onclick=()=>salirDemo(false);
     s.querySelector("[data-g]").onclick=()=>{closeSheet();setTimeout(()=>startTour(true),250);};s.querySelector("[data-x]").onclick=closeSheet;});
 }
-function startTour(force){
-  if(tourOn()||!st.ready)return;
-  const steps=st.rol==="dueno"?duenoSteps():st.rol==="mesero"?meseroSteps():cocinaSteps();
-  TOUR={steps,i:0,prev:st.view};LS.set(tkey(st.rol),1);
+function loginSteps(){
+  return [
+    {t:"👋 ¡Bienvenido a DL COMANDA PRO!",big:"🍽️",p:"Te muestro cómo entrar a la app y después la recorremos por dentro, hasta los planes. La guía habla y avanza sola; toca el parlante 🔊 para silenciarla.",panel:"loginForm"},
+    {el:'#lTabs [data-lt="new"]',t:"1. ¿Eres nuevo? Crea tu cuenta aquí",p:"Toca <b>✨ Crear cuenta</b> para registrar tu restaurante o bar. Es gratis y tienes <b>3 días de Premium</b> para probar todo.",panel:"newForm"},
+    {el:"#nNom",t:"Nombre y NIT",p:"Escribe el <b>nombre del restaurante</b> y el <b>NIT o cédula</b>. Tu personal los usará para entrar.",panel:"newForm",grupo:["#nNom","#nNit"]},
+    {el:"#nMail",t:"Tu correo",p:"Escribe tu correo <b>dos veces</b> para no equivocarte. Te llega un mensaje para confirmar la cuenta.",panel:"newForm",grupo:["#nMail","#nMail2"]},
+    {el:"#nPass",t:"Tu contraseña",p:"Mínimo 6 caracteres. Con el ojito 👁️ la puedes ver mientras la escribes.",panel:"newForm"},
+    {el:"#newBtn",t:"Acepta y crea la cuenta",p:"Marca que aceptas los términos y toca <b>Crear cuenta gratis</b>. Confirma el correo que te enviamos y vuelve a ingresar.",panel:"newForm",grupo:["#nAcepto","#newBtn"]},
+    {el:'#lTabs [data-lt="in"]',t:"2. 👑 Dueño: ingresa aquí",p:"Cuando ya tienes cuenta, entra con tu <b>correo y contraseña</b>. Si la olvidaste, toca <b>¿Olvidaste tu contraseña?</b>.",panel:"loginForm"},
+    {el:'#lTabs [data-lt="emp"]',t:"3. 🍽️ Tu personal entra aquí",p:"Meseros, cocina, bar y caja <b>no necesitan correo</b>: escriben el nombre del restaurante y el NIT, y luego su usuario y un <b>PIN de 4 números</b> que tú les creas.",panel:"empForm"},
+    {el:"#lHelp",t:"La guía siempre a la mano",p:"Toca este botón <b>?</b> cuando quieras volver a ver la guía. Dentro de la app también está arriba.",panel:"loginForm"},
+    {t:"Ahora, la app por dentro",big:"📱",p:"Te muestro la app con un <b>restaurante de ejemplo</b>: mesas, cocina, cobros, caja, administración y al final los planes. No se guarda nada.",fin:"Ver la app por dentro ›",panel:"loginForm"}
+  ];
+}
+function startTour(force,kind){
+  if(tourOn())return;
+  if(kind!=="login"&&!st.ready)return;
+  const steps=kind==="login"?loginSteps():st.rol==="dueno"?duenoSteps():st.rol==="mesero"?meseroSteps():cocinaSteps();
+  TOUR={steps,i:0,prev:st.view,kind};if(kind==="login")LS.set("dc_tour_login",1);else LS.set(tkey(st.rol),1);
   $("#tour").classList.add("on");$("#orderbar").style.visibility="hidden";showStep(0,1);
 }
 function endTour(skip){
   callar();if(!TOUR)return;const s=TOUR.steps[TOUR.i],t=TOUR;TOUR=null;
   $("#tour").classList.remove("on");$("#orderbar").style.visibility="";
+  if(t.kind==="login"){if(!skip)location.href=location.pathname+"?demo=1";else loginPanel("loginForm");return;}
   if(DEMO){go("mesas");setTimeout(finDemoSheet,300);return;}
   if(!skip&&s&&s.finAct)s.finAct();else go(misTabs().some(x=>x[0]===t.prev)?t.prev:misTabs()[0][0]);
 }
@@ -2476,6 +2497,7 @@ async function showStep(i,dir){
   if(!TOUR)return;const steps=TOUR.steps;
   if(i<0)i=0;if(i>=steps.length){endTour(false);return;}
   const s=steps[i];TOUR.i=i;
+  if(s.panel){loginPanel(s.panel);$("#login").scrollTop=0;}
   if(s.view&&s.view!==st.view&&misTabs().some(x=>x[0]===s.view))go(s.view);
   await new Promise(r=>setTimeout(r,s.view?180:20));
   const el=s.el?document.querySelector(s.el):null;
@@ -2491,13 +2513,15 @@ async function showStep(i,dir){
   const tp=tip.querySelector("[data-tp]");if(tp)tp.onclick=()=>{callar();showStep(i-1,-1);};
   const ts=tip.querySelector("[data-ts]");if(ts)ts.onclick=()=>endTour(true);
   const tv=tip.querySelector("[data-tv]");if(tv)tv.onclick=()=>{VOZ.on=!VOZ.on;LS.set("dc_tour_voz",VOZ.on);if(!VOZ.on)callar();showStep(i,1);};
-  place(el);leer(s,i,last);
+  place(el,s.grupo);leer(s,i,last);
 }
-function place(el){
+function place(el,grupo){
   const spot=$("#tour .tspot"),tip=$("#tour .ttip");
   if(!el){spot.classList.add("none");tip.style.left="";tip.style.top="";return;}
   spot.classList.remove("none");
-  const r=el.getBoundingClientRect(),pad=6,vw=innerWidth,vh=innerHeight;
+  let r=el.getBoundingClientRect();const pad=6,vw=innerWidth,vh=innerHeight;
+  if(grupo){const rs=grupo.map(q=>document.querySelector(q)).filter(visible).map(x=>(x.closest(".fld")||x.closest("label")||x).getBoundingClientRect());
+    if(rs.length){const L=Math.min(...rs.map(x=>x.left)),T=Math.min(...rs.map(x=>x.top)),R=Math.max(...rs.map(x=>x.right)),B=Math.max(...rs.map(x=>x.bottom));r={left:L,top:T,width:R-L,height:B-T};}}
   const top=Math.max(4,r.top-pad),h=Math.min(r.height+pad*2,vh*.55);
   spot.style.left=(r.left-pad)+"px";spot.style.top=top+"px";spot.style.width=(r.width+pad*2)+"px";spot.style.height=h+"px";
   const tw=tip.offsetWidth,th=tip.offsetHeight;
@@ -2505,12 +2529,14 @@ function place(el){
   let tl=r.left+r.width/2-tw/2;tl=Math.max(12,Math.min(vw-tw-12,tl));
   tip.style.left=tl+"px";tip.style.top=tt+"px";
 }
-{const g=document.getElementById("btnGuiaLogin");if(g)g.onclick=()=>{location.href=location.pathname+"?demo=1";};}
-if(DEMO){document.documentElement.classList.add("demo");const bn=document.createElement("div");bn.className="demobar";bn.innerHTML=`<span>🧭 <b>Demostración</b> · datos de ejemplo</span><button type="button" data-dc>✨ Crear cuenta</button><button type="button" data-ds>Salir</button>`;
+$("#lHelp").onclick=()=>startTour(true,"login");
+$("#guiaBtn").onclick=()=>{if(tourOn())return;if($("#scrim").classList.contains("on"))closeSheet();setTimeout(()=>startTour(true),150);};
+if(!DEMO&&location.hash!=="#crear")setTimeout(()=>{if(!LS.get("dc_tour_login",0)&&$("#login").classList.contains("on")&&!$("#loginForm").hidden&&!tourOn())startTour(false,"login");},1500);
+if(DEMO){document.documentElement.classList.add("demo");const bn=document.createElement("div");bn.className="demobar";bn.innerHTML=`<span>🧭 <b>Demostración</b><span class="dtx"> · datos de ejemplo</span></span><button type="button" data-dc>✨ Crear cuenta</button><button type="button" data-ds>Salir</button>`;
   document.body.appendChild(bn);bn.querySelector("[data-dc]").onclick=()=>salirDemo(true);bn.querySelector("[data-ds]").onclick=()=>salirDemo(false);}
 else if(location.hash==="#crear"){history.replaceState(null,"",location.pathname);setTimeout(()=>{const t=document.querySelector('#lTabs [data-lt="new"]');if(t)t.click();},400);}
-addEventListener("resize",()=>{if(TOUR){const s=TOUR.steps[TOUR.i];place(s&&s.el?document.querySelector(s.el):null);}});
-addEventListener("scroll",()=>{if(TOUR){const s=TOUR.steps[TOUR.i];if(s&&s.el)place(document.querySelector(s.el));}},{passive:true});
+addEventListener("resize",()=>{if(TOUR){const s=TOUR.steps[TOUR.i];place(s&&s.el?document.querySelector(s.el):null,s&&s.grupo);}});
+addEventListener("scroll",()=>{if(TOUR){const s=TOUR.steps[TOUR.i];if(s&&s.el)place(document.querySelector(s.el),s.grupo);}},{passive:true});
 function maybeTour(){
   if(!st.ready||tourOn()||(!DEMO&&LS.get(tkey(st.rol),0)))return;
   if($("#scrim").classList.contains("on")||$(".alert.on")){clearTimeout(tourT);tourT=setTimeout(maybeTour,4000);return;}
