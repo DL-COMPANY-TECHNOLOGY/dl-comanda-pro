@@ -302,6 +302,9 @@ html[data-theme="light"] .lcard{background:#fff;box-shadow:0 20px 50px rgba(15,2
 .rolepick button span{font-size:26px}
 .rolepick button small{display:block;color:var(--muted);font-weight:600;font-size:12.5px}
 .rolepick button.on{border-color:var(--gold);background:var(--goldSoft);box-shadow:var(--glow)}
+.rolepick.multi{gap:8px}.rolepick.multi button{padding:11px 14px}.rolepick.multi button>div{flex:1}
+.rolepick .ck{width:24px;height:24px;border-radius:8px;border:2px solid var(--line2);flex:none;display:grid;place-items:center;font-style:normal}
+.rolepick button.on .ck{background:var(--goldGrad);border-color:var(--gold)}.rolepick button.on .ck::after{content:"✓";color:#1a1300;font-weight:900;font-size:14px}
 
 /* descargar app */
 .dlbtn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:14px 18px;border-radius:16px;font-weight:800;font-size:15px;color:#1b1404;background:var(--goldGrad);box-shadow:0 8px 24px rgba(212,175,55,.35);width:100%}
@@ -518,7 +521,7 @@ footer.dlf .dlf-copy{font-size:10.5px;letter-spacing:1.2px;text-transform:upperc
   <div class="dlf-btns"><a class="wa-link" target="_blank" rel="noopener">💬 Soporte</a><a class="dl-only" data-install>📲 Descargar app</a><a class="dlf-site" href="https://dl-company-technology.github.io/" target="_blank" rel="noopener">🌐 Conoce DL COMPANY</a></div>
   <div class="dlf-apps"><p>Más apps de DL COMPANY</p><div><a href="https://dl-company-technology.github.io/dl-finanzas/" target="_blank" rel="noopener">DL FINANZAS</a><a href="https://dl-company-technology.github.io/dl-stock-pro/" target="_blank" rel="noopener">DL STOCK PRO</a><a href="https://dl-company-technology.github.io/dl-cuadra-pro/" target="_blank" rel="noopener">DL CUADRA PRO</a></div></div>
   <div class="dlf-legal"><a href="legal.html#terminos" target="_blank" rel="noopener">Términos</a><a href="legal.html#privacidad" target="_blank" rel="noopener">Privacidad</a><a href="legal.html#reembolsos" target="_blank" rel="noopener">Reembolsos</a></div>
-  <p class="dlf-copy">DL COMANDA PRO v2.2 · Plataforma oficial de pedidos para restaurantes © 2026</p>
+  <p class="dlf-copy">DL COMANDA PRO v2.3 · Plataforma oficial de pedidos para restaurantes © 2026</p>
 </footer>
 
 <div class="orderbar" id="orderbar">
@@ -1938,19 +1941,21 @@ $("#vCsv").onclick=async ev=>{
 };
 
 /* ADMIN (dueño) */
-const PERM_TXT={cocina:"🍳 Cocina",bar:"🍹 Bar",caja:"💵 Caja"};
+const PERM_TXT={cocina:"🍳 Cocina",bar:"🍹 Bar",caja:"💵 Cajero"};
 const rolTxt=(rol,per)=>rol==="mesero"?"🧑‍🍳 Mesero":(per&&per.length?["cocina","bar","caja"].filter(k=>per.includes(k)).map(k=>PERM_TXT[k]).join(" + "):"🍳 Cocina + 🍹 Bar + 💵 Caja");
 function rolPickHTML(rol,per){
-  return `<div class="rolepick" id="rp"><button type="button" class="${rol==="mesero"?"on":""}" data-r="mesero"><span>🧑‍🍳</span><div>Mesero<small>Toma pedidos por mesa y recibe el aviso cuando están listos</small></div></button><button type="button" class="${rol==="cocina"?"on":""}" data-r="cocina"><span>🏷️</span><div>Cocina, Bar o Caja<small>Elige una o varias funciones</small></div></button></div>
-    <div id="pPerm" ${rol==="cocina"?"":"hidden"} style="margin-top:10px"><div class="fld"><span>Funciones de este usuario</span></div>
-      <div class="permgrid">${[["cocina","🍳","Cocina","Recibe y prepara los platos"],["bar","🍹","Bar","Recibe y prepara las bebidas"],["caja","💵","Caja","Abre la caja, cobra y ve las cuentas"]].map(([k,i,t,d])=>`<button type="button" class="perm ${per.has(k)?"on":""}" data-pm="${k}"><span>${i}</span><b>${t}</b><small>${d}</small></button>`).join("")}</div>
-      <p class="hint" id="pPermTxt" style="margin:6px 0 0"></p></div>`;}
+  const op=(k,i,t,d)=>`<button type="button" data-o="${k}" class="${(k==="mesero"?rol==="mesero":rol==="cocina"&&per.has(k))?"on":""}"><span>${i}</span><div>${t}<small>${d}</small></div><i class="ck"></i></button>`;
+  return `<div class="fld" style="margin:4px 0 0"><span>Rol · puedes marcar varios (ej. Bar + Caja)</span></div>
+    <div class="rolepick multi" id="rp">${op("mesero","🧑‍🍳","Mesero","Toma pedidos por mesa y recibe el aviso cuando están listos")}${op("caja","💵","Cajero","Abre la caja, cobra las cuentas y recibe cuando piden la cuenta")}${op("cocina","🍳","Cocina","Recibe los platos en vivo y los marca listos")}${op("bar","🍹","Bar","Recibe las bebidas en vivo y las marca listas")}</div>
+    <p class="hint" id="pPermTxt" style="margin:6px 0 0"></p>`;}
 function bindRolPick(s,get,set){
-  const upd=()=>{const {rol,per}=get();s.querySelectorAll("#rp [data-r]").forEach(x=>x.classList.toggle("on",x.dataset.r===rol));s.querySelector("#pPerm").hidden=rol!=="cocina";
-    s.querySelectorAll("[data-pm]").forEach(x=>x.classList.toggle("on",per.has(x.dataset.pm)));
-    s.querySelector("#pPermTxt").innerHTML=!per.size?'<b style="color:var(--bad)">Elige al menos una función.</b>':`Quedará como <b>${rolTxt("cocina",[...per])}</b>.${per.has("bar")&&!estOn()?" El bar separado funciona cuando activas las estaciones cocina y bar.":""}`;};
-  s.querySelector("#rp").onclick=e=>{const b=e.target.closest("[data-r]");if(!b)return;set({rol:b.dataset.r});upd();};
-  s.querySelector("#pPerm").onclick=e=>{const b=e.target.closest("[data-pm]");if(!b)return;const {per}=get();per.has(b.dataset.pm)?per.delete(b.dataset.pm):per.add(b.dataset.pm);upd();};
+  const upd=()=>{const {rol,per}=get();
+    s.querySelectorAll("#rp [data-o]").forEach(x=>x.classList.toggle("on",x.dataset.o==="mesero"?rol==="mesero":rol==="cocina"&&per.has(x.dataset.o)));
+    s.querySelector("#pPermTxt").innerHTML=rol==="mesero"?"El mesero no se combina con otros roles.":!per.size?'<b style="color:var(--bad)">Elige al menos un rol.</b>':`Quedará como <b>${rolTxt("cocina",[...per])}</b>.${per.has("bar")&&!estOn()?" Para separar el bar de la cocina activa las estaciones cocina y bar.":""}`;};
+  s.querySelector("#rp").onclick=e=>{const b=e.target.closest("[data-o]");if(!b)return;const k=b.dataset.o,{rol,per}=get();
+    if(k==="mesero"){set({rol:"mesero"});}
+    else{if(rol!=="cocina"){per.clear();set({rol:"cocina"});}per.has(k)?per.delete(k):per.add(k);}
+    upd();};
   upd();}
 async function loadPersonal(){const r=await sb.from("personal").select("id,usuario,rol,permisos,activo,bloqueado_hasta,creado").order("creado");if(!r.error){st.personal=r.data||[];render();}}
 function renderAdmin(){
@@ -1979,14 +1984,14 @@ function pinSheet(usr,rol,pin,per){
     s.querySelector("[data-x]").onclick=closeSheet;
     s.querySelector("[data-sh]").onclick=()=>share(`🍽️ Tu acceso a DL COMANDA PRO (${rolTxt(rol,per).replace(/[^\p{L}\s+]/gu,"").replace(/\s+/g," ").trim()})\n\nAbre: ${location.origin+location.pathname}\nToca "🍽️ Personal":\n• Restaurante: ${st.empresa.nombre}\n• NIT: ${st.empresa.nit}\n• Usuario: ${usr}\n• PIN: ${pin}\n\nNo compartas tu PIN.`);});
 }
-$("#aPerNew").onclick=()=>{let rol="mesero";const per=new Set(["cocina","caja"]);
+$("#aPerNew").onclick=()=>{let rol="mesero";const per=new Set();
   openSheet(`<h3>Nuevo usuario</h3><p class="hint">La app genera un PIN de 4 números.</p>
     ${rolPickHTML(rol,per)}
     <label class="fld" style="margin-top:12px"><span>Usuario</span><input id="pu" maxlength="30" placeholder="Ej: Juan, Cocina 1, Bar, Caja"></label>
     <div class="acts"><button class="btn" data-x>Cancelar</button><button class="btn gold" data-ok>Crear y ver PIN</button></div>`,s=>{
     bindRolPick(s,()=>({rol,per}),o=>{rol=o.rol;});
     s.querySelector("[data-x]").onclick=closeSheet;const ok=s.querySelector("[data-ok]");
-    ok.onclick=async()=>{if(rol==="cocina"&&!per.size){toast("Elige al menos una función: Cocina, Bar o Caja");return;}ok.disabled=true;
+    ok.onclick=async()=>{if(rol==="cocina"&&!per.size){toast("Elige al menos un rol");return;}ok.disabled=true;
       try{const r=await rpc("crear_personal",{p_usuario:s.querySelector("#pu").value,p_rol:rol,p_permisos:rol==="cocina"?[...per]:null});await loadPersonal();pinSheet(r.usuario,r.rol,r.pin,r.permisos);}catch(e){toast(errMsg(e));ok.disabled=false;}};});};
 $("#aPer").onclick=e=>{const b=e.target.closest("[data-per]");if(!b)return;const p=st.personal.find(x=>x.id===b.dataset.per);if(!p)return;let rol=p.rol;const per=new Set(p.permisos&&p.permisos.length?p.permisos:["cocina","bar","caja"]);
   openSheet(`<h3>${esc(p.usuario)}</h3><p class="hint">Creado el ${new Date(p.creado).toLocaleDateString("es-CO")}</p>
@@ -1997,7 +2002,7 @@ $("#aPer").onclick=e=>{const b=e.target.closest("[data-per]");if(!b)return;const
     <div class="acts"><button class="btn" data-pin>🔑 Generar PIN nuevo</button><button class="btn bad" data-del>Eliminar</button></div>`,s=>{
     bindRolPick(s,()=>({rol,per}),o=>{rol=o.rol;});
     s.querySelector("[data-x]").onclick=closeSheet;
-    s.querySelector("[data-ok]").onclick=async()=>{if(rol==="cocina"&&!per.size){toast("Elige al menos una función: Cocina, Bar o Caja");return;}try{await rpc("editar_personal",{p_id:p.id,p_usuario:s.querySelector("#pu").value,p_rol:rol,p_activo:s.querySelector("#pa").checked,p_permisos:rol==="cocina"?[...per]:null});await loadPersonal();closeSheet();toast("Guardado ✓");}catch(err){toast(errMsg(err));}};
+    s.querySelector("[data-ok]").onclick=async()=>{if(rol==="cocina"&&!per.size){toast("Elige al menos un rol");return;}try{await rpc("editar_personal",{p_id:p.id,p_usuario:s.querySelector("#pu").value,p_rol:rol,p_activo:s.querySelector("#pa").checked,p_permisos:rol==="cocina"?[...per]:null});await loadPersonal();closeSheet();toast("Guardado ✓");}catch(err){toast(errMsg(err));}};
     s.querySelector("[data-pin]").onclick=()=>confirmSheet("¿PIN nuevo para "+p.usuario+"?","El PIN anterior deja de servir y se cierra su sesión.","Generar PIN",async()=>{const pin=await rpc("regenerar_pin",{p_id:p.id});await loadPersonal();pinSheet(p.usuario,p.rol,pin,p.permisos);});
     s.querySelector("[data-del]").onclick=()=>confirmSheet("¿Eliminar a "+p.usuario+"?","Ya no podrá ingresar. Sus pedidos anteriores se conservan.","Eliminar",async()=>{await rpc("eliminar_personal",{p_id:p.id});await loadPersonal();closeSheet();toast("Eliminado");},true);});};
 
